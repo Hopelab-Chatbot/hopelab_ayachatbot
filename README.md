@@ -20,7 +20,7 @@ FB_VERIFY_TOKEN
 FB_PAGE_ACCESS_TOKEN
 ```
 
-With these in place, you can run the application with
+With these in place, and the Facebook Messenger webhook on a public facing url, you can run the application with
 
 ```bash
 node index.js
