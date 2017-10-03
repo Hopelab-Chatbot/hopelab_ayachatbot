@@ -21,8 +21,35 @@ FB_PAGE_ACCESS_TOKEN
 
 With these in place, and the Facebook Messenger webhook on a public facing url, you can run the application with
 
+
+### Run App:
+
 ```bash
-node index.js
+yarn run start
+```
+
+### Run Tests:
+
+```bash
+yarn run test
+```
+
+### Run Prettier:
+
+```bash
+yarn run prettify
+```
+
+### Run Linting:
+
+```bash
+yarn run lint
+```
+
+### Setup a Mock DB with some fake data:
+
+```bash
+yarn run mock-db
 ```
 
 ## Code Structure
