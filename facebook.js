@@ -33,10 +33,10 @@ function getUserDetails(userId) {
                 resolve(JSON.parse(response.body));
 
                 if (error) {
-                    console.log('Error sending message: ', error);
+                    console.log('error: getUserDetails - sending message: ', error);
                     reject(error);
                 } else if (response.body.error) {
-                    console.log('Error: ', response.body.error);
+                    console.log('error: getUserDetails - response body error', response.body.error);
                     reject(response.body.error);
                 }
             }
@@ -165,7 +165,7 @@ function receivedMessage(event) {
                 .catch(console.error.bind(console));
         })
         .catch(e =>
-            console.log('Error: receivedMessage, retrieve all data.', e)
+            console.log('error: receivedMessage - error retrieving all data.', e)
         );
 }
 

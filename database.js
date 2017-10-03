@@ -34,10 +34,11 @@ function updateUser(user) {
                     )
                     .then(() => {
                         resolve();
-                    });
+                    })
+                    .catch(e => console.log(`error: updateUser - cacheUtils.setItem(${DB_USERS})`, e));
             })
             .catch(e => {
-                console.log('error: updateUser', e);
+                console.log(`error: updateUser - cacheUtils.getItem(${DB_USERS})`, e);
                 reject();
             });
     });
@@ -66,14 +67,15 @@ function getUserById(id) {
                         .setItem(DB_USERS, time, newUsers)
                         .then(() => {
                             resolve(user);
-                        });
+                        })
+                        .catch(e => console.log(`error: getUserById - cacheUtils.setItem(${DB_USERS})`, e));
                 }
 
                 resolve(user);
             })
             .catch(function(e) {
                 // no item found matching cacheKey
-                console.log('error: getUserById', e);
+                console.log(`error: getUserById - cacheUtils.getItem(${DB_USERS})`, e);
             });
     });
 }
@@ -91,7 +93,7 @@ function getSeries() {
                 resolve(JSON.parse(series));
             })
             .catch(e => {
-                console.log('error: getSeries', e);
+                console.log(`error: getSeries - cacheUtils.getItem(${DB_SERIES})`, e);
             });
     });
 }
@@ -127,7 +129,7 @@ function getBlocks() {
                 resolve(JSON.parse(blocks));
             })
             .catch(e => {
-                console.log('error: getBlocks', e);
+                console.log(`error: getBlocks - cacheUtils.getItem(${DB_BLOCKS})`, e);
             });
     });
 }
@@ -145,7 +147,7 @@ function getUserHistory() {
                 resolve(JSON.parse(history));
             })
             .catch(e => {
-                console.log('error: getUserHistory', e);
+                console.log(`error: getUserHistory - cacheUtils.getItem(${DB_USER_HISTORY})`, e);
             });
     });
 }

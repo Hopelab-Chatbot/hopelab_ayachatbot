@@ -54,7 +54,8 @@
                 "title": "No",
                 "payload": "message-12"
             }  
-        ]
+        ],
+        "text": "Quick Reply Questions:"
     },
     {
         "id": "message-11",

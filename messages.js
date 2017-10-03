@@ -9,7 +9,7 @@ function makePlatformMessagePayload(action, messages) {
     const message = messages.find(m => m.id === action);
 
     if (message && message.quick_replies) {
-        return { text: 'test', quick_replies: message.quick_replies };
+        return { text: message.text, quick_replies: message.quick_replies };
     }
 
     return { text: message.text };
@@ -100,6 +100,7 @@ function getMessagesForAction({ action, messages, blocks, user }) {
 }
 
 module.exports = {
+    makePlatformMessagePayload,
     getMessagesForAction,
     getActionForMessage
 };
