@@ -15,7 +15,6 @@ You need a few environment variables to be in place for this work properly local
 Currently these variables are:
 
 ```
-APIAI_ACCESS_TOKEN
 FB_VERIFY_TOKEN
 FB_PAGE_ACCESS_TOKEN
 ```
