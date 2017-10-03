@@ -13,27 +13,35 @@ const { createNewUser } = require('./users');
 
 const time = 1000 * 60 * 60 * 24;
 
-// does the response have a unique identifier?
-// otherwise, what module and action did we leave off at?
-
-function updateUserById(id, user) {
+/**
+ * Update User By ID
+ * 
+ * @param {Object} user
+ * @return {Promise}
+*/
+function updateUser(user) {
     return new Promise((resolve, reject) => {
-
         cacheUtils.getItem(DB_USERS)
             .then((users) => {
                 users = JSON.parse(users);
 
-                return cacheUtils.setItem(DB_USERS, time, users.map(u => u.id === id ? user : u)).then(() => {
+                return cacheUtils.setItem(DB_USERS, time, users.map(u => u.id === user.id ? user : u)).then(() => {
                     resolve();
                 });
             })
             .catch((e) => {
-                console.log('error: updateUserById', e);
+                console.log('error: updateUser', e);
                 reject();
             });
     });
 }
 
+/**
+ * Get User By ID
+ * 
+ * @param {String} id
+ * @return {Promise<Object>}
+*/
 function getUserById(id) {
     return new Promise((resolve, reject) => {
         cacheUtils.getItem(DB_USERS)
@@ -42,8 +50,6 @@ function getUserById(id) {
 
                 let user = users.find(u => u.id === id);
 
-                // if user not present, initialize
-                // a new user reference in db
                 if (!user) {
                     user = createNewUser(id);
                     const newUsers = users.concat(user);
@@ -62,6 +68,11 @@ function getUserById(id) {
     });
 }
 
+/**
+ * Get Modules
+ * 
+ * @return {Promise<Array>}
+*/
 function getModules() {
     return new Promise((resolve, reject) => {
         cacheUtils.getItem(DB_MODULES)
@@ -74,6 +85,11 @@ function getModules() {
     });
 }
 
+/**
+ * Get Messages
+ * 
+ * @return {Promise<Array>}
+*/
 function getMessages() {
     return new Promise((resolve, reject) => {
         cacheUtils.getItem(DB_MESSAGES)
@@ -86,6 +102,11 @@ function getMessages() {
     });
 }
 
+/**
+ * Get Blocks
+ * 
+ * @return {Promise<Array>}
+*/
 function getBlocks() {
     return new Promise((resolve, reject) => {
         cacheUtils.getItem(DB_BLOCKS)
@@ -98,11 +119,16 @@ function getBlocks() {
     });
 }
 
+/**
+ * Get user History
+ * 
+ * @return {Promise<Array>}
+*/
 function getUserHistory() {
     return new Promise((resolve, reject) => {
         cacheUtils.getItem(DB_USER_HISTORY)
-            .then((modules) => {
-                resolve(JSON.parse(modules));
+            .then((history) => {
+                resolve(JSON.parse(history));
             })
             .catch((e) => {
                 console.log('error: getUserHistory', e);
@@ -116,5 +142,5 @@ module.exports = {
     getMessages,
     getBlocks,
     getUserHistory,
-    updateUserById
+    updateUser
 };

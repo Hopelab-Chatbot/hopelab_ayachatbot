@@ -7,7 +7,7 @@ const {
     getModules,
     getMessages,
     getBlocks,
-    updateUserById
+    updateUser
 } = require('./database');
 
 const {
@@ -19,7 +19,8 @@ const {
 } = require('./constants');
 
 const {
-    getMessagesForAction
+    getMessagesForAction,
+    getActionForMessage
 } = require('./messages');
 
 const { promiseSerial } = require('./utils');
@@ -50,7 +51,12 @@ function getUserDetails(userId) {
     });
 }
 
-// Send a message to facebook messenger
+/**
+ * Send Message to Facebook API
+ * 
+ * @param {Object} messageData
+ * @return {Promise<String>}
+*/
 function callSendAPI(messageData) {
     return new Promise((resolve, reject) => {
         request({
@@ -66,7 +72,7 @@ function callSendAPI(messageData) {
 
                 resolve(messageId);
             } else {
-                console.error("Unable to send message.");
+                console.error('Unable to send message.');
                 console.error(response);
                 console.error(error);
 
@@ -76,7 +82,13 @@ function callSendAPI(messageData) {
     });
   }
 
-// async wrapper for sending message to fb platform
+/**
+ * Async Wrapper for callSendAPI
+ * 
+ * @param {String} recipientId
+ * @param {Object} message
+ * @return {Promise<String>}
+*/
 function sendMessage(recipientId, message) {
     const messageData = {
         recipient: {
@@ -90,28 +102,12 @@ function sendMessage(recipientId, message) {
     }
 }
 
-// determine next starting action based on incoming message
-// and the user progress along a block/module
-function getActionForMessage(message, user, blocks) {
-    let action;
-
-    if (message.quick_reply) {
-        action = message.quick_reply.payload;
-    } else {
-        const lastMessage = user.history[user.history.length - 2];
-        if (user.blockScope.length && lastMessage && lastMessage.next) {
-            action = lastMessage.next.id;
-        } else {
-            // TODO: Logic for where to start/move user to next series/collection
-            action = blocks.find(b => b.id === 'block-1').startMessage;
-            user.blockScope.push('block-1');
-        }
-    }
-
-    return action;
-}
-
-// handle incoming message to the webhook
+/**
+ * Receive Message From Facebook Messenger
+ * 
+ * @param {Object} event
+ * @return {void}
+*/
 function receivedMessage(event) {
     const senderID = event.sender.id;
     const recipientID = event.recipient.id;
@@ -151,8 +147,7 @@ function receivedMessage(event) {
             action, 
             messages: allMessages, 
             blocks: allBlocks,
-            blockScope: user.blockScope,
-            history: user.history
+            user
         });
 
         const { messagesToSend, context, history, blockScope } = messagesForAction;
@@ -163,10 +158,10 @@ function receivedMessage(event) {
         // send messages out to Messenger
         promiseSerial(messagesToSend.map(msg => sendMessage(senderID, msg)))
             .then(() => {
-                updateUserById(user.id, user).then(() => {
+                updateUser(user).then(() => {
                     console.log(`User ${user.id} updated successfully`);
                 })
-                .catch(e => console.log('Error: updateUserById', e));
+                .catch(e => console.log('Error: updateUser', e));
             })
             .catch(console.error.bind(console))
     })

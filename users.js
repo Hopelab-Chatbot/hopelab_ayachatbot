@@ -1,3 +1,9 @@
+/**
+ * Create New User
+ * 
+ * @param {String} id
+ * @return {Object}
+*/
 function createNewUser(id) {
     return {
         id,

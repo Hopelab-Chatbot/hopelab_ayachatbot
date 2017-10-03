@@ -2,7 +2,6 @@ const JSONbig = require('json-bigint');
 
 const { getActionMessages } = require('./messages');
 
-// facebook utils
 const { getUserDetails, receivedMessage } = require('./facebook');
 
 module.exports = function(app) {
@@ -29,18 +28,18 @@ module.exports = function(app) {
                         if (event.message) {
                             receivedMessage(event);
                         } else {
-                            console.log("Webhook received unknown event: ", event);
+                            console.log('Webhook received unknown event: ', event);
                         }
                     });
                 });
             }
 
             return res.status(200).json({
-                status: "ok"
+                status: 'ok'
             });
         } catch (err) {
             return res.status(400).json({
-                status: "error",
+                status: 'error',
                 error: err
             });
         }

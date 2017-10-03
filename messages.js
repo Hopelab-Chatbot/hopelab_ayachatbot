@@ -1,9 +1,14 @@
 const format = require('string-template');
 const { getBlocks, getMessages } = require('./database');
 
-// create specific platform payload based upon message content
-// TODO: Add any platform specific logic
-function makeMessagePayload(action, messages) {
+/**
+ * Create Specific Platform Payload
+ * 
+ * @param {String} action
+ * @param {Array} messages
+ * @return {Object}
+*/
+function makePlatformMessagePayload(action, messages) {
     const message = messages.find(m => m.id === action);
 
     if (message && message.quick_replies) {
@@ -14,18 +19,50 @@ function makeMessagePayload(action, messages) {
 }
 
 /**
- * Construct messages array
+ * Get the next Action for incoming message
+ * 
+ * @param {Object} message
+ * @param {Object} user
+ * @param {Array} blocks
+ * @return {String}
+*/
+function getActionForMessage(message, user, blocks) {
+    let action;
+
+    if (message.quick_reply) {
+        action = message.quick_reply.payload;
+    } else {
+        const lastMessage = user.history[user.history.length - 2];
+        if (user.blockScope.length && lastMessage && lastMessage.next) {
+            action = lastMessage.next.id;
+        } else {
+            // TODO: Logic for where to start/move user to next series/collection
+            action = blocks.find(b => b.id === 'block-1').startMessage;
+            user.blockScope.push('block-1');
+        }
+    }
+
+    return action;
+}
+
+/**
+ * Construct Outgoing Messages
  * 
  * @param {String} action
- * @return {Object} { messages, context }
+ * @param {Array} messages
+ * @param {Array} blocks
+ * @param {Object} user
+ * @return {Object} { messagesToSend, context, history, blockScope }
 */
-function getMessagesForAction({ action, messages, blocks, blockScope, history }) {
+function getMessagesForAction({ action, messages, blocks, user }) {
     let messagesToSend = [];
     let curr = messages.find(m => m.id === action);
     let context;
 
+    let { blockScope, history } = user;
+
     while (curr !== null && curr !== undefined) {
-        messagesToSend.push(makeMessagePayload(curr.id, messages));
+        messagesToSend.push(makePlatformMessagePayload(curr.id, messages));
         history.push(curr);
 
         if (curr.type === 'question' || curr.isEnd === true) {
@@ -40,19 +77,20 @@ function getMessagesForAction({ action, messages, blocks, blockScope, history })
             blockScope.pop();
 
             if (blockScope.length > 0) {
-                let currentBlock = blockScope[blockScope.length - 1];
+                const currentBlock = blockScope[blockScope.length - 1];
 
-                const lastBlockMessage = history.slice().reverse().find(m => m.block === currentBlock).next.afterBlock;
+                const pointerToNextBlock = history.slice().reverse().find(m => m.block === currentBlock).next.afterBlock;
 
-                curr = messages.find(m => m.id === lastBlockMessage);
+                curr = messages.find(m => m.id === pointerToNextBlock);
             } else {
                 // done
                 curr = null;
             }
         } else if (curr.next.id.indexOf('block') > -1) {
             blockScope.push(curr.next.id);
-            const block = blocks.find(b => b.id === curr.next.id);
-            curr = messages.find(m => m.id === block.startMessage);
+
+            const nextBlock = blocks.find(b => b.id === curr.next.id);
+            curr = messages.find(m => m.id === nextBlock.startMessage);
         } else {
             curr = messages.find(m => m.id === curr.next.id);
         }
@@ -62,5 +100,6 @@ function getMessagesForAction({ action, messages, blocks, blockScope, history })
 }
 
 module.exports = {
-    getMessagesForAction
+    getMessagesForAction,
+    getActionForMessage
 };
