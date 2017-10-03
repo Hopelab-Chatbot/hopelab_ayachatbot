@@ -1,7 +1,4 @@
 const request = require('request');
-const async = require('async');
-const uuid = require('uuid');
-const apiai = require('apiai');
 const {
     getUserById,
     getMessages,
@@ -11,10 +8,7 @@ const {
 
 const {
     FB_GRAPH_ROOT_URL,
-    FB_PAGE_ACCESS_TOKEN,
-    FB_TEXT_LIMIT,
-    APIAI_ACCESS_TOKEN,
-    APIAI_LANG
+    FB_PAGE_ACCESS_TOKEN
 } = require('./constants');
 
 const { getMessagesForAction, getActionForMessage } = require('./messages');
@@ -67,7 +61,6 @@ function callSendAPI(messageData) {
             },
             function(error, response, body) {
                 if (!error && response.statusCode == 200) {
-                    var recipientId = body.recipient_id;
                     var messageId = body.message_id;
 
                     resolve(messageId);
@@ -111,11 +104,7 @@ function sendMessage(recipientId, message) {
 */
 function receivedMessage(event) {
     const senderID = event.sender.id;
-    const recipientID = event.recipient.id;
-    const timeOfMessage = event.timestamp;
     const message = event.message;
-
-    const messageText = message.text;
 
     // grab all data needed
     const promises = [
@@ -157,7 +146,6 @@ function receivedMessage(event) {
 
             const {
                 messagesToSend,
-                context,
                 history,
                 blockScope
             } = messagesForAction;

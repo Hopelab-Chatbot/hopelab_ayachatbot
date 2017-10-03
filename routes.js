@@ -1,8 +1,6 @@
 const JSONbig = require('json-bigint');
 
-const { getActionMessages } = require('./messages');
-
-const { getUserDetails, receivedMessage } = require('./facebook');
+const { receivedMessage } = require('./facebook');
 
 module.exports = function(app) {
     app.get('/webhook/', (req, res) => {
@@ -20,9 +18,6 @@ module.exports = function(app) {
             if (data.object === 'page') {
                 // Iterate over each entry - there may be multiple if batched
                 data.entry.forEach(function(entry) {
-                    var pageID = entry.id;
-                    var timeOfEvent = entry.time;
-
                     // Iterate over each messaging event
                     entry.messaging.forEach(function(event) {
                         if (event.message) {

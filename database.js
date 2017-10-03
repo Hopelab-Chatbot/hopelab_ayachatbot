@@ -20,7 +20,7 @@ const time = 1000 * 60 * 60 * 24;
  * @return {Promise}
 */
 function updateUser(user) {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
         cacheUtils
             .getItem(DB_USERS)
             .then(users => {
@@ -50,7 +50,7 @@ function updateUser(user) {
  * @return {Promise<Object>}
 */
 function getUserById(id) {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
         cacheUtils
             .getItem(DB_USERS)
             .then(function(users) {
@@ -84,7 +84,7 @@ function getUserById(id) {
  * @return {Promise<Array>}
 */
 function getSeries() {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
         cacheUtils
             .getItem(DB_SERIES)
             .then(series => {
@@ -102,7 +102,7 @@ function getSeries() {
  * @return {Promise<Array>}
 */
 function getMessages() {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
         cacheUtils
             .getItem(DB_MESSAGES)
             .then(messages => {
@@ -120,7 +120,7 @@ function getMessages() {
  * @return {Promise<Array>}
 */
 function getBlocks() {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
         cacheUtils
             .getItem(DB_BLOCKS)
             .then(blocks => {
@@ -138,7 +138,7 @@ function getBlocks() {
  * @return {Promise<Array>}
 */
 function getUserHistory() {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
         cacheUtils
             .getItem(DB_USER_HISTORY)
             .then(history => {

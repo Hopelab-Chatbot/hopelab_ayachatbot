@@ -1,6 +1,3 @@
-const format = require('string-template');
-const { getBlocks, getMessages } = require('./database');
-
 /**
  * Create Specific Platform Payload
  * 
