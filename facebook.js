@@ -4,7 +4,6 @@ const uuid = require('uuid');
 const apiai = require('apiai');
 const {
     getUserById,
-    getModules,
     getMessages,
     getBlocks,
     updateUser
@@ -121,7 +120,6 @@ function receivedMessage(event) {
     // grab all data needed
     const promises = [
         getUserById(senderID),
-        getModules(),
         getMessages(),
         getBlocks()
     ];
@@ -129,9 +127,8 @@ function receivedMessage(event) {
     Promise.all(promises)
         .then(res => {
             let user = Object.assign({}, res[0]);
-            const modules = res[1];
-            const allMessages = res[2];
-            const allBlocks = res[3];
+            const allMessages = res[1];
+            const allBlocks = res[2];
 
             let prevMessage =
                 allMessages.find(

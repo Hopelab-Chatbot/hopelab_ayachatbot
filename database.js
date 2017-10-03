@@ -3,7 +3,7 @@ const redisClient = redis.createClient();
 const cacheUtils = require('alien-node-redis-utils')(redisClient);
 const {
     DB_USERS,
-    DB_MODULES,
+    DB_SERIES,
     DB_MESSAGES,
     DB_BLOCKS,
     DB_USER_HISTORY
@@ -79,19 +79,19 @@ function getUserById(id) {
 }
 
 /**
- * Get Modules
+ * Get Series
  * 
  * @return {Promise<Array>}
 */
-function getModules() {
+function getSeries() {
     return new Promise((resolve, reject) => {
         cacheUtils
-            .getItem(DB_MODULES)
-            .then(modules => {
-                resolve(JSON.parse(modules));
+            .getItem(DB_SERIES)
+            .then(series => {
+                resolve(JSON.parse(series));
             })
             .catch(e => {
-                console.log('error: getModules', e);
+                console.log('error: getSeries', e);
             });
     });
 }
@@ -105,8 +105,8 @@ function getMessages() {
     return new Promise((resolve, reject) => {
         cacheUtils
             .getItem(DB_MESSAGES)
-            .then(modules => {
-                resolve(JSON.parse(modules));
+            .then(messages => {
+                resolve(JSON.parse(messages));
             })
             .catch(e => {
                 console.log('error: getMessages', e);
@@ -123,8 +123,8 @@ function getBlocks() {
     return new Promise((resolve, reject) => {
         cacheUtils
             .getItem(DB_BLOCKS)
-            .then(modules => {
-                resolve(JSON.parse(modules));
+            .then(blocks => {
+                resolve(JSON.parse(blocks));
             })
             .catch(e => {
                 console.log('error: getBlocks', e);
@@ -152,7 +152,7 @@ function getUserHistory() {
 
 module.exports = {
     getUserById,
-    getModules,
+    getSeries,
     getMessages,
     getBlocks,
     getUserHistory,
