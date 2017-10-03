@@ -2,9 +2,9 @@ const redis = require('redis');
 const redisClient = redis.createClient();
 const cacheUtils = require('alien-node-redis-utils')(redisClient);
 
-const series = require('./stubs/series.json');
-const messages = require('./stubs/messages.json');
-const blocks = require('./stubs/blocks.json');
+const series = require('../stubs/series.json');
+const messages = require('../stubs/messages.json');
+const blocks = require('../stubs/blocks.json');
 const {
     DB_USERS,
     DB_SERIES,

@@ -17,7 +17,9 @@
   },
   "scripts": {
     "lint": "eslint *.js",
+    "mockDB": "node ./src/mockDatabaseSetup.js",
     "prettify": "prettier --single-quote --write './*.js'",
+    "start": "node index.js",
     "test": "mocha"
   },
   "prettier": {

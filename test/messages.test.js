@@ -1,5 +1,5 @@
 const expect = require('expect');
-const testModule = require('../messages');
+const testModule = require('../src/messages');
 
 describe('Messages Module', () => {
     it('should have an getActionForMessage function', () => {
