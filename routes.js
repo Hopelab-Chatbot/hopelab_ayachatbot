@@ -12,7 +12,7 @@ module.exports = function(app) {
             res.send('Error, wrong validation token');
         }
     });
-    
+
     app.post('/webhook/', (req, res) => {
         try {
             const data = JSONbig.parse(req.body);
@@ -22,13 +22,16 @@ module.exports = function(app) {
                 data.entry.forEach(function(entry) {
                     var pageID = entry.id;
                     var timeOfEvent = entry.time;
-            
+
                     // Iterate over each messaging event
                     entry.messaging.forEach(function(event) {
                         if (event.message) {
                             receivedMessage(event);
                         } else {
-                            console.log('Webhook received unknown event: ', event);
+                            console.log(
+                                'Webhook received unknown event: ',
+                                event
+                            );
                         }
                     });
                 });
@@ -44,4 +47,4 @@ module.exports = function(app) {
             });
         }
     });
-}
+};

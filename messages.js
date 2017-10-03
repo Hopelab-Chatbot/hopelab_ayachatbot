@@ -79,7 +79,10 @@ function getMessagesForAction({ action, messages, blocks, user }) {
             if (blockScope.length > 0) {
                 const currentBlock = blockScope[blockScope.length - 1];
 
-                const pointerToNextBlock = history.slice().reverse().find(m => m.block === currentBlock).next.afterBlock;
+                const pointerToNextBlock = history
+                    .slice()
+                    .reverse()
+                    .find(m => m.block === currentBlock).next.afterBlock;
 
                 curr = messages.find(m => m.id === pointerToNextBlock);
             } else {

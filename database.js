@@ -21,15 +21,22 @@ const time = 1000 * 60 * 60 * 24;
 */
 function updateUser(user) {
     return new Promise((resolve, reject) => {
-        cacheUtils.getItem(DB_USERS)
-            .then((users) => {
+        cacheUtils
+            .getItem(DB_USERS)
+            .then(users => {
                 users = JSON.parse(users);
 
-                return cacheUtils.setItem(DB_USERS, time, users.map(u => u.id === user.id ? user : u)).then(() => {
-                    resolve();
-                });
+                return cacheUtils
+                    .setItem(
+                        DB_USERS,
+                        time,
+                        users.map(u => (u.id === user.id ? user : u))
+                    )
+                    .then(() => {
+                        resolve();
+                    });
             })
-            .catch((e) => {
+            .catch(e => {
                 console.log('error: updateUser', e);
                 reject();
             });
@@ -44,7 +51,8 @@ function updateUser(user) {
 */
 function getUserById(id) {
     return new Promise((resolve, reject) => {
-        cacheUtils.getItem(DB_USERS)
+        cacheUtils
+            .getItem(DB_USERS)
             .then(function(users) {
                 users = JSON.parse(users);
 
@@ -54,15 +62,17 @@ function getUserById(id) {
                     user = createNewUser(id);
                     const newUsers = users.concat(user);
 
-                    return cacheUtils.setItem(DB_USERS, time, newUsers).then(() => {
-                        resolve(user);
-                    });
+                    return cacheUtils
+                        .setItem(DB_USERS, time, newUsers)
+                        .then(() => {
+                            resolve(user);
+                        });
                 }
 
                 resolve(user);
             })
             .catch(function(e) {
-                // no item found matching cacheKey 
+                // no item found matching cacheKey
                 console.log('error: getUserById', e);
             });
     });
@@ -75,11 +85,12 @@ function getUserById(id) {
 */
 function getModules() {
     return new Promise((resolve, reject) => {
-        cacheUtils.getItem(DB_MODULES)
-            .then((modules) => {
+        cacheUtils
+            .getItem(DB_MODULES)
+            .then(modules => {
                 resolve(JSON.parse(modules));
             })
-            .catch((e) => {
+            .catch(e => {
                 console.log('error: getModules', e);
             });
     });
@@ -92,11 +103,12 @@ function getModules() {
 */
 function getMessages() {
     return new Promise((resolve, reject) => {
-        cacheUtils.getItem(DB_MESSAGES)
-            .then((modules) => {
+        cacheUtils
+            .getItem(DB_MESSAGES)
+            .then(modules => {
                 resolve(JSON.parse(modules));
             })
-            .catch((e) => {
+            .catch(e => {
                 console.log('error: getMessages', e);
             });
     });
@@ -109,11 +121,12 @@ function getMessages() {
 */
 function getBlocks() {
     return new Promise((resolve, reject) => {
-        cacheUtils.getItem(DB_BLOCKS)
-            .then((modules) => {
+        cacheUtils
+            .getItem(DB_BLOCKS)
+            .then(modules => {
                 resolve(JSON.parse(modules));
             })
-            .catch((e) => {
+            .catch(e => {
                 console.log('error: getBlocks', e);
             });
     });
@@ -126,11 +139,12 @@ function getBlocks() {
 */
 function getUserHistory() {
     return new Promise((resolve, reject) => {
-        cacheUtils.getItem(DB_USER_HISTORY)
-            .then((history) => {
+        cacheUtils
+            .getItem(DB_USER_HISTORY)
+            .then(history => {
                 resolve(JSON.parse(history));
             })
-            .catch((e) => {
+            .catch(e => {
                 console.log('error: getUserHistory', e);
             });
     });
