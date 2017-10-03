@@ -43,64 +43,133 @@ function getActionForMessage(message, user, blocks) {
 }
 
 /**
+ * Get Next Message
+ * 
+ * @param {Object} currentMessage
+ * @param {Object} user
+ * @param {Array} messages
+ * @param {Array} blocks
+ * @return {Object}
+*/
+function getNextMessage(curr, user, messages, blocks) {
+    let next;
+
+    const { blockScope, history } = user;
+
+    if (curr.isEnd === true) {
+        if (blockScope.length > 0) {
+            const currentBlock = blockScope[blockScope.length - 1];
+
+            const pointerToNextBlock = history
+                .slice()
+                .reverse()
+                .find(m => m.block === currentBlock).next.afterBlock;
+
+            next = messages.find(m => m.id === pointerToNextBlock);
+        } else {
+            // done
+            next = null;
+        }
+    } else if (curr.next.id.indexOf('block') > -1) {
+        const nextBlock = blocks.find(b => b.id === curr.next.id);
+        next = messages.find(m => m.id === nextBlock.startMessage);
+    } else {
+        next = messages.find(m => m.id === curr.next.id);
+    }
+
+    return next;
+}
+
+/**
+ * Update Block Scope
+ * 
+ * @param {Object} currentMessage
+ * @param {Array} blockScope
+ * @return {Array}
+*/
+function updateBlockScope(currentMessage, blockScope) {
+    const blockScopeToUpdate = blockScope.slice();
+
+    if (currentMessage.isEnd === true) {
+        blockScopeToUpdate.pop();
+    } 
+    
+    if (currentMessage.next && (currentMessage.next.id || '').indexOf('block') > -1) {
+        blockScopeToUpdate.push(currentMessage.next.id);
+    }
+
+    return blockScopeToUpdate;
+}
+
+/**
+ * Update History with Message
+ * 
+ * @param {Object} currentMessage
+ * @param {Array} history
+ * @return {Array}
+*/
+function updateHistory(currentMessage, history) {
+    const historyToUpdate = history.slice();
+
+    historyToUpdate.push(Object.assign({}, currentMessage));
+
+    return historyToUpdate;
+}
+
+/**
  * Construct Outgoing Messages
  * 
  * @param {String} action
  * @param {Array} messages
  * @param {Array} blocks
  * @param {Object} user
- * @return {Object} { messagesToSend, context, history, blockScope }
+ * @return {Object}
 */
 function getMessagesForAction({ action, messages, blocks, user }) {
     let messagesToSend = [];
     let curr = messages.find(m => m.id === action);
-    let context;
+    
+    let userToUpdate = Object.assign({}, user);
 
-    let { blockScope, history } = user;
+    const { blockScope, history } = userToUpdate;
 
-    while (curr !== null && curr !== undefined) {
+    while (Object.keys(curr).length) {
         messagesToSend.push(makePlatformMessagePayload(curr.id, messages));
-        history.push(curr);
 
-        if (curr.type === 'question' || curr.isEnd === true) {
-            context = Object.assign({}, curr);
-        }
+        // update block scope
+        userToUpdate = Object.assign(
+            {}, 
+            userToUpdate, 
+            { blockScope: updateBlockScope(curr, userToUpdate.blockScope) }
+        );
 
+        // update history
+        userToUpdate = Object.assign(
+            {},
+            userToUpdate,
+            { history: updateHistory(curr, userToUpdate.history) }
+        );
+
+        // if it's a question
         if (curr.type === 'question') {
             break;
         }
 
-        if (curr.isEnd === true) {
-            blockScope.pop();
-
-            if (blockScope.length > 0) {
-                const currentBlock = blockScope[blockScope.length - 1];
-
-                const pointerToNextBlock = history
-                    .slice()
-                    .reverse()
-                    .find(m => m.block === currentBlock).next.afterBlock;
-
-                curr = messages.find(m => m.id === pointerToNextBlock);
-            } else {
-                // done
-                curr = null;
-            }
-        } else if (curr.next.id.indexOf('block') > -1) {
-            blockScope.push(curr.next.id);
-
-            const nextBlock = blocks.find(b => b.id === curr.next.id);
-            curr = messages.find(m => m.id === nextBlock.startMessage);
-        } else {
-            curr = messages.find(m => m.id === curr.next.id);
-        }
+        curr = Object.assign({}, getNextMessage(curr, userToUpdate, messages, blocks));
     }
 
-    return { messagesToSend, context, history, blockScope };
+    return { 
+        messagesToSend,
+        history: userToUpdate.history, 
+        blockScope: userToUpdate.blockScope 
+    };
 }
 
 module.exports = {
     makePlatformMessagePayload,
     getMessagesForAction,
-    getActionForMessage
+    getActionForMessage,
+    updateBlockScope,
+    updateHistory,
+    getNextMessage
 };
