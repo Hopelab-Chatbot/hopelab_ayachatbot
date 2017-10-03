@@ -1,8 +1,10 @@
 const request = require('request');
+
 const {
-    getUserById,
-    getMessages,
-    getBlocks,
+    updateHistory
+} = require('./users');
+
+const {
     updateUser
 } = require('./database');
 
@@ -102,71 +104,65 @@ function sendMessage(recipientId, message) {
  * @param {Object} event
  * @return {void}
 */
-function receivedMessage(event) {
-    const senderID = event.sender.id;
-    const message = event.message;
+function receivedMessage({ senderID, message, user, allMessages, allBlocks }) {
+    let userToUpdate = Object.assign({}, user);
+    
+    let prevMessage =
+        allMessages.find(
+            m =>
+                m.id ===
+                (user.history[user.history.length - 1] || {}).id
+        ) || {};
 
-    // grab all data needed
-    const promises = [
-        getUserById(senderID),
-        getMessages(),
-        getBlocks()
-    ];
-
-    Promise.all(promises)
-        .then(res => {
-            let user = Object.assign({}, res[0]);
-            const allMessages = res[1];
-            const allBlocks = res[2];
-
-            let prevMessage =
-                allMessages.find(
-                    m =>
-                        m.id ===
-                        (user.history[user.history.length - 1] || {}).id
-                ) || {};
-
-            // record the user's answer
-            user.history.push({
+    userToUpdate = Object.assign(
+        {},
+        userToUpdate,
+        { history: updateHistory(
+            {
                 type: 'answer',
                 timestamp: Date.now(),
                 message,
                 previous: prevMessage.id
-            });
+            },
+            userToUpdate.history
+        )}
+    );
 
-            let action = getActionForMessage(message, user, allBlocks);
+    let action = getActionForMessage(message, userToUpdate, allBlocks);
 
-            // the new constructed messages to be sent back
-            let messagesForAction = getMessagesForAction({
-                action,
-                messages: allMessages,
-                blocks: allBlocks,
-                user
-            });
+    // the new constructed messages to be sent back
+    let messagesForAction = getMessagesForAction({
+        action,
+        messages: allMessages,
+        blocks: allBlocks,
+        user: userToUpdate
+    });
 
-            const {
-                messagesToSend,
-                history,
-                blockScope
-            } = messagesForAction;
+    const {
+        messagesToSend,
+        history,
+        blockScope
+    } = messagesForAction;
 
-            user.history = history;
-            user.blockScope = blockScope;
+    userToUpdate = Object.assign(
+        {},
+        userToUpdate,
+        {
+            history,
+            blockScope
+        }
+    );
 
-            // send messages out to Messenger
-            promiseSerial(messagesToSend.map(msg => sendMessage(senderID, msg)))
+    // send messages out to Messenger
+    promiseSerial(messagesToSend.map(msg => sendMessage(senderID, msg)))
+        .then(() => {
+            updateUser(userToUpdate)
                 .then(() => {
-                    updateUser(user)
-                        .then(() => {
-                            console.log(`User ${user.id} updated successfully`);
-                        })
-                        .catch(e => console.log('Error: updateUser', e));
+                    console.log(`User ${userToUpdate.id} updated successfully`);
                 })
-                .catch(console.error.bind(console));
+                .catch(e => console.log('Error: updateUser', e));
         })
-        .catch(e =>
-            console.log('error: receivedMessage - error retrieving all data.', e)
-        );
+        .catch(console.error.bind(console));
 }
 
 module.exports = {

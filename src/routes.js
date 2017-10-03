@@ -2,6 +2,12 @@ const JSONbig = require('json-bigint');
 
 const { receivedMessage } = require('./facebook');
 
+const {
+    getUserById,
+    getMessages,
+    getBlocks
+} = require('./database');
+
 module.exports = function(app) {
     app.get('/webhook/', (req, res) => {
         if (req.query['hub.verify_token'] === FB_VERIFY_TOKEN) {
@@ -21,7 +27,33 @@ module.exports = function(app) {
                     // Iterate over each messaging event
                     entry.messaging.forEach(function(event) {
                         if (event.message) {
-                            receivedMessage(event);
+                            const senderID = event.sender.id;
+                            const message = event.message;
+
+                            // grab all data needed
+                            const promises = [
+                                getUserById(senderID),
+                                getMessages(),
+                                getBlocks()
+                            ];
+
+                            Promise.all(promises)
+                                .then(res => {
+                                    let user = Object.assign({}, res[0]);
+                                    const allMessages = res[1];
+                                    const allBlocks = res[2];
+
+                                    receivedMessage({
+                                        senderID,
+                                        message,
+                                        user,
+                                        allMessages,
+                                        allBlocks
+                                    });
+                                })
+                                .catch(e =>
+                                    console.log('error: webhook - error retrieving all data.', e)
+                                );
                         } else {
                             console.log(
                                 'Webhook received unknown event: ',
