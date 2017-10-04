@@ -2,6 +2,14 @@ const expect = require('expect');
 const testModule = require('../src/users');
 
 describe('Users Module', () => {
+    describe('createNewUser', () => {
+        it('returns a default user object for given id', () => {
+            const newUser = testModule.createNewUser('12345');
+
+            expect(newUser.id).toEqual('12345');
+        });
+    });
+
     describe('updateBlockScope', () => {
         it('removes last element if it is marked isEnd', () => {
             const blocks = [{}, {}, {}];
