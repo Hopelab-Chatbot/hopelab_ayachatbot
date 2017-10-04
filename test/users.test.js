@@ -48,19 +48,21 @@ describe('Users Module', () => {
     });
 
     describe('getPreviousMessageInHistory', () => {
-
         const messages = [{ id: 1 }];
         const user = { history: [{ id: 1 }] };
 
         it('returns the previous message in the user history', () => {
-            let message = testModule.getPreviousMessageInHistory(messages, user);
+            let message = testModule.getPreviousMessageInHistory(
+                messages,
+                user
+            );
             expect(message).toEqual(messages[0]);
 
-            message = testModule.getPreviousMessageInHistory(messages, { history: [] });
+            message = testModule.getPreviousMessageInHistory(messages, {
+                history: []
+            });
             expect(message).toEqual({});
         });
-
-
     });
 
     describe('isNextMessageBlock', () => {
@@ -73,9 +75,7 @@ describe('Users Module', () => {
                 testModule.isNextMessageBlock({ next: { id: 'message-1' } })
             ).toBe(false);
 
-            expect(
-                testModule.isNextMessageBlock({ next: { } })
-            ).toBe(false);
+            expect(testModule.isNextMessageBlock({ next: {} })).toBe(false);
         });
     });
 });
