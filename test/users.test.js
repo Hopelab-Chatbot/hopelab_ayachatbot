@@ -47,6 +47,18 @@ describe('Users Module', () => {
         });
     });
 
+    describe('getPreviousMessageInHistory', () => {
+
+        const messages = [{ id: 1 }];
+        const user = { history: [{ id: 1 }] };
+
+        it('returns the previous message in the user history', () => {
+            const message = testModule.getPreviousMessageInHistory(messages, user);
+
+            expect(message).toEqual(messages[0]);
+        });
+    });
+
     describe('isNextMessageBlock', () => {
         it('says if next message is a block element', () => {
             expect(
