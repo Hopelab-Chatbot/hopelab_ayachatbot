@@ -20,7 +20,7 @@ const time = 1000 * 60 * 60 * 24;
  * @return {Promise}
 */
 function updateUser(user) {
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
         cacheUtils
             .getItem(DB_USERS)
             .then(users => {
@@ -35,10 +35,18 @@ function updateUser(user) {
                     .then(() => {
                         resolve();
                     })
-                    .catch(e => console.log(`error: updateUser - cacheUtils.setItem(${DB_USERS})`, e));
+                    .catch(e =>
+                        console.log(
+                            `error: updateUser - cacheUtils.setItem(${DB_USERS})`,
+                            e
+                        )
+                    );
             })
             .catch(e => {
-                console.log(`error: updateUser - cacheUtils.getItem(${DB_USERS})`, e);
+                console.log(
+                    `error: updateUser - cacheUtils.getItem(${DB_USERS})`,
+                    e
+                );
                 reject();
             });
     });
@@ -51,7 +59,7 @@ function updateUser(user) {
  * @return {Promise<Object>}
 */
 function getUserById(id) {
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
         cacheUtils
             .getItem(DB_USERS)
             .then(function(users) {
@@ -68,14 +76,22 @@ function getUserById(id) {
                         .then(() => {
                             resolve(user);
                         })
-                        .catch(e => console.log(`error: getUserById - cacheUtils.setItem(${DB_USERS})`, e));
+                        .catch(e =>
+                            console.log(
+                                `error: getUserById - cacheUtils.setItem(${DB_USERS})`,
+                                e
+                            )
+                        );
                 }
 
                 resolve(user);
             })
             .catch(function(e) {
                 // no item found matching cacheKey
-                console.log(`error: getUserById - cacheUtils.getItem(${DB_USERS})`, e);
+                console.log(
+                    `error: getUserById - cacheUtils.getItem(${DB_USERS})`,
+                    e
+                );
             });
     });
 }
@@ -86,14 +102,17 @@ function getUserById(id) {
  * @return {Promise<Array>}
 */
 function getSeries() {
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
         cacheUtils
             .getItem(DB_SERIES)
             .then(series => {
                 resolve(JSON.parse(series));
             })
             .catch(e => {
-                console.log(`error: getSeries - cacheUtils.getItem(${DB_SERIES})`, e);
+                console.log(
+                    `error: getSeries - cacheUtils.getItem(${DB_SERIES})`,
+                    e
+                );
             });
     });
 }
@@ -104,7 +123,7 @@ function getSeries() {
  * @return {Promise<Array>}
 */
 function getMessages() {
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
         cacheUtils
             .getItem(DB_MESSAGES)
             .then(messages => {
@@ -122,14 +141,17 @@ function getMessages() {
  * @return {Promise<Array>}
 */
 function getBlocks() {
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
         cacheUtils
             .getItem(DB_BLOCKS)
             .then(blocks => {
                 resolve(JSON.parse(blocks));
             })
             .catch(e => {
-                console.log(`error: getBlocks - cacheUtils.getItem(${DB_BLOCKS})`, e);
+                console.log(
+                    `error: getBlocks - cacheUtils.getItem(${DB_BLOCKS})`,
+                    e
+                );
             });
     });
 }
@@ -140,14 +162,17 @@ function getBlocks() {
  * @return {Promise<Array>}
 */
 function getUserHistory() {
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
         cacheUtils
             .getItem(DB_USER_HISTORY)
             .then(history => {
                 resolve(JSON.parse(history));
             })
             .catch(e => {
-                console.log(`error: getUserHistory - cacheUtils.getItem(${DB_USER_HISTORY})`, e);
+                console.log(
+                    `error: getUserHistory - cacheUtils.getItem(${DB_USER_HISTORY})`,
+                    e
+                );
             });
     });
 }

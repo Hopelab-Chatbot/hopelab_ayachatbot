@@ -28,9 +28,9 @@ function updateBlockScope(currentMessage, blockScope) {
 
     if (currentMessage.isEnd === true) {
         blockScopeToUpdate.pop();
-    } 
-    
-    if (currentMessage.next && (currentMessage.next.id || '').indexOf('block') > -1) {
+    }
+
+    if (isNextMessageBlock(currentMessage)) {
         blockScopeToUpdate.push(currentMessage.next.id);
     }
 
@@ -52,8 +52,35 @@ function updateHistory(currentMessage, history) {
     return historyToUpdate;
 }
 
+/**
+ * Get Previous Message in User History
+ * 
+ * @param {Object} messages
+ * @param {Object} user
+ * @return {Object}
+*/
+function getPreviousMessageInHistory(messages, user) {
+    return (
+        messages.find(
+            m => m.id === (user.history[user.history.length - 1] || {}).id
+        ) || {}
+    );
+}
+
+/**
+ * Is Next Message a Block?
+ * 
+ * @param {Object} message
+ * @return {Boolean}
+*/
+function isNextMessageBlock(message) {
+    return !!message.next && (message.next.id || '').indexOf('block') > -1;
+}
+
 module.exports = {
     createNewUser,
     updateBlockScope,
-    updateHistory
+    updateHistory,
+    getPreviousMessageInHistory,
+    isNextMessageBlock
 };

@@ -2,11 +2,7 @@ const JSONbig = require('json-bigint');
 
 const { receivedMessage } = require('./facebook');
 
-const {
-    getUserById,
-    getMessages,
-    getBlocks
-} = require('./database');
+const { getUserById, getMessages, getBlocks } = require('./database');
 
 module.exports = function(app) {
     app.get('/webhook/', (req, res) => {
@@ -22,15 +18,12 @@ module.exports = function(app) {
             const data = JSONbig.parse(req.body);
 
             if (data.object === 'page') {
-                // Iterate over each entry - there may be multiple if batched
-                data.entry.forEach(function(entry) {
-                    // Iterate over each messaging event
-                    entry.messaging.forEach(function(event) {
+                data.entry.forEach(entry => {
+                    entry.messaging.forEach(event => {
                         if (event.message) {
                             const senderID = event.sender.id;
                             const message = event.message;
 
-                            // grab all data needed
                             const promises = [
                                 getUserById(senderID),
                                 getMessages(),
@@ -52,7 +45,10 @@ module.exports = function(app) {
                                     });
                                 })
                                 .catch(e =>
-                                    console.log('error: webhook - error retrieving all data.', e)
+                                    console.log(
+                                        'error: webhook - error retrieving all data.',
+                                        e
+                                    )
                                 );
                         } else {
                             console.log(

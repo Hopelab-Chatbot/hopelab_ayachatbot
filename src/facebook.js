@@ -1,17 +1,10 @@
 const request = require('request');
 
-const {
-    updateHistory
-} = require('./users');
+const { updateHistory, getPreviousMessageInHistory } = require('./users');
 
-const {
-    updateUser
-} = require('./database');
+const { updateUser } = require('./database');
 
-const {
-    FB_GRAPH_ROOT_URL,
-    FB_PAGE_ACCESS_TOKEN
-} = require('./constants');
+const { FB_GRAPH_ROOT_URL, FB_PAGE_ACCESS_TOKEN } = require('./constants');
 
 const { getMessagesForAction, getActionForMessage } = require('./messages');
 
@@ -35,10 +28,16 @@ function getUserDetails(userId) {
                 resolve(JSON.parse(response.body));
 
                 if (error) {
-                    console.log('error: getUserDetails - sending message: ', error);
+                    console.log(
+                        'error: getUserDetails - sending message: ',
+                        error
+                    );
                     reject(error);
                 } else if (response.body.error) {
-                    console.log('error: getUserDetails - response body error', response.body.error);
+                    console.log(
+                        'error: getUserDetails - response body error',
+                        response.body.error
+                    );
                     reject(response.body.error);
                 }
             }
@@ -106,18 +105,11 @@ function sendMessage(recipientId, message) {
 */
 function receivedMessage({ senderID, message, user, allMessages, allBlocks }) {
     let userToUpdate = Object.assign({}, user);
-    
-    let prevMessage =
-        allMessages.find(
-            m =>
-                m.id ===
-                (user.history[user.history.length - 1] || {}).id
-        ) || {};
 
-    userToUpdate = Object.assign(
-        {},
-        userToUpdate,
-        { history: updateHistory(
+    const prevMessage = getPreviousMessageInHistory(allMessages, user);
+
+    userToUpdate = Object.assign({}, userToUpdate, {
+        history: updateHistory(
             {
                 type: 'answer',
                 timestamp: Date.now(),
@@ -125,35 +117,24 @@ function receivedMessage({ senderID, message, user, allMessages, allBlocks }) {
                 previous: prevMessage.id
             },
             userToUpdate.history
-        )}
-    );
+        )
+    });
 
-    let action = getActionForMessage(message, userToUpdate, allBlocks);
+    const action = getActionForMessage(message, userToUpdate, allBlocks);
 
-    // the new constructed messages to be sent back
-    let messagesForAction = getMessagesForAction({
+    const { messagesToSend, history, blockScope } = getMessagesForAction({
         action,
         messages: allMessages,
         blocks: allBlocks,
         user: userToUpdate
     });
 
-    const {
-        messagesToSend,
+    userToUpdate = Object.assign({}, userToUpdate, {
         history,
         blockScope
-    } = messagesForAction;
+    });
 
-    userToUpdate = Object.assign(
-        {},
-        userToUpdate,
-        {
-            history,
-            blockScope
-        }
-    );
-
-    // send messages out to Messenger
+    // send all messages out to Messenger
     promiseSerial(messagesToSend.map(msg => sendMessage(senderID, msg)))
         .then(() => {
             updateUser(userToUpdate)
@@ -162,7 +143,7 @@ function receivedMessage({ senderID, message, user, allMessages, allBlocks }) {
                 })
                 .catch(e => console.log('Error: updateUser', e));
         })
-        .catch(console.error.bind(console));
+        .catch(e => console.log('error: promiseSerial', e));
 }
 
 module.exports = {

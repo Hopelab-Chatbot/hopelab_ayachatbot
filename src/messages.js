@@ -1,7 +1,4 @@
-const {
-    updateBlockScope,
-    updateHistory
-} = require('./users');
+const { updateBlockScope, updateHistory } = require('./users');
 
 /**
  * Create Specific Platform Payload
@@ -97,7 +94,7 @@ function getNextMessage(curr, user, messages, blocks) {
 function getMessagesForAction({ action, messages, blocks, user }) {
     let messagesToSend = [];
     let curr = messages.find(m => m.id === action);
-    
+
     let userToUpdate = Object.assign({}, user);
 
     const { blockScope, history } = userToUpdate;
@@ -106,31 +103,30 @@ function getMessagesForAction({ action, messages, blocks, user }) {
         messagesToSend.push(makePlatformMessagePayload(curr.id, messages));
 
         // update block scope
-        userToUpdate = Object.assign(
-            {}, 
-            userToUpdate, 
-            { blockScope: updateBlockScope(curr, userToUpdate.blockScope) }
-        );
+        userToUpdate = Object.assign({}, userToUpdate, {
+            blockScope: updateBlockScope(curr, userToUpdate.blockScope)
+        });
 
         // update history
-        userToUpdate = Object.assign(
-            {},
-            userToUpdate,
-            { history: updateHistory(curr, userToUpdate.history) }
-        );
+        userToUpdate = Object.assign({}, userToUpdate, {
+            history: updateHistory(curr, userToUpdate.history)
+        });
 
         // if it's a question
         if (curr.type === 'question') {
             break;
         }
 
-        curr = Object.assign({}, getNextMessage(curr, userToUpdate, messages, blocks));
+        curr = Object.assign(
+            {},
+            getNextMessage(curr, userToUpdate, messages, blocks)
+        );
     }
 
-    return { 
+    return {
         messagesToSend,
-        history: userToUpdate.history, 
-        blockScope: userToUpdate.blockScope 
+        history: userToUpdate.history,
+        blockScope: userToUpdate.blockScope
     };
 }
 
@@ -138,7 +134,6 @@ module.exports = {
     makePlatformMessagePayload,
     getMessagesForAction,
     getActionForMessage,
-    updateBlockScope,
     updateHistory,
     getNextMessage
 };
