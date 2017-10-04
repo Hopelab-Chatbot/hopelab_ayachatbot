@@ -34,6 +34,12 @@ yarn run start
 yarn run test
 ```
 
+### Run Coverage:
+
+```bash
+yarn run coverage
+```
+
 ### Run Prettier:
 
 ```bash
