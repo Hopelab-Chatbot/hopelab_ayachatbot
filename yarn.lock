@@ -1374,6 +1374,10 @@ ramda@^0.20.x:
   version "0.20.1"
   resolved "https://registry.yarnpkg.com/ramda/-/ramda-0.20.1.tgz#c81e8fb5e78b5eff2269349ee0434137b4c74651"
 
+ramda@^0.24.1:
+  version "0.24.1"
+  resolved "https://registry.yarnpkg.com/ramda/-/ramda-0.24.1.tgz#c3b7755197f35b8dc3502228262c4c91ddb6b857"
+
 range-parser@~1.2.0:
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/range-parser/-/range-parser-1.2.0.tgz#f49be6b487894ddc40dcc94a322f611092e00d5e"

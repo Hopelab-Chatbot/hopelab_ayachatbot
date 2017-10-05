@@ -1,5 +1,6 @@
 const expect = require('expect');
 const testModule = require('../src/users');
+const { TYPE_BLOCK, TYPE_MESSAGE } = require('../src/constants');
 
 describe('Users Module', () => {
     describe('createNewUser', () => {
@@ -27,7 +28,7 @@ describe('Users Module', () => {
             let blockScope;
 
             blockScope = testModule.updateBlockScope(
-                { next: { id: 'block-2' } },
+                { next: { id: 'block-2', type: TYPE_BLOCK } },
                 blocks
             );
             expect(blockScope.length).toEqual(4);
@@ -68,11 +69,15 @@ describe('Users Module', () => {
     describe('isNextMessageBlock', () => {
         it('says if next message is a block element', () => {
             expect(
-                testModule.isNextMessageBlock({ next: { id: 'block-1' } })
+                testModule.isNextMessageBlock({
+                    next: { id: 'block-1', type: TYPE_BLOCK }
+                })
             ).toBe(true);
 
             expect(
-                testModule.isNextMessageBlock({ next: { id: 'message-1' } })
+                testModule.isNextMessageBlock({
+                    next: { id: 'message-1', type: TYPE_MESSAGE }
+                })
             ).toBe(false);
 
             expect(testModule.isNextMessageBlock({ next: {} })).toBe(false);

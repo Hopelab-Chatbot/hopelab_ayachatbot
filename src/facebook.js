@@ -1,10 +1,18 @@
 const request = require('request');
 
+const R = require('ramda');
+
 const { updateHistory, getPreviousMessageInHistory } = require('./users');
 
 const { updateUser } = require('./database');
 
-const { FB_GRAPH_ROOT_URL, FB_PAGE_ACCESS_TOKEN } = require('./constants');
+const {
+    FB_GRAPH_ROOT_URL,
+    FB_PAGE_ACCESS_TOKEN,
+    TYPING_TIME_IN_MILLISECONDS,
+    FB_MESSAGE_TYPE,
+    FB_TYPING_ON_TYPE
+} = require('./constants');
 
 const { getMessagesForAction, getActionForMessage } = require('./messages');
 
@@ -24,17 +32,17 @@ function getUserDetails(userId) {
                 qs: { access_token: FB_PAGE_ACCESS_TOKEN },
                 method: 'GET'
             },
-            function(error, response) {
+            (error, response) => {
                 resolve(JSON.parse(response.body));
 
                 if (error) {
-                    console.log(
+                    console.error(
                         'error: getUserDetails - sending message: ',
                         error
                     );
                     reject(error);
                 } else if (response.body.error) {
-                    console.log(
+                    console.error(
                         'error: getUserDetails - response body error',
                         response.body.error
                     );
@@ -60,7 +68,7 @@ function callSendAPI(messageData) {
                 method: 'POST',
                 json: messageData
             },
-            function(error, response, body) {
+            (error, response, body) => {
                 if (!error && response.statusCode == 200) {
                     var messageId = body.message_id;
 
@@ -78,22 +86,61 @@ function callSendAPI(messageData) {
 }
 
 /**
+ * Send a follow-up message to a user
+ * 
+ * @param {String} recipientId
+ * @param {Object} content
+ * @return {Promise<String>}
+*/
+function sendFollowUpMessageToUser(recipientId, content) {
+    const messageData = createMessagePayload(recipientId, content);
+
+    callSendAPI(messageData);
+}
+
+/**
+ * Create the FB Message Payload
+ * 
+ * @param {String} recipientId
+ * @param {Object} content
+ * @return {Object}
+*/
+function createMessagePayload(recipientId, content) {
+    const { type, message } = content;
+
+    let payload = {
+        recipient: {
+            id: recipientId
+        }
+    };
+
+    if (type === FB_MESSAGE_TYPE) {
+        payload.message = message;
+    } else if (type === FB_TYPING_ON_TYPE) {
+        payload.sender_action = FB_TYPING_ON_TYPE;
+    }
+
+    return payload;
+}
+
+/**
  * Async Wrapper for callSendAPI
  * 
  * @param {String} recipientId
- * @param {Object} message
+ * @param {Object} content
  * @return {Promise<String>}
 */
-function sendMessage(recipientId, message) {
-    const messageData = {
-        recipient: {
-            id: recipientId
-        },
-        message
-    };
+function sendMessage(recipientId, content) {
+    const messageData = createMessagePayload(recipientId, content);
+    const time =
+        content.type === FB_MESSAGE_TYPE ? TYPING_TIME_IN_MILLISECONDS : 0;
 
     return () => {
-        return callSendAPI(messageData);
+        return new Promise(r => {
+            return setTimeout(() => {
+                r(callSendAPI(messageData));
+            }, time);
+        });
     };
 }
 
@@ -103,7 +150,14 @@ function sendMessage(recipientId, message) {
  * @param {Object} event
  * @return {void}
 */
-function receivedMessage({ senderID, message, user, allMessages, allBlocks }) {
+function receivedMessage({
+    senderID,
+    message,
+    user,
+    allMessages,
+    allBlocks,
+    media
+}) {
     let userToUpdate = Object.assign({}, user);
 
     const prevMessage = getPreviousMessageInHistory(allMessages, user);
@@ -126,7 +180,8 @@ function receivedMessage({ senderID, message, user, allMessages, allBlocks }) {
         action,
         messages: allMessages,
         blocks: allBlocks,
-        user: userToUpdate
+        user: userToUpdate,
+        media
     });
 
     userToUpdate = Object.assign({}, userToUpdate, {
@@ -134,16 +189,23 @@ function receivedMessage({ senderID, message, user, allMessages, allBlocks }) {
         blockScope
     });
 
+    const messagesWithTyping = R.intersperse(
+        { type: FB_TYPING_ON_TYPE },
+        messagesToSend
+    );
+
     // send all messages out to Messenger
-    promiseSerial(messagesToSend.map(msg => sendMessage(senderID, msg)))
+    promiseSerial(messagesWithTyping.map(msg => sendMessage(senderID, msg)))
         .then(() => {
             updateUser(userToUpdate)
                 .then(() => {
-                    console.log(`User ${userToUpdate.id} updated successfully`);
+                    console.error(
+                        `User ${userToUpdate.id} updated successfully`
+                    );
                 })
-                .catch(e => console.log('Error: updateUser', e));
+                .catch(e => console.error('Error: updateUser', e));
         })
-        .catch(e => console.log('error: promiseSerial', e));
+        .catch(e => console.error('error: promiseSerial', e));
 }
 
 module.exports = {
