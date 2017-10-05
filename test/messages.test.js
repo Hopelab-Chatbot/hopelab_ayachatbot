@@ -1,5 +1,8 @@
 const expect = require('expect');
 const testModule = require('../src/messages');
+const { TYPE_BLOCK } = require('../src/constants');
+
+const media = require('../stubs/media.json');
 
 describe('Messages Module', () => {
     it('should have an getActionForMessage function', () => {
@@ -75,7 +78,9 @@ describe('Messages Module', () => {
 
     describe('getNextMessage', () => {
         const user = {
-            history: [{ block: 'block-1', next: { afterBlock: '2' } }],
+            history: [
+                { block: 'block-1', next: { type: TYPE_BLOCK, after: '2' } }
+            ],
             blockScope: ['block-1']
         };
 
@@ -109,7 +114,7 @@ describe('Messages Module', () => {
 
         it('follows the block path if next message is pointing to a block', () => {
             const message = testModule.getNextMessage(
-                { next: { id: 'block-2' } },
+                { next: { id: 'block-2', type: TYPE_BLOCK } },
                 Object.assign({}, user, { blockScope: [] }),
                 messages,
                 [{ id: 'block-2', startMessage: '1' }]
@@ -176,6 +181,58 @@ describe('Messages Module', () => {
             });
 
             expect(nextMessages.blockScope.length).toEqual(1);
+        });
+
+        it('handles stringing together media messages', () => {
+            let nextMessages = testModule.getMessagesForAction({
+                action: 'message-20',
+                messages,
+                blocks,
+                user: {
+                    blockScope: ['block-3'],
+                    history: []
+                },
+                media
+            });
+
+            expect(nextMessages.messagesToSend.length).toEqual(3);
+        });
+    });
+
+    describe('getMediaUrlForMessage', () => {
+        it('returns a url for the media type', () => {
+            let url = testModule.getMediaUrlForMessage('image', {}, media);
+            let mediaElement = media['image'].find(m => m.url === url);
+
+            expect(mediaElement.url).toEqual(url);
+
+            url = testModule.getMediaUrlForMessage('video', {}, media);
+            mediaElement = media['video'].find(m => m.url === url);
+
+            expect(mediaElement.url).toEqual(url);
+        });
+    });
+
+    describe('makePlatformMediaMessagePayload', () => {
+        it('creates a payload for a media element', () => {
+            const videoUrl = 'http://video';
+            const imageUrl = 'http://image';
+
+            let payload = testModule.makePlatformMediaMessagePayload(
+                'video',
+                videoUrl
+            );
+
+            expect(payload.attachment.type).toEqual('video');
+            expect(payload.attachment.payload.url).toEqual(videoUrl);
+
+            payload = testModule.makePlatformMediaMessagePayload(
+                'image',
+                imageUrl
+            );
+
+            expect(payload.attachment.type).toEqual('image');
+            expect(payload.attachment.payload.url).toEqual(imageUrl);
         });
     });
 });

@@ -2,7 +2,7 @@ const JSONbig = require('json-bigint');
 
 const { receivedMessage } = require('./facebook');
 
-const { getUserById, getMessages, getBlocks } = require('./database');
+const { getUserById, getMessages, getBlocks, getMedia } = require('./database');
 
 module.exports = function(app) {
     app.get('/webhook/', (req, res) => {
@@ -27,7 +27,8 @@ module.exports = function(app) {
                             const promises = [
                                 getUserById(senderID),
                                 getMessages(),
-                                getBlocks()
+                                getBlocks(),
+                                getMedia()
                             ];
 
                             Promise.all(promises)
@@ -35,23 +36,25 @@ module.exports = function(app) {
                                     let user = Object.assign({}, res[0]);
                                     const allMessages = res[1];
                                     const allBlocks = res[2];
+                                    const media = res[3];
 
                                     receivedMessage({
                                         senderID,
                                         message,
                                         user,
                                         allMessages,
-                                        allBlocks
+                                        allBlocks,
+                                        media
                                     });
                                 })
                                 .catch(e =>
-                                    console.log(
+                                    console.error(
                                         'error: webhook - error retrieving all data.',
                                         e
                                     )
                                 );
                         } else {
-                            console.log(
+                            console.error(
                                 'Webhook received unknown event: ',
                                 event
                             );
@@ -64,6 +67,8 @@ module.exports = function(app) {
                 status: 'ok'
             });
         } catch (err) {
+            console.error('error: webhook', err);
+
             return res.status(400).json({
                 status: 'error',
                 error: err

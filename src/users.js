@@ -1,3 +1,5 @@
+const { TYPE_BLOCK } = require('./constants');
+
 /**
  * Create New User
  * 
@@ -74,7 +76,7 @@ function getPreviousMessageInHistory(messages, user) {
  * @return {Boolean}
 */
 function isNextMessageBlock(message) {
-    return !!message.next && (message.next.id || '').indexOf('block') > -1;
+    return !!message.next && message.next.type === TYPE_BLOCK;
 }
 
 module.exports = {

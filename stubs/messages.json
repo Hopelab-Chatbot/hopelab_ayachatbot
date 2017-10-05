@@ -7,7 +7,6 @@
             "id": "message-2"
         },
         "isEnd": false,
-        "isNextMedia": false,
         "type": "message",
         "text": "hello"
     },
@@ -17,10 +16,9 @@
         "next": {
             "type": "block",
             "id": "block-2",
-            "afterBlock": "message-3"
+            "after": "message-3"
         },
         "isEnd": false,
-        "isNextMedia": false,
         "type": "message",
         "text": "testing"
     },
@@ -32,7 +30,6 @@
             "id": "message-9"
         },
         "isEnd": false,
-        "isNextMedia": false,
         "type": "message",
         "text": "returned to block 1"
     },
@@ -41,7 +38,6 @@
         "block": "block-1",
         "next": {},
         "isEnd": false,
-        "isNextMedia": false,
         "type": "question",
         "quick_replies": [
             {
@@ -65,7 +61,6 @@
             "id": "message-13"
         },
         "isEnd": false,
-        "isNextMedia": false,
         "type": "message",
         "text": "Bot saw Yes"
     },
@@ -77,7 +72,6 @@
             "id": "message-13"
         },
         "isEnd": false,
-        "isNextMedia": false,
         "type": "message",
         "text": "Bot saw No"
     },
@@ -86,7 +80,6 @@
         "block": "block-1",
         "next": {},
         "isEnd": true,
-        "isNextMedia": false,
         "type": "message",
         "text": "Block 1 End"
     },
@@ -98,7 +91,6 @@
             "id": "message-15"
         },
         "isEnd": false,
-        "isNextMedia": false,
         "type": "question",
         "text": "How are you?"
     },
@@ -110,7 +102,6 @@
             "id": "message-16"
         },
         "isEnd": false,
-        "isNextMedia": false,
         "type": "message",
         "text": "Bot Reply to text input"
     },
@@ -120,10 +111,9 @@
         "next": {
             "type": "block",
             "id": "block-3",
-            "afterBlock": "message-17"
+            "after": "message-17"
         },
         "isEnd": false,
-        "isNextMedia": false,
         "type": "message",
         "text": "Insert Block 3 Next"
     },
@@ -132,7 +122,6 @@
         "block": "block-2",
         "next": {},
         "isEnd": true,
-        "isNextMedia": false,
         "type": "message",
         "text": "Returned to Block 2"
     },
@@ -144,7 +133,6 @@
             "id": "message-19"
         },
         "isEnd": false,
-        "isNextMedia": false,
         "type": "message",
         "text": "Block 3"
     },
@@ -152,20 +140,40 @@
         "id": "message-19",
         "block": "block-3",
         "next": {
-            "type": "message",
+            "type": "image",
             "id": "message-20"
         },
         "isEnd": false,
-        "isNextMedia": false,
         "type": "question",
         "text": "Question in Block 3"
     },
     {
         "id": "message-20",
         "block": "block-3",
+        "next": {
+            "type": "video",
+            "id": "message-21"
+        },
+        "isEnd": false,
+        "type": "image",
+        "text": ""
+    },
+    {
+        "id": "message-21",
+        "block": "block-3",
+        "next": {
+            "type": "message",
+            "id": "message-22"
+        },
+        "isEnd": false,
+        "type": "video",
+        "text": ""
+    },
+    {
+        "id": "message-22",
+        "block": "block-3",
         "next": {},
         "isEnd": true,
-        "isNextMedia": false,
         "type": "message",
         "text": "Leaving Block 3"
     }

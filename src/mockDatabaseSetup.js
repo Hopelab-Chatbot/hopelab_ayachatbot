@@ -5,32 +5,49 @@ const cacheUtils = require('alien-node-redis-utils')(redisClient);
 const series = require('../stubs/series.json');
 const messages = require('../stubs/messages.json');
 const blocks = require('../stubs/blocks.json');
+const media = require('../stubs/media.json');
 const {
     DB_USERS,
     DB_SERIES,
     DB_MESSAGES,
     DB_BLOCKS,
-    DB_USER_HISTORY
+    DB_USER_HISTORY,
+    DB_MEDIA,
+    ONE_WEEK_IN_MILLISECONDS
 } = require('./constants');
 
-const time = 1000 * 60 * 60 * 24 * 7 * 4;
-
 cacheUtils.deleteItem(DB_USERS).then(() => {
-    cacheUtils.setItem(DB_USERS, time, []).then(process.exit);
+    cacheUtils
+        .setItem(DB_USERS, ONE_WEEK_IN_MILLISECONDS, [])
+        .then(process.exit);
 });
 
 cacheUtils.deleteItem(DB_SERIES).then(() => {
-    cacheUtils.setItem(DB_SERIES, time, series).then(process.exit);
+    cacheUtils
+        .setItem(DB_SERIES, ONE_WEEK_IN_MILLISECONDS, series)
+        .then(process.exit);
 });
 
 cacheUtils.deleteItem(DB_MESSAGES).then(() => {
-    cacheUtils.setItem(DB_MESSAGES, time, messages).then(process.exit);
+    cacheUtils
+        .setItem(DB_MESSAGES, ONE_WEEK_IN_MILLISECONDS, messages)
+        .then(process.exit);
 });
 
 cacheUtils.deleteItem(DB_BLOCKS).then(() => {
-    cacheUtils.setItem(DB_BLOCKS, time, blocks).then(process.exit);
+    cacheUtils
+        .setItem(DB_BLOCKS, ONE_WEEK_IN_MILLISECONDS, blocks)
+        .then(process.exit);
+});
+
+cacheUtils.deleteItem(DB_MEDIA).then(() => {
+    cacheUtils
+        .setItem(DB_MEDIA, ONE_WEEK_IN_MILLISECONDS, media)
+        .then(process.exit);
 });
 
 cacheUtils.deleteItem(DB_USER_HISTORY).then(() => {
-    cacheUtils.setItem(DB_USER_HISTORY, time, []).then(process.exit);
+    cacheUtils
+        .setItem(DB_USER_HISTORY, ONE_WEEK_IN_MILLISECONDS, [])
+        .then(process.exit);
 });

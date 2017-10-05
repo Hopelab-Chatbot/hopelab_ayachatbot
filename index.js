@@ -9,5 +9,5 @@ app.use(bodyParser.text({ type: 'application/json' }));
 require('./src/routes')(app);
 
 app.listen(REST_PORT, () => {
-    console.log('Rest service ready on port ' + REST_PORT);
+    console.log(`Rest service ready on port ${REST_PORT}`);
 });
