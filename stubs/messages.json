@@ -172,6 +172,17 @@
     {
         "id": "message-22",
         "block": "block-3",
+        "next": {
+            "type": "message",
+            "id": "message-23"
+        },
+        "isEnd": false,
+        "type": "message",
+        "text": "http://www.google.com"
+    },
+    {
+        "id": "message-23",
+        "block": "block-3",
         "next": {},
         "isEnd": true,
         "type": "message",
