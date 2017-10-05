@@ -113,6 +113,12 @@ function sendMessage(recipientId, content) {
     };
 }
 
+/**
+ * Add Typing Indicators For Messages
+ * 
+ * @param {Array} array
+ * @return {Array}
+*/
 function addTypingIndicatorToMessages(messages) {
     let messagesWithTyping = [];
 
