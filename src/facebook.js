@@ -1,5 +1,7 @@
 const request = require('request');
 
+const R = require('ramda');
+
 const { updateHistory, getPreviousMessageInHistory } = require('./users');
 
 const { updateUser } = require('./database');
@@ -143,26 +145,6 @@ function sendMessage(recipientId, content) {
 }
 
 /**
- * Add Typing Indicators For Messages
- * 
- * @param {Array} array
- * @return {Array}
-*/
-function addTypingIndicatorToMessages(messages) {
-    let messagesWithTyping = [];
-
-    for (let i = 0; i < messages.length; i++) {
-        messagesWithTyping.push({
-            type: 'typing_on'
-        });
-
-        messagesWithTyping.push(messages[i]);
-    }
-
-    return messagesWithTyping;
-}
-
-/**
  * Receive Message From Facebook Messenger
  * 
  * @param {Object} event
@@ -207,7 +189,10 @@ function receivedMessage({
         blockScope
     });
 
-    const messagesWithTyping = addTypingIndicatorToMessages(messagesToSend);
+    const messagesWithTyping = R.intersperse(
+        { type: 'typing_on' },
+        messagesToSend
+    );
 
     // send all messages out to Messenger
     promiseSerial(messagesWithTyping.map(msg => sendMessage(senderID, msg)))
