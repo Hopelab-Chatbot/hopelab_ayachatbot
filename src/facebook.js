@@ -121,10 +121,6 @@ function addTypingIndicatorToMessages(messages) {
             type: 'typing_on'
         });
 
-        // messagesWithTyping.push({
-        //     type: 'typing_off'
-        // });
-
         messagesWithTyping.push(messages[i]);
     }
 
