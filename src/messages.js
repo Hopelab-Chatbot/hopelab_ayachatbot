@@ -42,6 +42,16 @@ function makePlatformMediaMessagePayload(type, url) {
 }
 
 /**
+ * Get the last message sent to user in history
+ * 
+ * @param {Object} user
+ * @return {Object}
+*/
+function getLastSentMessageInHistory(user) {
+    return user.history[user.history.length - 2];
+}
+
+/**
  * Get the next Action for incoming message
  * 
  * @param {Object} message
@@ -55,8 +65,7 @@ function getActionForMessage(message, user, blocks) {
     if (message.quick_reply) {
         action = message.quick_reply.payload;
     } else {
-        // go back two because latest user reply has been added
-        const lastMessage = user.history[user.history.length - 2];
+        const lastMessage = getLastSentMessageInHistory(user);
         if (user.blockScope.length && lastMessage && lastMessage.next) {
             action = lastMessage.next.id;
         } else {

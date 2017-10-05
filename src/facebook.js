@@ -190,7 +190,7 @@ function receivedMessage({
     });
 
     const messagesWithTyping = R.intersperse(
-        { type: 'typing_on' },
+        { type: FB_TYPING_ON_TYPE },
         messagesToSend
     );
 

@@ -20,15 +20,12 @@ const { createNewUser } = require('./users');
  * @param {Object} user
  * @return {Promise}
 */
-function setUserInCache(user) {
-    return users => {
-        return cacheUtils.setItem(
-            DB_USERS,
-            ONE_DAY_IN_MILLISECONDS,
-            users.map(u => (u.id === user.id ? user : u))
-        );
-    };
-}
+const setUserInCache = user => users =>
+    cacheUtils.setItem(
+        DB_USERS,
+        ONE_DAY_IN_MILLISECONDS,
+        users.map(u => (u.id === user.id ? user : u))
+    );
 
 /**
  * Update User By ID
@@ -36,8 +33,8 @@ function setUserInCache(user) {
  * @param {Object} user
  * @return {Promise}
 */
-function updateUser(user) {
-    return new Promise(resolve => {
+const updateUser = user =>
+    new Promise(resolve => {
         cacheUtils
             .getItem(DB_USERS)
             .then(JSON.parse)
@@ -51,7 +48,6 @@ function updateUser(user) {
                 reject();
             });
     });
-}
 
 /**
  * Find User By Id
@@ -59,15 +55,11 @@ function updateUser(user) {
  * @param {String} id
  * @return {Object}
 */
-function findUserById(id) {
-    return users => {
-        return {
-            id,
-            user: users.find(u => u.id === id),
-            users
-        };
-    };
-}
+const findUserById = id => users => ({
+    id,
+    user: users.find(u => u.id === id),
+    users
+});
 
 /**
  * Create a User in Database
@@ -100,8 +92,8 @@ function createUserIfNotExisting({ id, user, users }) {
  * @param {String} id
  * @return {Promise<Object>}
 */
-function getUserById(id) {
-    return new Promise(resolve => {
+const getUserById = id =>
+    new Promise(resolve => {
         cacheUtils
             .getItem(DB_USERS)
             .then(JSON.parse)
@@ -116,15 +108,14 @@ function getUserById(id) {
                 );
             });
     });
-}
 
 /**
  * Get Series
  * 
  * @return {Promise<Array>}
 */
-function getSeries() {
-    return new Promise(resolve => {
+const getSeries = () =>
+    new Promise(resolve => {
         cacheUtils
             .getItem(DB_SERIES)
             .then(JSON.parse)
@@ -136,15 +127,14 @@ function getSeries() {
                 );
             });
     });
-}
 
 /**
  * Get Messages
  * 
  * @return {Promise<Array>}
 */
-function getMessages() {
-    return new Promise(resolve => {
+const getMessages = () =>
+    new Promise(resolve => {
         cacheUtils
             .getItem(DB_MESSAGES)
             .then(JSON.parse)
@@ -153,15 +143,14 @@ function getMessages() {
                 console.error('error: getMessages', e);
             });
     });
-}
 
 /**
  * Get Blocks
  * 
  * @return {Promise<Array>}
 */
-function getBlocks() {
-    return new Promise(resolve => {
+const getBlocks = () =>
+    new Promise(resolve => {
         cacheUtils
             .getItem(DB_BLOCKS)
             .then(JSON.parse)
@@ -173,15 +162,14 @@ function getBlocks() {
                 );
             });
     });
-}
 
 /**
  * Get Media
  * 
  * @return {Promise<Object>}
 */
-function getMedia() {
-    return new Promise(resolve => {
+const getMedia = () =>
+    new Promise(resolve => {
         cacheUtils
             .getItem(DB_MEDIA)
             .then(JSON.parse)
@@ -193,15 +181,14 @@ function getMedia() {
                 );
             });
     });
-}
 
 /**
  * Get user History
  * 
  * @return {Promise<Array>}
 */
-function getUserHistory() {
-    return new Promise(resolve => {
+const getUserHistory = () =>
+    new Promise(resolve => {
         cacheUtils
             .getItem(DB_USER_HISTORY)
             .then(JSON.parse)
@@ -213,7 +200,6 @@ function getUserHistory() {
                 );
             });
     });
-}
 
 module.exports = {
     getUserById,

@@ -5,7 +5,7 @@ const FB_TEXT_LIMIT = 640;
 const FB_GRAPH_ROOT_URL = 'https://graph.facebook.com/v2.6/';
 
 // facebook messenger
-const TYPING_TIME_IN_MILLISECONDS = 1000 * 1;
+const TYPING_TIME_IN_MILLISECONDS = 1000;
 const FB_MESSAGE_TYPE = 'message';
 const FB_TYPING_ON_TYPE = 'typing_on';
 
