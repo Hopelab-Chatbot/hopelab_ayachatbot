@@ -4,6 +4,9 @@ const FB_PAGE_ACCESS_TOKEN = process.env.FB_PAGE_ACCESS_TOKEN;
 const FB_TEXT_LIMIT = 640;
 const FB_GRAPH_ROOT_URL = 'https://graph.facebook.com/v2.6/';
 
+// facebook messenger
+const TYPING_TIME_IN_MILLISECONDS = 1000 * 1;
+
 // database keys
 const DB_USERS = 'users';
 const DB_SERIES = 'series';
@@ -41,5 +44,6 @@ module.exports = {
     TYPE_IMAGE,
     TYPE_VIDEO,
     ONE_DAY_IN_MILLISECONDS,
-    ONE_WEEK_IN_MILLISECONDS
+    ONE_WEEK_IN_MILLISECONDS,
+    TYPING_TIME_IN_MILLISECONDS
 };

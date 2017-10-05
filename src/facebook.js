@@ -4,7 +4,11 @@ const { updateHistory, getPreviousMessageInHistory } = require('./users');
 
 const { updateUser } = require('./database');
 
-const { FB_GRAPH_ROOT_URL, FB_PAGE_ACCESS_TOKEN } = require('./constants');
+const {
+    FB_GRAPH_ROOT_URL,
+    FB_PAGE_ACCESS_TOKEN,
+    TYPING_TIME_IN_MILLISECONDS
+} = require('./constants');
 
 const { getMessagesForAction, getActionForMessage } = require('./messages');
 
@@ -81,20 +85,50 @@ function callSendAPI(messageData) {
  * Async Wrapper for callSendAPI
  * 
  * @param {String} recipientId
- * @param {Object} message
+ * @param {Object} content
  * @return {Promise<String>}
 */
-function sendMessage(recipientId, message) {
-    const messageData = {
+function sendMessage(recipientId, content) {
+    const { type, message } = content;
+
+    let messageData = {
         recipient: {
             id: recipientId
-        },
-        message
+        }
     };
+    let time = type === 'message' ? TYPING_TIME_IN_MILLISECONDS : 0;
+
+    if (type === 'message') {
+        messageData.message = message;
+    } else if (type === 'typing_on' || type === 'typing_off') {
+        messageData.sender_action = type;
+    }
 
     return () => {
-        return callSendAPI(messageData);
+        return new Promise(r => {
+            return setTimeout(() => {
+                r(callSendAPI(messageData));
+            }, time);
+        });
     };
+}
+
+function addTypingIndicatorToMessages(messages) {
+    let messagesWithTyping = [];
+
+    for (let i = 0; i < messages.length; i++) {
+        messagesWithTyping.push({
+            type: 'typing_on'
+        });
+
+        // messagesWithTyping.push({
+        //     type: 'typing_off'
+        // });
+
+        messagesWithTyping.push(messages[i]);
+    }
+
+    return messagesWithTyping;
 }
 
 /**
@@ -142,8 +176,10 @@ function receivedMessage({
         blockScope
     });
 
+    const messagesWithTyping = addTypingIndicatorToMessages(messagesToSend);
+
     // send all messages out to Messenger
-    promiseSerial(messagesToSend.map(msg => sendMessage(senderID, msg)))
+    promiseSerial(messagesWithTyping.map(msg => sendMessage(senderID, msg)))
         .then(() => {
             updateUser(userToUpdate)
                 .then(() => {

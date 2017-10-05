@@ -143,7 +143,7 @@ describe('Messages Module', () => {
 
         it('returns the next set of messages', () => {
             let nextMessages = testModule.getMessagesForAction({
-                action: 'message-1',
+                action: blocks[0].startMessage,
                 messages,
                 blocks,
                 user: {
@@ -152,12 +152,12 @@ describe('Messages Module', () => {
                 }
             });
 
-            expect(nextMessages.messagesToSend.length).toEqual(3);
+            expect(nextMessages.messagesToSend.length).toEqual(2);
         });
 
         it('returns the correct history for messages sent', () => {
             let nextMessages = testModule.getMessagesForAction({
-                action: 'message-1',
+                action: blocks[0].startMessage,
                 messages,
                 blocks,
                 user: {
@@ -166,16 +166,16 @@ describe('Messages Module', () => {
                 }
             });
 
-            expect(nextMessages.history.length).toEqual(3);
+            expect(nextMessages.history.length).toEqual(2);
         });
 
         it('returns the correct number of blocks for block scope', () => {
             let nextMessages = testModule.getMessagesForAction({
-                action: 'message-1',
+                action: blocks[0].startMessage,
                 messages,
                 blocks,
                 user: {
-                    blockScope: [],
+                    blockScope: [blocks[0].id],
                     history: []
                 }
             });
@@ -185,17 +185,17 @@ describe('Messages Module', () => {
 
         it('handles stringing together media messages', () => {
             let nextMessages = testModule.getMessagesForAction({
-                action: 'message-20',
+                action: 'message-204',
                 messages,
                 blocks,
                 user: {
-                    blockScope: ['block-3'],
+                    blockScope: ['block-1', 'block-2'],
                     history: []
                 },
                 media
             });
 
-            expect(nextMessages.messagesToSend.length).toEqual(3);
+            expect(nextMessages.messagesToSend.length).toEqual(7);
         });
     });
 

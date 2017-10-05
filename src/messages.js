@@ -143,11 +143,15 @@ function getMessagesForAction({ action, messages, blocks, user, media }) {
     while (Object.keys(curr).length) {
         if (curr.type === TYPE_IMAGE || curr.type === TYPE_VIDEO) {
             const url = getMediaUrlForMessage(curr.type, user, media);
-            messagesToSend.push(
-                makePlatformMediaMessagePayload(curr.type, url)
-            );
+            messagesToSend.push({
+                type: 'message',
+                message: makePlatformMediaMessagePayload(curr.type, url)
+            });
         } else {
-            messagesToSend.push(makePlatformMessagePayload(curr.id, messages));
+            messagesToSend.push({
+                type: 'message',
+                message: makePlatformMessagePayload(curr.id, messages)
+            });
         }
 
         // update block scope
