@@ -7,7 +7,9 @@ const { updateUser } = require('./database');
 const {
     FB_GRAPH_ROOT_URL,
     FB_PAGE_ACCESS_TOKEN,
-    TYPING_TIME_IN_MILLISECONDS
+    TYPING_TIME_IN_MILLISECONDS,
+    FB_MESSAGE_TYPE,
+    FB_TYPING_ON_TYPE
 } = require('./constants');
 
 const { getMessagesForAction, getActionForMessage } = require('./messages');
@@ -82,6 +84,44 @@ function callSendAPI(messageData) {
 }
 
 /**
+ * Send a follow-up message to a user
+ * 
+ * @param {String} recipientId
+ * @param {Object} content
+ * @return {Promise<String>}
+*/
+function sendFollowUpMessageToUser(recipientId, content) {
+    const messageData = createMessagePayload(recipientId, content);
+
+    callSendAPI(messageData);
+}
+
+/**
+ * Create the FB Message Payload
+ * 
+ * @param {String} recipientId
+ * @param {Object} content
+ * @return {Object}
+*/
+function createMessagePayload(recipientId, content) {
+    const { type, message } = content;
+
+    let payload = {
+        recipient: {
+            id: recipientId
+        }
+    };
+
+    if (type === FB_MESSAGE_TYPE) {
+        payload.message = message;
+    } else if (type === FB_TYPING_ON_TYPE) {
+        payload.sender_action = FB_TYPING_ON_TYPE;
+    }
+
+    return payload;
+}
+
+/**
  * Async Wrapper for callSendAPI
  * 
  * @param {String} recipientId
@@ -89,20 +129,9 @@ function callSendAPI(messageData) {
  * @return {Promise<String>}
 */
 function sendMessage(recipientId, content) {
-    const { type, message } = content;
-
-    let messageData = {
-        recipient: {
-            id: recipientId
-        }
-    };
-    let time = type === 'message' ? TYPING_TIME_IN_MILLISECONDS : 0;
-
-    if (type === 'message') {
-        messageData.message = message;
-    } else if (type === 'typing_on' || type === 'typing_off') {
-        messageData.sender_action = type;
-    }
+    const messageData = createMessagePayload(recipientId, content);
+    const time =
+        content.type === FB_MESSAGE_TYPE ? TYPING_TIME_IN_MILLISECONDS : 0;
 
     return () => {
         return new Promise(r => {
