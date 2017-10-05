@@ -24,7 +24,7 @@ function getUserDetails(userId) {
                 qs: { access_token: FB_PAGE_ACCESS_TOKEN },
                 method: 'GET'
             },
-            function(error, response) {
+            (error, response) => {
                 resolve(JSON.parse(response.body));
 
                 if (error) {
