@@ -4,6 +4,8 @@ const { receivedMessage } = require('./facebook');
 
 const { getUserById, getMessages, getBlocks, getMedia } = require('./database');
 
+const { FB_VERIFY_TOKEN } = require('./constants');
+
 module.exports = app => {
     app.get('/webhook/', (req, res) => {
         if (req.query['hub.verify_token'] === FB_VERIFY_TOKEN) {
