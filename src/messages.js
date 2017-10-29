@@ -62,9 +62,11 @@ function getInitialConversation() {
  * @param {Object} message
  * @param {Object} user
  * @param {Array} blocks
+ * @param {Array} collections
+ * @param {Array} messages
  * @return {String}
 */
-function getActionForMessage({ message, user, blocks }) {
+function getActionForMessage({ message, user, blocks, messages, collections }) {
     let action;
 
     if (message.quick_reply) {
@@ -74,18 +76,12 @@ function getActionForMessage({ message, user, blocks }) {
         if (user.blockScope.length && lastMessage && lastMessage.next) {
             action = lastMessage.next.id;
         } else {
-            // getInitialConversation();
-
-            // find all the messages or collections
-            // that have parent as intro-conversation 
-            // and see which one is the start :)
-
-
-
+            const next = messages.concat(collections).filter(e => e.parent && e.parent.id === 'intro-conversation')
+                .find(e => e.start === true);
 
             // TODO: Logic for where to start/move user to next series/collection
-            action = blocks.find(b => b.id === 'block-1').startMessage;
-            user.blockScope.push('block-1');
+            action = next.id;
+            user.blockScope.push('intro-block');
         }
     }
 
@@ -106,11 +102,11 @@ function getNextMessage(curr, user, messages, blocks) {
 
     const { blockScope, history } = user;
 
-    if (curr.isEnd === true) {
+    if (curr.isEnd === true || !curr.next) {
         if (blockScope.length > 0) {
             const currentBlock = blockScope[blockScope.length - 1];
 
-            const pointerToNextBlock = history
+            const lastCurrentBlockMessageInHistory = history
                 .slice()
                 .reverse()
                 .find(
@@ -118,14 +114,21 @@ function getNextMessage(curr, user, messages, blocks) {
                         m.block === currentBlock &&
                         m.next &&
                         m.next.type === TYPE_BLOCK
-                ).next.after;
+                );
+
+            if (!lastCurrentBlockMessageInHistory || !lastCurrentBlockMessageInHistory.next) {
+                return;
+            }
+
+            // TODO: revisit this, maybe make this simpler
+            const pointerToNextBlock = lastCurrentBlockMessageInHistory.next.after;
 
             next = messages.find(m => m.id === pointerToNextBlock);
         } else {
             // done
             next = null;
         }
-    } else if (curr.next.type === TYPE_BLOCK) {
+    } else if (curr.next && curr.next.type === TYPE_BLOCK) {
         const nextBlock = blocks.find(b => b.id === curr.next.id);
         next = messages.find(m => m.id === nextBlock.startMessage);
     } else {

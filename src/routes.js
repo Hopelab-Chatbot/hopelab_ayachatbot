@@ -48,6 +48,8 @@ module.exports = app => {
                                         senderID,
                                         message,
                                         user,
+                                        allConversations,
+                                        allCollections,
                                         allMessages,
                                         allBlocks,
                                         media
