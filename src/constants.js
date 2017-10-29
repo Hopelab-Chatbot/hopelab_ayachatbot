@@ -11,6 +11,8 @@ const FB_TYPING_ON_TYPE = 'typing_on';
 
 // database keys
 const DB_USERS = 'users';
+const DB_CONVERSATIONS = 'conversations';
+const DB_COLLECTIONS = 'collections';
 const DB_SERIES = 'series';
 const DB_MESSAGES = 'messages';
 const DB_USER_HISTORY = 'user-history';
@@ -24,6 +26,9 @@ const TYPE_BLOCK = 'block';
 const TYPE_IMAGE = 'image';
 const TYPE_VIDEO = 'video';
 
+// entity keys
+const INTRO_CONVERSATION_ID = 'intro-conversation';
+
 // caching time
 const ONE_DAY_IN_MILLISECONDS = 1000 * 60 * 60 * 24;
 const ONE_WEEK_IN_MILLISECONDS = 1000 * 60 * 60 * 24 * 7 * 4;
@@ -35,6 +40,8 @@ module.exports = {
     FB_TEXT_LIMIT,
     FB_GRAPH_ROOT_URL,
     DB_USERS,
+    DB_CONVERSATIONS,
+    DB_COLLECTIONS,
     DB_SERIES,
     DB_MESSAGES,
     DB_BLOCKS,
@@ -49,5 +56,6 @@ module.exports = {
     ONE_WEEK_IN_MILLISECONDS,
     TYPING_TIME_IN_MILLISECONDS,
     FB_MESSAGE_TYPE,
-    FB_TYPING_ON_TYPE
+    FB_TYPING_ON_TYPE,
+    INTRO_CONVERSATION_ID
 };

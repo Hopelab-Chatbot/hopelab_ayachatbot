@@ -1,7 +1,8 @@
 [
     {
         "id": "message-100",
-        "block": "block-1",
+        "block": "intro",
+        "series": "intro",
         "next": {
             "type": "question",
             "id": "message-101"
@@ -12,7 +13,8 @@
     },
     {
         "id": "message-101",
-        "block": "block-1",
+        "block": "intro",
+        "series": "intro",
         "next": {
             "type": "message",
             "id": "message-102"
@@ -24,7 +26,8 @@
 
     {
         "id": "message-102",
-        "block": "block-1",
+        "block": "intro",
+        "series": "intro",
         "next": {
             "type": "message",
             "id": "message-103"
@@ -36,10 +39,11 @@
 
     {
         "id": "message-103",
-        "block": "block-1",
+        "block": "intro",
+        "series": "intro",
         "next": {
-            "type": "block",
-            "id": "block-2",
+            "type": "series",
+            "id": "series-1",
             "after": "message-104"
         },
         "isEnd": false,
@@ -49,7 +53,8 @@
 
     {
         "id": "message-104",
-        "block": "block-1",
+        "block": "intro",
+        "series": "",
         "next": {
             "type": "message",
             "id": "message-105"
@@ -61,7 +66,8 @@
 
     {
         "id": "message-105",
-        "block": "block-1",
+        "block": "intro",
+        "series": "",
         "next": {},
         "isEnd": true,
         "type": "message",
@@ -70,7 +76,8 @@
 
     {
         "id": "message-200",
-        "block": "block-2",
+        "block": "block-1",
+        "series": "series-1",
         "next": {
             "type": "message",
             "id": "message-201"
@@ -82,7 +89,8 @@
 
     {
         "id": "message-201",
-        "block": "block-2",
+        "block": "block-1",
+        "series": "series-1",
         "next": {},
         "isEnd": false,
         "type": "question",
@@ -103,7 +111,8 @@
 
     {
         "id": "message-202",
-        "block": "block-2",
+        "block": "block-1",
+        "series": "series-1",
         "next": {
             "type": "message",
             "id": "message-204"
@@ -115,7 +124,8 @@
 
     {
         "id": "message-203",
-        "block": "block-2",
+        "block": "block-1",
+        "series": "series-1",
         "next": {
             "type": "message",
             "id": "message-204"
@@ -127,7 +137,8 @@
 
     {
         "id": "message-204",
-        "block": "block-2",
+        "block": "block-1",
+        "series": "series-1",
         "next": {
             "type": "message",
             "id": "message-205"
@@ -139,7 +150,8 @@
 
     {
         "id": "message-205",
-        "block": "block-2",
+        "block": "block-1",
+        "series": "series-1",
         "next": {
             "type": "image",
             "id": "message-206"
@@ -151,7 +163,8 @@
 
     {
         "id": "message-206",
-        "block": "block-2",
+        "block": "block-1",
+        "series": "series-1",
         "next": {
             "type": "message",
             "id": "message-207"
@@ -163,7 +176,8 @@
 
     {
         "id": "message-207",
-        "block": "block-2",
+        "block": "block-1",
+        "series": "series-1",
         "next": {
             "type": "video",
             "id": "message-208"
@@ -175,7 +189,8 @@
 
     {
         "id": "message-208",
-        "block": "block-2",
+        "block": "block-1",
+        "series": "series-1",
         "next": {
             "type": "message",
             "id": "message-209"
@@ -187,7 +202,8 @@
 
     {
         "id": "message-209",
-        "block": "block-2",
+        "block": "block-1",
+        "series": "series-1",
         "next": {
             "type": "question",
             "id": "message-210"
@@ -199,7 +215,8 @@
 
     {
         "id": "message-210",
-        "block": "block-2",
+        "block": "block-1",
+        "series": "series-1",
         "next": {
             "type": "message",
             "id": "message-211"
@@ -211,10 +228,47 @@
 
     {
         "id": "message-211",
-        "block": "block-2",
+        "block": "block-1",
+        "series": "series-1",
         "next": {},
         "isEnd": true,
         "type": "message",
         "text": "Thanks for the feedback! I hope you enjoyed this content! I am going to leave this dynamic content block now."
+    },
+
+    {
+        "id": "message-300",
+        "block": "block-2",
+        "series": "series-1",
+        "next": {
+            "type": "message",
+            "id": "message-301"
+        },
+        "isEnd": false,
+        "type": "message",
+        "text": "Block 2 content"
+    },
+
+    {
+        "id": "message-301",
+        "block": "block-2",
+        "series": "series-1",
+        "next": {
+            "type": "message",
+            "id": "message-302"
+        },
+        "isEnd": false,
+        "type": "message",
+        "text": "More block 2"
+    },
+
+    {
+        "id": "message-302",
+        "block": "block-2",
+        "series": "series-1",
+        "next": {},
+        "isEnd": true,
+        "type": "message",
+        "text": "Leaving block 2 content"
     }
 ]

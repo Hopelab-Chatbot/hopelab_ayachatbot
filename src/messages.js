@@ -3,7 +3,8 @@ const {
     TYPE_BLOCK,
     TYPE_IMAGE,
     TYPE_VIDEO,
-    TYPE_QUESTION
+    TYPE_QUESTION,
+    INTRO_CONVERSATION_ID
 } = require('./constants');
 
 /**
@@ -51,6 +52,10 @@ function getLastSentMessageInHistory(user) {
     return user.history[user.history.length - 2];
 }
 
+function getInitialConversation() {
+    return INTRO_CONVERSATION_ID;
+}
+
 /**
  * Get the next Action for incoming message
  * 
@@ -59,7 +64,7 @@ function getLastSentMessageInHistory(user) {
  * @param {Array} blocks
  * @return {String}
 */
-function getActionForMessage(message, user, blocks) {
+function getActionForMessage({ message, user, blocks }) {
     let action;
 
     if (message.quick_reply) {
@@ -69,6 +74,15 @@ function getActionForMessage(message, user, blocks) {
         if (user.blockScope.length && lastMessage && lastMessage.next) {
             action = lastMessage.next.id;
         } else {
+            // getInitialConversation();
+
+            // find all the messages or collections
+            // that have parent as intro-conversation 
+            // and see which one is the start :)
+
+
+
+
             // TODO: Logic for where to start/move user to next series/collection
             action = blocks.find(b => b.id === 'block-1').startMessage;
             user.blockScope.push('block-1');

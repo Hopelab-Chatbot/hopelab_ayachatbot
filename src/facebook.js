@@ -174,7 +174,7 @@ function receivedMessage({
         )
     });
 
-    const action = getActionForMessage(message, userToUpdate, allBlocks);
+    const action = getActionForMessage({ message, user: userToUpdate, blocks: allBlocks });
 
     const { messagesToSend, history, blockScope } = getMessagesForAction({
         action,
