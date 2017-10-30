@@ -11,6 +11,8 @@ const {
     LOGIC_RANDOM
 } = require('./constants');
 
+const R = require('ramda');
+
 /**
  * Create Specific Platform Payload
  * 
@@ -125,6 +127,28 @@ function getNextRandomSeries(collectionSeries, seriesSeen) {
 }
 
 /**
+ * Get Next Sequential Series
+ * 
+ * @param {Array} collectionSeries
+ * @param {Array} seriesSeen
+ * @return {Object}
+*/
+function getNextSequentialSeries(collectionSeries, seriesSeen) {
+    if (collectionSeries.length === seriesSeen.length) {
+        // start over at random
+        return collectionSeries[0];
+    }
+
+    const lastSeen = collectionSeries.findIndex(s => s.id === R.takeLast(1, seriesSeen));
+
+    if (lastSeen === collectionSeries.length) {
+        return collectionSeries[0];
+    }
+
+    return collectionSeries[lastSeen + 1]
+}
+
+/**
  * Get Next Message For a Collection
  * 
  * @param {Object} collection
@@ -142,6 +166,12 @@ function getNextSeriesForCollection(collection, series, user) {
     if (collection.rule === LOGIC_RANDOM) {
         nextSeries = getNextRandomSeries(collectionSeries, seriesSeen);
     }
+
+    if (collection.rule === LOGIC_SEQUENTIAL) {
+        nextSeries = getNextSequentialSeries(collectionSeries, seriesSeen);
+    }
+
+    return nextSeries;
 }
 
 /**
@@ -275,12 +305,9 @@ function getMessagesForAction({ action, collections, series, messages, blocks, u
             if (curr.next.type === TYPE_COLLECTION) {
                 const collection = collections.find(c => c.id === curr.next.id);
 
-                getNextSeriesForCollection(collection, series, userToUpdate);
+                const nextSeries = getNextSeriesForCollection(collection, series, userToUpdate);
 
                 // TODO: Update User
-
-
-
 
                 curr = null;
             }
