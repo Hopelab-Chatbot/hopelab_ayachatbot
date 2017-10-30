@@ -182,11 +182,12 @@ function getMessagesForAction({ action, messages, blocks, user, media }) {
     let userToUpdate = Object.assign({}, user);
 
     while (Object.keys(curr).length) {
-        if (curr.type === TYPE_IMAGE || curr.type === TYPE_VIDEO) {
-            const url = getMediaUrlForMessage(curr.type, user, media);
+        if (curr.messageType === TYPE_IMAGE || curr.messageType === TYPE_VIDEO) {
+            const url = getMediaUrlForMessage(curr.messageType, user, media);
+
             messagesToSend.push({
                 type: 'message',
-                message: makePlatformMediaMessagePayload(curr.type, url)
+                message: makePlatformMediaMessagePayload(curr.messageType, url)
             });
         } else {
             messagesToSend.push({
@@ -209,7 +210,7 @@ function getMessagesForAction({ action, messages, blocks, user, media }) {
         });
 
         // if it's a question
-        if (curr.type === TYPE_QUESTION) {
+        if (curr.messageType === TYPE_QUESTION) {
             break;
         }
 
