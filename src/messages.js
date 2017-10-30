@@ -74,6 +74,7 @@ function getActionForMessage({ message, user, blocks, messages, collections }) {
         action = message.quick_reply.payload;
     } else {
         const lastMessage = getLastSentMessageInHistory(user);
+
         if (user.blockScope.length && lastMessage && lastMessage.next) {
             action = lastMessage.next.id;
         } else {
@@ -181,7 +182,7 @@ function getMessagesForAction({ action, messages, blocks, user, media }) {
 
     let userToUpdate = Object.assign({}, user);
 
-    while (Object.keys(curr).length) {
+    while (curr) {
         if (
             curr.messageType === TYPE_IMAGE ||
             curr.messageType === TYPE_VIDEO
@@ -217,10 +218,14 @@ function getMessagesForAction({ action, messages, blocks, user, media }) {
             break;
         }
 
-        curr = Object.assign(
-            {},
-            getNextMessage(curr, userToUpdate, messages, blocks)
-        );
+        if (curr.next) {
+            curr = Object.assign(
+                {},
+                getNextMessage(curr, userToUpdate, messages, blocks)
+            );
+        } else {
+            curr = null
+        }
     }
 
     return {

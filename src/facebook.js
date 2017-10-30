@@ -185,6 +185,11 @@ function receivedMessage({
         collections: allCollections
     });
 
+    // ::: :::: :::
+    // ::: TODO :::
+    // ::: :::: :::
+    // track collections, series, blocks here
+
     const { messagesToSend, history, blockScope } = getMessagesForAction({
         action,
         messages: allMessages,
