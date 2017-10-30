@@ -20,6 +20,7 @@ const DB_BLOCKS = 'blocks';
 const DB_MEDIA = 'media';
 
 // data types
+const TYPE_COLLECTION = 'collection';
 const TYPE_MESSAGE = 'message';
 const TYPE_QUESTION = 'question';
 const TYPE_BLOCK = 'block';
@@ -47,6 +48,7 @@ module.exports = {
     DB_BLOCKS,
     DB_MEDIA,
     DB_USER_HISTORY,
+    TYPE_COLLECTION,
     TYPE_MESSAGE,
     TYPE_QUESTION,
     TYPE_BLOCK,

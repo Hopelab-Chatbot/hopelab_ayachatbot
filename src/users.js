@@ -28,7 +28,7 @@ function createNewUser(id) {
 function updateBlockScope(currentMessage, blockScope) {
     const blockScopeToUpdate = blockScope.slice();
 
-    if (currentMessage.isEnd === true) {
+    if (currentMessage.isEnd === true || !currentMessage.next) {
         blockScopeToUpdate.pop();
     }
 

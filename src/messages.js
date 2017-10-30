@@ -1,5 +1,6 @@
 const { updateBlockScope, updateHistory } = require('./users');
 const {
+    TYPE_COLLECTION,
     TYPE_BLOCK,
     TYPE_IMAGE,
     TYPE_VIDEO,
@@ -128,6 +129,15 @@ function getNextMessage(curr, user, messages, blocks) {
             // done
             next = null;
         }
+    } else if (curr.next && curr.next.type === TYPE_COLLECTION) {
+        // getAllSeriesForCollection
+        // checkAgainstCollectionsSeenForUser
+
+        // getAllBlocksForSeries
+        // checkAgainstBlocksSeenForUser
+
+
+        next = null;
     } else if (curr.next && curr.next.type === TYPE_BLOCK) {
         const nextBlock = blocks.find(b => b.id === curr.next.id);
         next = messages.find(m => m.id === nextBlock.startMessage);
