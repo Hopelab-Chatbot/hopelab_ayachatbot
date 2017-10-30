@@ -77,7 +77,9 @@ function getActionForMessage({ message, user, blocks, messages, collections }) {
         if (user.blockScope.length && lastMessage && lastMessage.next) {
             action = lastMessage.next.id;
         } else {
-            const next = messages.concat(collections).filter(e => e.parent && e.parent.id === 'intro-conversation')
+            const next = messages
+                .concat(collections)
+                .filter(e => e.parent && e.parent.id === 'intro-conversation')
                 .find(e => e.start === true);
 
             // TODO: Logic for where to start/move user to next series/collection
@@ -117,12 +119,16 @@ function getNextMessage(curr, user, messages, blocks) {
                         m.next.type === TYPE_BLOCK
                 );
 
-            if (!lastCurrentBlockMessageInHistory || !lastCurrentBlockMessageInHistory.next) {
+            if (
+                !lastCurrentBlockMessageInHistory ||
+                !lastCurrentBlockMessageInHistory.next
+            ) {
                 return;
             }
 
             // TODO: revisit this, maybe make this simpler
-            const pointerToNextBlock = lastCurrentBlockMessageInHistory.next.after;
+            const pointerToNextBlock =
+                lastCurrentBlockMessageInHistory.next.after;
 
             next = messages.find(m => m.id === pointerToNextBlock);
         } else {
@@ -135,7 +141,6 @@ function getNextMessage(curr, user, messages, blocks) {
 
         // getAllBlocksForSeries
         // checkAgainstBlocksSeenForUser
-
 
         next = null;
     } else if (curr.next && curr.next.type === TYPE_BLOCK) {
@@ -189,6 +194,9 @@ function getMessagesForAction({ action, messages, blocks, user, media }) {
                 message: makePlatformMessagePayload(curr.id, messages)
             });
         }
+
+        // ::: TODO :::
+        // Track collections, series
 
         // update block scope
         userToUpdate = Object.assign({}, userToUpdate, {

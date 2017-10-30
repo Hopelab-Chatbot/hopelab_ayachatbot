@@ -157,6 +157,7 @@ function receivedMessage({
     allConversations,
     allCollections,
     allMessages,
+    allSeries,
     allBlocks,
     media
 }) {
@@ -176,7 +177,13 @@ function receivedMessage({
         )
     });
 
-    const action = getActionForMessage({ message, user: userToUpdate, blocks: allBlocks, messages: allMessages, collections: allCollections });
+    const action = getActionForMessage({
+        message,
+        user: userToUpdate,
+        blocks: allBlocks,
+        messages: allMessages,
+        collections: allCollections
+    });
 
     const { messagesToSend, history, blockScope } = getMessagesForAction({
         action,

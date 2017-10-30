@@ -2,7 +2,15 @@ const JSONbig = require('json-bigint');
 
 const { receivedMessage } = require('./facebook');
 
-const { getUserById, getConversations, getCollections, getMessages, getBlocks, getMedia } = require('./database');
+const {
+    getUserById,
+    getConversations,
+    getCollections,
+    getSeries,
+    getBlocks,
+    getMessages,
+    getMedia
+} = require('./database');
 
 const { FB_VERIFY_TOKEN } = require('./constants');
 
@@ -31,6 +39,7 @@ module.exports = app => {
                                 getConversations(),
                                 getCollections(),
                                 getMessages(),
+                                getSeries(),
                                 getBlocks(),
                                 getMedia()
                             ];
@@ -41,8 +50,9 @@ module.exports = app => {
                                     const allConversations = res[1];
                                     const allCollections = res[2];
                                     const allMessages = res[3];
-                                    const allBlocks = res[4];
-                                    const media = res[5];
+                                    const allSeries = res[4];
+                                    const allBlocks = res[5];
+                                    const media = res[6];
 
                                     receivedMessage({
                                         senderID,
@@ -51,6 +61,7 @@ module.exports = app => {
                                         allConversations,
                                         allCollections,
                                         allMessages,
+                                        allSeries,
                                         allBlocks,
                                         media
                                     });

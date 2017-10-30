@@ -117,18 +117,18 @@ const getUserById = id =>
  * @return {Promise<Array>}
 */
 const getConversations = () =>
-new Promise(resolve => {
-    cacheUtils
-        .getItem(DB_CONVERSATIONS)
-        .then(JSON.parse)
-        .then(resolve)
-        .catch(e => {
-            console.error(
-                `error: getConversations - cacheUtils.getItem(${DB_CONVERSATIONS})`,
-                e
-            );
-        });
-});
+    new Promise(resolve => {
+        cacheUtils
+            .getItem(DB_CONVERSATIONS)
+            .then(JSON.parse)
+            .then(resolve)
+            .catch(e => {
+                console.error(
+                    `error: getConversations - cacheUtils.getItem(${DB_CONVERSATIONS})`,
+                    e
+                );
+            });
+    });
 
 /**
  * Get Collections
@@ -136,18 +136,18 @@ new Promise(resolve => {
  * @return {Promise<Array>}
 */
 const getCollections = () =>
-new Promise(resolve => {
-    cacheUtils
-        .getItem(DB_COLLECTIONS)
-        .then(JSON.parse)
-        .then(resolve)
-        .catch(e => {
-            console.error(
-                `error: getCollections - cacheUtils.getItem(${DB_COLLECTIONS})`,
-                e
-            );
-        });
-});
+    new Promise(resolve => {
+        cacheUtils
+            .getItem(DB_COLLECTIONS)
+            .then(JSON.parse)
+            .then(resolve)
+            .catch(e => {
+                console.error(
+                    `error: getCollections - cacheUtils.getItem(${DB_COLLECTIONS})`,
+                    e
+                );
+            });
+    });
 
 /**
  * Get Series
