@@ -182,7 +182,10 @@ function getMessagesForAction({ action, messages, blocks, user, media }) {
     let userToUpdate = Object.assign({}, user);
 
     while (Object.keys(curr).length) {
-        if (curr.messageType === TYPE_IMAGE || curr.messageType === TYPE_VIDEO) {
+        if (
+            curr.messageType === TYPE_IMAGE ||
+            curr.messageType === TYPE_VIDEO
+        ) {
             const url = getMediaUrlForMessage(curr.messageType, user, media);
 
             messagesToSend.push({
