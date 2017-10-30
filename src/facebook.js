@@ -192,8 +192,9 @@ function receivedMessage({
 
     const { messagesToSend, history, blockScope } = getMessagesForAction({
         action,
+        collections: allCollections,
         messages: allMessages,
-        blocks: allBlocks,
+        series: allSeries,
         user: userToUpdate,
         media
     });

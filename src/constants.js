@@ -30,6 +30,10 @@ const TYPE_VIDEO = 'video';
 // entity keys
 const INTRO_CONVERSATION_ID = 'intro-conversation';
 
+// LOGIC RULES
+const LOGIC_SEQUENTIAL = 'sequential';
+const LOGIC_RANDOM = 'random';
+
 // caching time
 const ONE_DAY_IN_MILLISECONDS = 1000 * 60 * 60 * 24;
 const ONE_WEEK_IN_MILLISECONDS = 1000 * 60 * 60 * 24 * 7 * 4;
@@ -59,5 +63,7 @@ module.exports = {
     TYPING_TIME_IN_MILLISECONDS,
     FB_MESSAGE_TYPE,
     FB_TYPING_ON_TYPE,
-    INTRO_CONVERSATION_ID
+    INTRO_CONVERSATION_ID,
+    LOGIC_SEQUENTIAL,
+    LOGIC_RANDOM
 };

@@ -1,11 +1,14 @@
-const { updateBlockScope, updateHistory } = require('./users');
+const { updateBlockScope, updateHistory, getSeriesSeenByUserForCollection } = require('./users');
 const {
     TYPE_COLLECTION,
     TYPE_BLOCK,
+    TYPE_MESSAGE,
     TYPE_IMAGE,
     TYPE_VIDEO,
     TYPE_QUESTION,
-    INTRO_CONVERSATION_ID
+    INTRO_CONVERSATION_ID,
+    LOGIC_SEQUENTIAL,
+    LOGIC_RANDOM
 } = require('./constants');
 
 /**
@@ -93,6 +96,55 @@ function getActionForMessage({ message, user, blocks, messages, collections }) {
 }
 
 /**
+ * Get All Series For Parent ID
+ * 
+ * @param {String} collectionId
+ * @param {Array} series
+ * @return {Array}
+*/
+function getAllPublicSeriesForCollection(collectionId, series) {
+    return series.filter(s => !s.private && s.parent.id === collectionId);
+}
+
+/**
+ * Get Next Random Series
+ * 
+ * @param {Array} collectionSeries
+ * @param {Array} seriesSeen
+ * @return {Object}
+*/
+function getNextRandomSeries(collectionSeries, seriesSeen) {
+    if (collectionSeries.length === seriesSeen.length) {
+        // start over at random
+        return collectionSeries[Math.floor(collectionSeries.length * Math.random())];
+    }
+
+    const seriesLeft = collectionSeries.filter(cs => seriesSeen.indexOf(cs.id) === -1);
+
+    return seriesLeft[Math.floor(seriesLeft.length * Math.random())];
+}
+
+/**
+ * Get Next Message For a Collection
+ * 
+ * @param {Object} collection
+ * @param {Array} series
+ * @param {Object} user
+ * @return {Object}
+*/
+function getNextSeriesForCollection(collection, series, user) {
+    const collectionSeries = getAllPublicSeriesForCollection(collection.id, series);
+
+    const seriesSeen = getSeriesSeenByUserForCollection(collection.id, user);
+
+    let nextSeries;
+
+    if (collection.rule === LOGIC_RANDOM) {
+        nextSeries = getNextRandomSeries(collectionSeries, seriesSeen);
+    }
+}
+
+/**
  * Get Next Message
  * 
  * @param {Object} currentMessage
@@ -136,14 +188,6 @@ function getNextMessage(curr, user, messages, blocks) {
             // done
             next = null;
         }
-    } else if (curr.next && curr.next.type === TYPE_COLLECTION) {
-        // getAllSeriesForCollection
-        // checkAgainstCollectionsSeenForUser
-
-        // getAllBlocksForSeries
-        // checkAgainstBlocksSeenForUser
-
-        next = null;
     } else if (curr.next && curr.next.type === TYPE_BLOCK) {
         const nextBlock = blocks.find(b => b.id === curr.next.id);
         next = messages.find(m => m.id === nextBlock.startMessage);
@@ -171,12 +215,14 @@ function getMediaUrlForMessage(type, user, media) {
  * Construct Outgoing Messages
  * 
  * @param {String} action
+ * @param {Array} collections
+ * @param {Array} series
  * @param {Array} messages
  * @param {Array} blocks
  * @param {Object} user
  * @return {Object}
 */
-function getMessagesForAction({ action, messages, blocks, user, media }) {
+function getMessagesForAction({ action, collections, series, messages, blocks, user, media }) {
     let messagesToSend = [];
     let curr = messages.find(m => m.id === action);
 
@@ -219,10 +265,25 @@ function getMessagesForAction({ action, messages, blocks, user, media }) {
         }
 
         if (curr.next) {
-            curr = Object.assign(
-                {},
-                getNextMessage(curr, userToUpdate, messages, blocks)
-            );
+            if (curr.next.type === TYPE_MESSAGE) {
+                curr = Object.assign(
+                    {},
+                    getNextMessage(curr, userToUpdate, messages, blocks)
+                );
+            }
+
+            if (curr.next.type === TYPE_COLLECTION) {
+                const collection = collections.find(c => c.id === curr.next.id);
+
+                getNextSeriesForCollection(collection, series, userToUpdate);
+
+                // TODO: Update User
+
+
+
+
+                curr = null;
+            }
         } else {
             curr = null
         }

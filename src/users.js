@@ -1,5 +1,7 @@
 const { TYPE_BLOCK } = require('./constants');
 
+const R = require('ramda');
+
 /**
  * Create New User
  * 
@@ -70,6 +72,21 @@ function getPreviousMessageInHistory(messages, user) {
 }
 
 /**
+ * Get List of Series Seen By User for a Collection
+ * 
+ * @param {String} collectionId
+ * @param {Object} user
+ * @return {Array}
+*/
+function getSeriesSeenByUserForCollection(collectionId, user) {
+    return R.pathOr(
+        [],
+        ['seriesSeen'],
+        R.find(R.propEq('id', collectionId))(user.collectionProgress || [])
+    );
+}
+
+/**
  * Is Next Message a Block?
  * 
  * @param {Object} message
@@ -84,5 +101,6 @@ module.exports = {
     updateBlockScope,
     updateHistory,
     getPreviousMessageInHistory,
+    getSeriesSeenByUserForCollection,
     isNextMessageBlock
 };
