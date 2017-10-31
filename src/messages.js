@@ -1,7 +1,7 @@
 const {
     updateBlockScope,
     updateHistory,
-    getSeriesSeenByUserForCollection,
+    getChildEntitiesSeenByUserForParent,
     updateCollectionProgress
 } = require('./users');
 const {
@@ -103,68 +103,67 @@ function getActionForMessage({ message, user, blocks, messages, collections }) {
 }
 
 /**
- * Get All Series For Parent ID
+ * Get All Public Children Whose Parent Matches ID
  * 
- * @param {String} collectionId
- * @param {Array} series
+ * @param {String} id
+ * @param {Array} children
  * @return {Array}
 */
-function getAllPublicSeriesForCollection(collectionId, series) {
-    return series.filter(s => !s.private && s.parent.id === collectionId);
+function getAllPublicChildren(id, children) {
+    return children.filter(s => !s.private && s.parent.id === id);
 }
 
 /**
- * Get Next Random Series
+ * Get Next Random Entity
  * 
- * @param {Array} collectionSeries
- * @param {Array} seriesSeen
+ * @param {Array} totalEntities
+ * @param {Array} seenEntities
  * @return {Object}
 */
-function getNextRandomSeries(collectionSeries, seriesSeen) {
-    if (collectionSeries.length === seriesSeen.length) {
-        // start over at random
-        const nextSeries =
-            collectionSeries[
-                Math.floor(collectionSeries.length * Math.random())
+function getNextRandomEntityFor(totalEntities, seenEntities) {
+    if (totalEntities.length === seenEntities.length) {
+        const next =
+        totalEntities[
+                Math.floor(totalEntities.length * Math.random())
             ];
-        return { nextSeries, seriesSeen: [nextSeries.id] };
+        return { next, seenEntities: [next.id] };
     }
 
-    const seriesLeft = collectionSeries.filter(
-        cs => seriesSeen.indexOf(cs.id) === -1
+    const left = totalEntities.filter(
+        t => seenEntities.indexOf(t.id) === -1
     );
-    const nextSeries =
-        seriesLeft[Math.floor(seriesLeft.length * Math.random())];
+    const next =
+        left[Math.floor(left.length * Math.random())];
 
-    return { nextSeries, seriesSeen: seriesSeen.concat(nextSeries.id) };
+    return { next, seenEntities: seenEntities.concat(next.id) };
 }
 
 /**
- * Get Next Sequential Series
+ * Get Next Sequential Entity
  * 
- * @param {Array} collectionSeries
- * @param {Array} seriesSeen
+ * @param {Array} totalEntities
+ * @param {Array} seenEntities
  * @return {Object}
 */
-function getNextSequentialSeries(collectionSeries, seriesSeen) {
-    const firstSeries = collectionSeries[0] || {};
+function getNextSequentialEntityFor(totalEntities, seenEntities) {
+    const first = totalEntities[0] || {};
 
-    if (collectionSeries.length === seriesSeen.length) {
+    if (totalEntities.length === seenEntities.length) {
         // start over at random
-        return { nextSeries: firstSeries, seriesSeen: [firstSeries.id] };
+        return { next: first, seenEntities: [first.id] };
     }
 
-    const lastSeen = collectionSeries.findIndex(
-        s => s.id === R.nth(0, R.takeLast(1, seriesSeen))
+    const lastSeen = totalEntities.findIndex(
+        t => t.id === R.nth(0, R.takeLast(1, seenEntities))
     );
 
-    if (lastSeen === collectionSeries.length - 1) {
-        return { nextSeries: firstSeries, seriesSeen: [firstSeries.id] };
+    if (lastSeen === totalEntities.length - 1) {
+        return { next: first, seenEntities: [first.id] };
     }
 
-    const nextSeries = collectionSeries[lastSeen + 1];
+    const next = totalEntities[lastSeen + 1];
 
-    return { nextSeries, seriesSeen: seriesSeen.concat(nextSeries.id) };
+    return { next, seenEntities: seenEntities.concat(next.id) };
 }
 
 /**
@@ -176,19 +175,46 @@ function getNextSequentialSeries(collectionSeries, seriesSeen) {
  * @return {Object}
 */
 function getNextSeriesForCollection(collection, series, user) {
-    const collectionSeries = getAllPublicSeriesForCollection(
+    const collectionSeries = getAllPublicChildren(
         collection.id,
         series
     );
 
-    const seriesSeen = getSeriesSeenByUserForCollection(collection.id, user);
+    const seriesSeen = getChildEntitiesSeenByUserForParent(collection.id, user, 'collectionProgress', 'seriesSeen');
 
     if (collection.rule === LOGIC_RANDOM) {
-        return getNextRandomSeries(collectionSeries, seriesSeen);
+        return getNextRandomEntityFor(collectionSeries, seriesSeen);
     }
 
     if (collection.rule === LOGIC_SEQUENTIAL) {
-        return getNextSequentialSeries(collectionSeries, seriesSeen);
+        return getNextSequentialEntityFor(collectionSeries, seriesSeen);
+    }
+
+    return {};
+}
+
+/**
+ * Get Next Block For a Series
+ * 
+ * @param {Object} collection
+ * @param {Array} series
+ * @param {Object} user
+ * @return {Object}
+*/
+function getNextBlockForSeries(series, blocks, user) {
+    const seriesBlocks = getAllPublicChildren(
+        series.id,
+        blocks
+    );
+
+    const blocksSeen = getChildEntitiesSeenByUserForParent(series.id, user, 'seriesProgress', 'blocksSeen');
+
+    if (series.rule === LOGIC_RANDOM) {
+        return getNextRandomEntityFor(seriesBlocks, blocksSeen);
+    }
+
+    if (series.rule === LOGIC_SEQUENTIAL) {
+        return getNextSequentialEntityFor(seriesBlocks, blocksSeen);
     }
 
     return {};
@@ -333,9 +359,15 @@ function getMessagesForAction({
             if (curr.next.type === TYPE_COLLECTION) {
                 const collection = collections.find(c => c.id === curr.next.id);
 
-                const { nextSeries, seriesSeen } = getNextSeriesForCollection(
+                const { next: nextSeries, entitiesSeen: seriesSeen } = getNextSeriesForCollection(
                     collection,
                     series,
+                    userUpdates
+                );
+
+                const { next: nextBlock, entitiesSeen: blocksSeen, } = getNextBlockForSeries(
+                    nextSeries,
+                    blocks,
                     userUpdates
                 );
 

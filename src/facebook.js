@@ -195,6 +195,7 @@ function receivedMessage({
         collections: allCollections,
         messages: allMessages,
         series: allSeries,
+        blocks: allBlocks,
         user: userToUpdate,
         media
     });

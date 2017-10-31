@@ -72,17 +72,19 @@ function getPreviousMessageInHistory(messages, user) {
 }
 
 /**
- * Get List of Series Seen By User for a Collection
+ * Get List of Child Entities Seen by User
  * 
- * @param {String} collectionId
+ * @param {String} id
  * @param {Object} user
+ * @param {String} progressKey
+ * @param {String} seenKey
  * @return {Array}
 */
-function getSeriesSeenByUserForCollection(collectionId, user) {
+function getChildEntitiesSeenByUserForParent(id, user, progressKey, seenKey) {
     return R.pathOr(
         [],
-        ['seriesSeen'],
-        R.find(R.propEq('id', collectionId))(user.collectionProgress || [])
+        [seenKey],
+        R.find(R.propEq('id', id))(user[progressKey] || [])
     );
 }
 
@@ -126,7 +128,7 @@ module.exports = {
     updateBlockScope,
     updateHistory,
     getPreviousMessageInHistory,
-    getSeriesSeenByUserForCollection,
+    getChildEntitiesSeenByUserForParent,
     isNextMessageBlock,
     updateCollectionProgress
 };
