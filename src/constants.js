@@ -26,6 +26,7 @@ const TYPE_QUESTION = 'question';
 const TYPE_BLOCK = 'block';
 const TYPE_IMAGE = 'image';
 const TYPE_VIDEO = 'video';
+const TYPE_ANSWER = 'answer';
 
 // entity keys
 const INTRO_CONVERSATION_ID = 'intro-conversation';
@@ -34,6 +35,12 @@ const INTRO_BLOCK_ID = 'intro-block';
 // LOGIC RULES
 const LOGIC_SEQUENTIAL = 'sequential';
 const LOGIC_RANDOM = 'random';
+
+// user data keys
+const COLLECTION_PROGRESS = 'collection-progress';
+const SERIES_PROGRESS = 'series-progress';
+const SERIES_SEEN = 'series-seen';
+const BLOCKS_SEEN = 'blocks-seen';
 
 // caching time
 const ONE_DAY_IN_MILLISECONDS = 1000 * 60 * 60 * 24;
@@ -67,5 +74,9 @@ module.exports = {
     INTRO_CONVERSATION_ID,
     INTRO_BLOCK_ID,
     LOGIC_SEQUENTIAL,
-    LOGIC_RANDOM
+    LOGIC_RANDOM,
+    COLLECTION_PROGRESS,
+    SERIES_PROGRESS,
+    SERIES_SEEN,
+    BLOCKS_SEEN
 };

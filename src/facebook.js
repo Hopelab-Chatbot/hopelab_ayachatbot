@@ -11,7 +11,8 @@ const {
     FB_PAGE_ACCESS_TOKEN,
     TYPING_TIME_IN_MILLISECONDS,
     FB_MESSAGE_TYPE,
-    FB_TYPING_ON_TYPE
+    FB_TYPING_ON_TYPE,
+    TYPE_ANSWER
 } = require('./constants');
 
 const { getMessagesForAction, getActionForMessage } = require('./messages');
@@ -188,7 +189,7 @@ function receivedMessage({
     userToUpdate = Object.assign({}, userToUpdate, {
         history: updateHistory(
             {
-                type: 'answer',
+                type: TYPE_ANSWER,
                 timestamp: Date.now(),
                 message,
                 previous: prevMessage.id

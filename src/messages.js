@@ -14,7 +14,11 @@ const {
     LOGIC_SEQUENTIAL,
     LOGIC_RANDOM,
     INTRO_CONVERSATION_ID,
-    INTRO_BLOCK_ID
+    INTRO_BLOCK_ID,
+    COLLECTION_PROGRESS,
+    SERIES_PROGRESS,
+    SERIES_SEEN,
+    BLOCKS_SEEN
 } = require('./constants');
 
 const R = require('ramda');
@@ -76,6 +80,10 @@ function newConversationTrack(messages, collections) {
         .concat(collections)
         .filter(e => e.parent && e.parent.id === INTRO_CONVERSATION_ID)
         .find(e => e.start === true);
+
+    if (next.type === TYPE_COLLECTION) {
+        // getStartMessageForCollection()
+    }
 
     return {
         action: next.id,
@@ -158,7 +166,6 @@ function getNextSequentialEntityFor(totalEntities, seenEntities) {
     const first = totalEntities[0] || {};
 
     if (totalEntities.length === seenEntities.length) {
-        // start over at random
         return { next: first, seenEntities: [first.id] };
     }
 
@@ -189,8 +196,8 @@ function getNextSeriesForCollection(collection, series, user) {
     const seriesSeen = getChildEntitiesSeenByUserForParent(
         collection.id,
         user,
-        'collectionProgress',
-        'seriesSeen'
+        COLLECTION_PROGRESS,
+        SERIES_SEEN
     );
 
     if (collection.rule === LOGIC_RANDOM) {
@@ -218,8 +225,8 @@ function getNextBlockForSeries(series, blocks, user) {
     const blocksSeen = getChildEntitiesSeenByUserForParent(
         series.id,
         user,
-        'seriesProgress',
-        'blocksSeen'
+        SERIES_PROGRESS,
+        BLOCKS_SEEN
     );
 
     if (series.rule === LOGIC_RANDOM) {
@@ -318,6 +325,68 @@ function getMediaUrlForMessage(type, user, media) {
 }
 
 /**
+ * Get Message for a Collection
+ * 
+ * @param {String} collectionId
+ * @param {Array} collections
+ * @param {Array} series
+ * @param {Array} blocks
+ * @param {Array} messages
+ * @param {Object} userUpdates
+ * @return {Object}
+*/
+function getNextMessageForCollection(
+    collectionId,
+    collections,
+    series,
+    blocks,
+    messages,
+    userUpdates
+) {
+    const collection = collections.find(c => c.id === collectionId);
+
+    const {
+        next: nextSeries,
+        seenEntities: seriesSeen
+    } = getNextSeriesForCollection(collection, series, userUpdates);
+
+    const { next: nextBlock, seenEntities: blocksSeen } = getNextBlockForSeries(
+        nextSeries,
+        blocks,
+        userUpdates
+    );
+
+    let user = Object.assign({}, userUpdates, {
+        [COLLECTION_PROGRESS]: updateProgressForEntity(
+            userUpdates,
+            collection.id,
+            seriesSeen,
+            COLLECTION_PROGRESS,
+            SERIES_SEEN
+        ),
+        [SERIES_PROGRESS]: updateProgressForEntity(
+            userUpdates,
+            nextSeries.id,
+            blocksSeen,
+            SERIES_PROGRESS,
+            BLOCKS_SEEN
+        )
+    });
+
+    const message = getFirstMessageForBlock(nextBlock.id, messages);
+
+    // update block scope
+    user = Object.assign({}, user, {
+        blockScope: updateBlockScope(message, user.blockScope)
+    });
+
+    return {
+        message,
+        user
+    };
+}
+
+/**
  * Construct Outgoing Messages
  * 
  * @param {String} action
@@ -338,6 +407,10 @@ function getMessagesForAction({
     media
 }) {
     let messagesToSend = [];
+
+    // cant assume its a message!
+    // action should have type and id { type, id }
+
     let curr = messages.find(m => m.id === action);
 
     let userUpdates = Object.assign({}, user);
@@ -350,12 +423,12 @@ function getMessagesForAction({
             const url = getMediaUrlForMessage(curr.messageType, user, media);
 
             messagesToSend.push({
-                type: 'message',
+                type: TYPE_MESSAGE,
                 message: makePlatformMediaMessagePayload(curr.messageType, url)
             });
         } else {
             messagesToSend.push({
-                type: 'message',
+                type: TYPE_MESSAGE,
                 message: makePlatformMessagePayload(curr.id, messages)
             });
         }
@@ -385,42 +458,18 @@ function getMessagesForAction({
                 );
             }
 
-            if (curr.next && curr.next.type === TYPE_COLLECTION) {
-                const collection = collections.find(c => c.id === curr.next.id);
+            if (curr.next.type === TYPE_COLLECTION) {
+                let nextMessage = getNextMessageForCollection(
+                    curr.next.id,
+                    collections,
+                    series,
+                    blocks,
+                    messages,
+                    userUpdates
+                );
 
-                const {
-                    next: nextSeries,
-                    seenEntities: seriesSeen
-                } = getNextSeriesForCollection(collection, series, userUpdates);
-
-                const {
-                    next: nextBlock,
-                    seenEntities: blocksSeen
-                } = getNextBlockForSeries(nextSeries, blocks, userUpdates);
-
-                userUpdates = Object.assign({}, userUpdates, {
-                    collectionProgress: updateProgressForEntity(
-                        userUpdates,
-                        collection.id,
-                        seriesSeen,
-                        'collectionProgress',
-                        'seriesSeen'
-                    ),
-                    seriesProgress: updateProgressForEntity(
-                        userUpdates,
-                        nextSeries.id,
-                        blocksSeen,
-                        'seriesProgress',
-                        'blocksSeen'
-                    )
-                });
-
-                curr = getFirstMessageForBlock(nextBlock.id, messages);
-
-                // update block scope
-                userUpdates = Object.assign({}, userUpdates, {
-                    blockScope: updateBlockScope(curr, userUpdates.blockScope)
-                });
+                curr = nextMessage.message;
+                userUpdates = nextMessage.user;
             }
         } else {
             curr = null;
