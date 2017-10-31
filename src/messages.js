@@ -12,7 +12,9 @@ const {
     TYPE_VIDEO,
     TYPE_QUESTION,
     LOGIC_SEQUENTIAL,
-    LOGIC_RANDOM
+    LOGIC_RANDOM,
+    INTRO_CONVERSATION_ID,
+    INTRO_BLOCK_ID
 } = require('./constants');
 
 const R = require('ramda');
@@ -63,6 +65,25 @@ function getLastSentMessageInHistory(user) {
 }
 
 /**
+ * Start a new Converation Track
+ * 
+ * @param {Array} messages
+ * @param {Array} collections
+ * @return {Object}
+*/
+function newConversationTrack(messages, collections) {
+    const next = messages
+        .concat(collections)
+        .filter(e => e.parent && e.parent.id === INTRO_CONVERSATION_ID)
+        .find(e => e.start === true);
+
+    return {
+        action: next.id,
+        block: INTRO_BLOCK_ID
+    };
+}
+
+/**
  * Get the next Action for incoming message
  * 
  * @param {Object} message
@@ -80,17 +101,15 @@ function getActionForMessage({ message, user, messages, collections }) {
     } else {
         const lastMessage = getLastSentMessageInHistory(user);
 
+        // TODO: Pickup After Collection
+
         if (user.blockScope.length && lastMessage && lastMessage.next) {
             action = lastMessage.next.id;
         } else {
-            const next = messages
-                .concat(collections)
-                .filter(e => e.parent && e.parent.id === 'intro-conversation')
-                .find(e => e.start === true);
+            const newTrack = newConversationTrack(messages, collections);
 
-            // TODO: Logic for where to start/move user to next series/collection
-            action = next.id;
-            user.blockScope.push('intro-block');
+            action = newTrack.action;
+            user.blockScope.push(newTrack.block);
         }
     }
 
@@ -345,6 +364,8 @@ function getMessagesForAction({
         userUpdates = Object.assign({}, userUpdates, {
             blockScope: updateBlockScope(curr, userUpdates.blockScope)
         });
+
+        // TODO: Collection and Series?
 
         // update history
         userUpdates = Object.assign({}, userUpdates, {

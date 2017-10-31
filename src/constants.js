@@ -29,6 +29,7 @@ const TYPE_VIDEO = 'video';
 
 // entity keys
 const INTRO_CONVERSATION_ID = 'intro-conversation';
+const INTRO_BLOCK_ID = 'intro-block';
 
 // LOGIC RULES
 const LOGIC_SEQUENTIAL = 'sequential';
@@ -64,6 +65,7 @@ module.exports = {
     FB_MESSAGE_TYPE,
     FB_TYPING_ON_TYPE,
     INTRO_CONVERSATION_ID,
+    INTRO_BLOCK_ID,
     LOGIC_SEQUENTIAL,
     LOGIC_RANDOM
 };

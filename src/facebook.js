@@ -147,6 +147,26 @@ function sendMessage(recipientId, content) {
 /**
  * Receive Message From Facebook Messenger
  * 
+ * @param {Array} messages
+ * @param {String} senderID
+ * @param {Object} user
+ * @return {Promise}
+*/
+function sendAllMessagesToMessenger(messages, senderID, user) {
+    return promiseSerial(messages.map(msg => sendMessage(senderID, msg)))
+        .then(() => {
+            updateUser(user)
+                .then(() => {
+                    console.error(`User ${user.id} updated successfully`);
+                })
+                .catch(e => console.error('Error: updateUser', e));
+        })
+        .catch(e => console.error('error: promiseSerial', e));
+}
+
+/**
+ * Receive Message From Facebook Messenger
+ * 
  * @param {Object} event
  * @return {void}
 */
@@ -185,11 +205,6 @@ function receivedMessage({
         collections: allCollections
     });
 
-    // ::: :::: :::
-    // ::: TODO :::
-    // ::: :::: :::
-    // track collections, series, blocks here
-
     const { messagesToSend, userUpdates } = getMessagesForAction({
         action,
         collections: allCollections,
@@ -207,18 +222,7 @@ function receivedMessage({
         messagesToSend
     );
 
-    // send all messages out to Messenger
-    promiseSerial(messagesWithTyping.map(msg => sendMessage(senderID, msg)))
-        .then(() => {
-            updateUser(userToUpdate)
-                .then(() => {
-                    console.error(
-                        `User ${userToUpdate.id} updated successfully`
-                    );
-                })
-                .catch(e => console.error('Error: updateUser', e));
-        })
-        .catch(e => console.error('error: promiseSerial', e));
+    sendAllMessagesToMessenger(messagesWithTyping, senderID, userToUpdate);
 }
 
 module.exports = {
