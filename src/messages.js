@@ -1,9 +1,11 @@
 const { updateBlockScope, updateHistory } = require('./users');
 const {
+    TYPE_COLLECTION,
     TYPE_BLOCK,
     TYPE_IMAGE,
     TYPE_VIDEO,
-    TYPE_QUESTION
+    TYPE_QUESTION,
+    INTRO_CONVERSATION_ID
 } = require('./constants');
 
 /**
@@ -51,27 +53,39 @@ function getLastSentMessageInHistory(user) {
     return user.history[user.history.length - 2];
 }
 
+function getInitialConversation() {
+    return INTRO_CONVERSATION_ID;
+}
+
 /**
  * Get the next Action for incoming message
  * 
  * @param {Object} message
  * @param {Object} user
  * @param {Array} blocks
+ * @param {Array} collections
+ * @param {Array} messages
  * @return {String}
 */
-function getActionForMessage(message, user, blocks) {
+function getActionForMessage({ message, user, blocks, messages, collections }) {
     let action;
 
     if (message.quick_reply) {
         action = message.quick_reply.payload;
     } else {
         const lastMessage = getLastSentMessageInHistory(user);
+
         if (user.blockScope.length && lastMessage && lastMessage.next) {
             action = lastMessage.next.id;
         } else {
+            const next = messages
+                .concat(collections)
+                .filter(e => e.parent && e.parent.id === 'intro-conversation')
+                .find(e => e.start === true);
+
             // TODO: Logic for where to start/move user to next series/collection
-            action = blocks.find(b => b.id === 'block-1').startMessage;
-            user.blockScope.push('block-1');
+            action = next.id;
+            user.blockScope.push('intro-block');
         }
     }
 
@@ -92,11 +106,11 @@ function getNextMessage(curr, user, messages, blocks) {
 
     const { blockScope, history } = user;
 
-    if (curr.isEnd === true) {
+    if (curr.isEnd === true || !curr.next) {
         if (blockScope.length > 0) {
             const currentBlock = blockScope[blockScope.length - 1];
 
-            const pointerToNextBlock = history
+            const lastCurrentBlockMessageInHistory = history
                 .slice()
                 .reverse()
                 .find(
@@ -104,14 +118,33 @@ function getNextMessage(curr, user, messages, blocks) {
                         m.block === currentBlock &&
                         m.next &&
                         m.next.type === TYPE_BLOCK
-                ).next.after;
+                );
+
+            if (
+                !lastCurrentBlockMessageInHistory ||
+                !lastCurrentBlockMessageInHistory.next
+            ) {
+                return;
+            }
+
+            // TODO: revisit this, maybe make this simpler
+            const pointerToNextBlock =
+                lastCurrentBlockMessageInHistory.next.after;
 
             next = messages.find(m => m.id === pointerToNextBlock);
         } else {
             // done
             next = null;
         }
-    } else if (curr.next.type === TYPE_BLOCK) {
+    } else if (curr.next && curr.next.type === TYPE_COLLECTION) {
+        // getAllSeriesForCollection
+        // checkAgainstCollectionsSeenForUser
+
+        // getAllBlocksForSeries
+        // checkAgainstBlocksSeenForUser
+
+        next = null;
+    } else if (curr.next && curr.next.type === TYPE_BLOCK) {
         const nextBlock = blocks.find(b => b.id === curr.next.id);
         next = messages.find(m => m.id === nextBlock.startMessage);
     } else {
@@ -149,12 +182,16 @@ function getMessagesForAction({ action, messages, blocks, user, media }) {
 
     let userToUpdate = Object.assign({}, user);
 
-    while (Object.keys(curr).length) {
-        if (curr.type === TYPE_IMAGE || curr.type === TYPE_VIDEO) {
-            const url = getMediaUrlForMessage(curr.type, user, media);
+    while (curr) {
+        if (
+            curr.messageType === TYPE_IMAGE ||
+            curr.messageType === TYPE_VIDEO
+        ) {
+            const url = getMediaUrlForMessage(curr.messageType, user, media);
+
             messagesToSend.push({
                 type: 'message',
-                message: makePlatformMediaMessagePayload(curr.type, url)
+                message: makePlatformMediaMessagePayload(curr.messageType, url)
             });
         } else {
             messagesToSend.push({
@@ -162,6 +199,9 @@ function getMessagesForAction({ action, messages, blocks, user, media }) {
                 message: makePlatformMessagePayload(curr.id, messages)
             });
         }
+
+        // ::: TODO :::
+        // Track collections, series
 
         // update block scope
         userToUpdate = Object.assign({}, userToUpdate, {
@@ -174,14 +214,18 @@ function getMessagesForAction({ action, messages, blocks, user, media }) {
         });
 
         // if it's a question
-        if (curr.type === TYPE_QUESTION) {
+        if (curr.messageType === TYPE_QUESTION) {
             break;
         }
 
-        curr = Object.assign(
-            {},
-            getNextMessage(curr, userToUpdate, messages, blocks)
-        );
+        if (curr.next) {
+            curr = Object.assign(
+                {},
+                getNextMessage(curr, userToUpdate, messages, blocks)
+            );
+        } else {
+            curr = null
+        }
     }
 
     return {

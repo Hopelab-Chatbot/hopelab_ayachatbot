@@ -4,6 +4,8 @@ const cacheUtils = require('alien-node-redis-utils')(redisClient);
 
 const {
     DB_USERS,
+    DB_CONVERSATIONS,
+    DB_COLLECTIONS,
     DB_SERIES,
     DB_MESSAGES,
     DB_BLOCKS,
@@ -110,6 +112,44 @@ const getUserById = id =>
     });
 
 /**
+ * Get Conversations
+ * 
+ * @return {Promise<Array>}
+*/
+const getConversations = () =>
+    new Promise(resolve => {
+        cacheUtils
+            .getItem(DB_CONVERSATIONS)
+            .then(JSON.parse)
+            .then(resolve)
+            .catch(e => {
+                console.error(
+                    `error: getConversations - cacheUtils.getItem(${DB_CONVERSATIONS})`,
+                    e
+                );
+            });
+    });
+
+/**
+ * Get Collections
+ * 
+ * @return {Promise<Array>}
+*/
+const getCollections = () =>
+    new Promise(resolve => {
+        cacheUtils
+            .getItem(DB_COLLECTIONS)
+            .then(JSON.parse)
+            .then(resolve)
+            .catch(e => {
+                console.error(
+                    `error: getCollections - cacheUtils.getItem(${DB_COLLECTIONS})`,
+                    e
+                );
+            });
+    });
+
+/**
  * Get Series
  * 
  * @return {Promise<Array>}
@@ -203,6 +243,8 @@ const getUserHistory = () =>
 
 module.exports = {
     getUserById,
+    getConversations,
+    getCollections,
     getSeries,
     getMessages,
     getBlocks,

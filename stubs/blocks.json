@@ -1,20 +1,12 @@
 [
     {
-        "title": "",
-        "number": "",
-        "tags": [],
-        "source": "",
-        "id": "block-1",
-        "startMessage": "message-100",
-        "endMessage": "message-105"
-    },
-    {
-        "title": "",
-        "number": "",
-        "tags": [],
-        "source": "",
-        "id": "block-2",
-        "startMessage": "message-200",
-        "endMessage": "message-211"
+        "type": "block",
+        "id": "intro-block",
+        "name": "default",
+        "private": true,
+        "parent": {
+            "type": "series",
+            "id": "intro-series"
+        }
     }
 ]
