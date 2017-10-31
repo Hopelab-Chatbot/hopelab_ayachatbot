@@ -86,7 +86,7 @@ function newConversationTrack(messages, collections) {
     }
 
     return {
-        action: next.id,
+        action: { type: next.type, id: next.id },
         block: INTRO_BLOCK_ID
     };
 }
@@ -105,14 +105,14 @@ function getActionForMessage({ message, user, messages, collections }) {
     let action;
 
     if (message.quick_reply) {
-        action = message.quick_reply.payload;
+        action = { type: TYPE_MESSAGE, id: message.quick_reply.payload };
     } else {
         const lastMessage = getLastSentMessageInHistory(user);
 
         // TODO: Pickup After Collection
 
         if (user.blockScope.length && lastMessage && lastMessage.next) {
-            action = lastMessage.next.id;
+            action = { type: lastMessage.next.type, id: lastMessage.next.id };
         } else {
             const newTrack = newConversationTrack(messages, collections);
 
@@ -407,13 +407,15 @@ function getMessagesForAction({
     media
 }) {
     let messagesToSend = [];
+    let curr;
+    let userUpdates;
 
-    // cant assume its a message!
-    // action should have type and id { type, id }
-
-    let curr = messages.find(m => m.id === action);
-
-    let userUpdates = Object.assign({}, user);
+    if (action.type === TYPE_MESSAGE) {
+        curr = messages.find(m => m.id === action.id);
+        userUpdates = Object.assign({}, user);
+    } else if (action.type === TYPE_COLLECTION) {
+        console.log('NEXT ACTION IS COLLECTION');
+    }
 
     while (curr) {
         if (
