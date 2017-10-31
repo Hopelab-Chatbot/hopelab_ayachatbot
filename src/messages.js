@@ -1,4 +1,4 @@
-const { updateBlockScope, updateHistory, getSeriesSeenByUserForCollection } = require('./users');
+const { updateBlockScope, updateHistory, getSeriesSeenByUserForCollection, updateCollectionProgress } = require('./users');
 const {
     TYPE_COLLECTION,
     TYPE_BLOCK,
@@ -118,12 +118,14 @@ function getAllPublicSeriesForCollection(collectionId, series) {
 function getNextRandomSeries(collectionSeries, seriesSeen) {
     if (collectionSeries.length === seriesSeen.length) {
         // start over at random
-        return collectionSeries[Math.floor(collectionSeries.length * Math.random())];
+        const nextSeries = collectionSeries[Math.floor(collectionSeries.length * Math.random())];
+        return { nextSeries, seriesSeen: [nextSeries.id]};
     }
 
     const seriesLeft = collectionSeries.filter(cs => seriesSeen.indexOf(cs.id) === -1);
+    const nextSeries = seriesLeft[Math.floor(seriesLeft.length * Math.random())];
 
-    return seriesLeft[Math.floor(seriesLeft.length * Math.random())];
+    return { nextSeries, seriesSeen: seriesSeen.concat(nextSeries.id) };
 }
 
 /**
@@ -134,18 +136,22 @@ function getNextRandomSeries(collectionSeries, seriesSeen) {
  * @return {Object}
 */
 function getNextSequentialSeries(collectionSeries, seriesSeen) {
+    const firstSeries = collectionSeries[0] || {};
+
     if (collectionSeries.length === seriesSeen.length) {
         // start over at random
-        return collectionSeries[0];
+        return { nextSeries: firstSeries, seriesSeen: [firstSeries.id] }
     }
 
-    const lastSeen = collectionSeries.findIndex(s => s.id === R.takeLast(1, seriesSeen));
+    const lastSeen = collectionSeries.findIndex(s => s.id === R.nth(0, R.takeLast(1, seriesSeen)));
 
-    if (lastSeen === collectionSeries.length) {
-        return collectionSeries[0];
+    if (lastSeen === collectionSeries.length - 1) {
+        return { nextSeries: firstSeries, seriesSeen: [firstSeries.id] };
     }
 
-    return collectionSeries[lastSeen + 1]
+    const nextSeries = collectionSeries[lastSeen + 1];
+
+    return { nextSeries, seriesSeen: seriesSeen.concat(nextSeries.id) }
 }
 
 /**
@@ -161,17 +167,15 @@ function getNextSeriesForCollection(collection, series, user) {
 
     const seriesSeen = getSeriesSeenByUserForCollection(collection.id, user);
 
-    let nextSeries;
-
     if (collection.rule === LOGIC_RANDOM) {
-        nextSeries = getNextRandomSeries(collectionSeries, seriesSeen);
+        return getNextRandomSeries(collectionSeries, seriesSeen);
     }
 
     if (collection.rule === LOGIC_SEQUENTIAL) {
-        nextSeries = getNextSequentialSeries(collectionSeries, seriesSeen);
+        return getNextSequentialSeries(collectionSeries, seriesSeen);
     }
 
-    return nextSeries;
+    return {};
 }
 
 /**
@@ -256,7 +260,7 @@ function getMessagesForAction({ action, collections, series, messages, blocks, u
     let messagesToSend = [];
     let curr = messages.find(m => m.id === action);
 
-    let userToUpdate = Object.assign({}, user);
+    let userUpdates = Object.assign({}, user);
 
     while (curr) {
         if (
@@ -280,13 +284,13 @@ function getMessagesForAction({ action, collections, series, messages, blocks, u
         // Track collections, series
 
         // update block scope
-        userToUpdate = Object.assign({}, userToUpdate, {
-            blockScope: updateBlockScope(curr, userToUpdate.blockScope)
+        userUpdates = Object.assign({}, userUpdates, {
+            blockScope: updateBlockScope(curr, userUpdates.blockScope)
         });
 
         // update history
-        userToUpdate = Object.assign({}, userToUpdate, {
-            history: updateHistory(curr, userToUpdate.history)
+        userUpdates = Object.assign({}, userUpdates, {
+            history: updateHistory(curr, userUpdates.history)
         });
 
         // if it's a question
@@ -298,17 +302,19 @@ function getMessagesForAction({ action, collections, series, messages, blocks, u
             if (curr.next.type === TYPE_MESSAGE) {
                 curr = Object.assign(
                     {},
-                    getNextMessage(curr, userToUpdate, messages, blocks)
+                    getNextMessage(curr, userUpdates, messages, blocks)
                 );
             }
 
             if (curr.next.type === TYPE_COLLECTION) {
                 const collection = collections.find(c => c.id === curr.next.id);
 
-                const nextSeries = getNextSeriesForCollection(collection, series, userToUpdate);
+                const { nextSeries, seriesSeen } = getNextSeriesForCollection(collection, series, userUpdates);
 
-                // TODO: Update User
-
+                userUpdates = Object.assign({}, userUpdates, {
+                    collectionProgress: updateCollectionProgress(userUpdates, collection.id, seriesSeen)
+                });
+                
                 curr = null;
             }
         } else {
@@ -318,8 +324,7 @@ function getMessagesForAction({ action, collections, series, messages, blocks, u
 
     return {
         messagesToSend,
-        history: userToUpdate.history,
-        blockScope: userToUpdate.blockScope
+        userUpdates
     };
 }
 

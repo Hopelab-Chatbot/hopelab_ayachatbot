@@ -190,7 +190,7 @@ function receivedMessage({
     // ::: :::: :::
     // track collections, series, blocks here
 
-    const { messagesToSend, history, blockScope } = getMessagesForAction({
+    const { messagesToSend, userUpdates } = getMessagesForAction({
         action,
         collections: allCollections,
         messages: allMessages,
@@ -199,10 +199,7 @@ function receivedMessage({
         media
     });
 
-    userToUpdate = Object.assign({}, userToUpdate, {
-        history,
-        blockScope
-    });
+    userToUpdate = Object.assign({}, userToUpdate, userUpdates);
 
     const messagesWithTyping = R.intersperse(
         { type: FB_TYPING_ON_TYPE },

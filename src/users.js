@@ -87,6 +87,27 @@ function getSeriesSeenByUserForCollection(collectionId, user) {
 }
 
 /**
+ * Update the user's series progress for a collection
+ * 
+ * @param {Object} user
+ * @param {String} collectionId
+ * @param {Array} seriesSeen
+ * @return {Array}
+*/
+function updateCollectionProgress(user, collectionId, seriesSeen) {
+    const collectionProgress = user.collectionProgress || [];
+    const collectionIndex = collectionProgress.findIndex(cp => cp.id === collectionId);
+
+    if (collectionIndex === -1) {
+        return collectionProgress.concat({ id: collectionId, seriesSeen });
+    }
+
+    return collectionProgress.map((cp, i) => {
+        return i === collectionIndex ? Object.assign({}, cp, { seriesSeen }) : cp
+    });
+}
+
+/**
  * Is Next Message a Block?
  * 
  * @param {Object} message
@@ -102,5 +123,6 @@ module.exports = {
     updateHistory,
     getPreviousMessageInHistory,
     getSeriesSeenByUserForCollection,
-    isNextMessageBlock
+    isNextMessageBlock,
+    updateCollectionProgress
 };
