@@ -2,7 +2,7 @@ const {
     updateBlockScope,
     updateHistory,
     getChildEntitiesSeenByUserForParent,
-    updateCollectionProgress
+    updateProgressForEntity
 } = require('./users');
 const {
     TYPE_COLLECTION,
@@ -11,7 +11,6 @@ const {
     TYPE_IMAGE,
     TYPE_VIDEO,
     TYPE_QUESTION,
-    INTRO_CONVERSATION_ID,
     LOGIC_SEQUENTIAL,
     LOGIC_RANDOM
 } = require('./constants');
@@ -63,10 +62,6 @@ function getLastSentMessageInHistory(user) {
     return user.history[user.history.length - 2];
 }
 
-function getInitialConversation() {
-    return INTRO_CONVERSATION_ID;
-}
-
 /**
  * Get the next Action for incoming message
  * 
@@ -77,7 +72,7 @@ function getInitialConversation() {
  * @param {Array} messages
  * @return {String}
 */
-function getActionForMessage({ message, user, blocks, messages, collections }) {
+function getActionForMessage({ message, user, messages, collections }) {
     let action;
 
     if (message.quick_reply) {
@@ -123,17 +118,12 @@ function getAllPublicChildren(id, children) {
 function getNextRandomEntityFor(totalEntities, seenEntities) {
     if (totalEntities.length === seenEntities.length) {
         const next =
-        totalEntities[
-                Math.floor(totalEntities.length * Math.random())
-            ];
+            totalEntities[Math.floor(totalEntities.length * Math.random())];
         return { next, seenEntities: [next.id] };
     }
 
-    const left = totalEntities.filter(
-        t => seenEntities.indexOf(t.id) === -1
-    );
-    const next =
-        left[Math.floor(left.length * Math.random())];
+    const left = totalEntities.filter(t => seenEntities.indexOf(t.id) === -1);
+    const next = left[Math.floor(left.length * Math.random())];
 
     return { next, seenEntities: seenEntities.concat(next.id) };
 }
@@ -175,12 +165,14 @@ function getNextSequentialEntityFor(totalEntities, seenEntities) {
  * @return {Object}
 */
 function getNextSeriesForCollection(collection, series, user) {
-    const collectionSeries = getAllPublicChildren(
-        collection.id,
-        series
-    );
+    const collectionSeries = getAllPublicChildren(collection.id, series);
 
-    const seriesSeen = getChildEntitiesSeenByUserForParent(collection.id, user, 'collectionProgress', 'seriesSeen');
+    const seriesSeen = getChildEntitiesSeenByUserForParent(
+        collection.id,
+        user,
+        'collectionProgress',
+        'seriesSeen'
+    );
 
     if (collection.rule === LOGIC_RANDOM) {
         return getNextRandomEntityFor(collectionSeries, seriesSeen);
@@ -202,12 +194,14 @@ function getNextSeriesForCollection(collection, series, user) {
  * @return {Object}
 */
 function getNextBlockForSeries(series, blocks, user) {
-    const seriesBlocks = getAllPublicChildren(
-        series.id,
-        blocks
-    );
+    const seriesBlocks = getAllPublicChildren(series.id, blocks);
 
-    const blocksSeen = getChildEntitiesSeenByUserForParent(series.id, user, 'seriesProgress', 'blocksSeen');
+    const blocksSeen = getChildEntitiesSeenByUserForParent(
+        series.id,
+        user,
+        'seriesProgress',
+        'blocksSeen'
+    );
 
     if (series.rule === LOGIC_RANDOM) {
         return getNextRandomEntityFor(seriesBlocks, blocksSeen);
@@ -277,6 +271,23 @@ function getNextMessage(curr, user, messages, blocks) {
 /**
  * Construct Outgoing Messages
  * 
+ * @param {String} blockId
+ * @param {Array} messages
+ * @return {Object}
+*/
+function getFirstMessageForBlock(blockId, messages) {
+    return R.pathOr(
+        {},
+        ['0'],
+        messages.filter(
+            m => m.parent && m.parent.id === blockId && !m.private && m.start
+        )
+    );
+}
+
+/**
+ * Construct Outgoing Messages
+ * 
  * @param {String} type
  * @param {Object} user
  * @param {Object} media
@@ -330,9 +341,6 @@ function getMessagesForAction({
             });
         }
 
-        // ::: TODO :::
-        // Track collections, series
-
         // update block scope
         userUpdates = Object.assign({}, userUpdates, {
             blockScope: updateBlockScope(curr, userUpdates.blockScope)
@@ -356,30 +364,42 @@ function getMessagesForAction({
                 );
             }
 
-            if (curr.next.type === TYPE_COLLECTION) {
+            if (curr.next && curr.next.type === TYPE_COLLECTION) {
                 const collection = collections.find(c => c.id === curr.next.id);
 
-                const { next: nextSeries, entitiesSeen: seriesSeen } = getNextSeriesForCollection(
-                    collection,
-                    series,
-                    userUpdates
-                );
+                const {
+                    next: nextSeries,
+                    seenEntities: seriesSeen
+                } = getNextSeriesForCollection(collection, series, userUpdates);
 
-                const { next: nextBlock, entitiesSeen: blocksSeen, } = getNextBlockForSeries(
-                    nextSeries,
-                    blocks,
-                    userUpdates
-                );
+                const {
+                    next: nextBlock,
+                    seenEntities: blocksSeen
+                } = getNextBlockForSeries(nextSeries, blocks, userUpdates);
 
                 userUpdates = Object.assign({}, userUpdates, {
-                    collectionProgress: updateCollectionProgress(
+                    collectionProgress: updateProgressForEntity(
                         userUpdates,
                         collection.id,
-                        seriesSeen
+                        seriesSeen,
+                        'collectionProgress',
+                        'seriesSeen'
+                    ),
+                    seriesProgress: updateProgressForEntity(
+                        userUpdates,
+                        nextSeries.id,
+                        blocksSeen,
+                        'seriesProgress',
+                        'blocksSeen'
                     )
                 });
 
-                curr = null;
+                curr = getFirstMessageForBlock(nextBlock.id, messages);
+
+                // update block scope
+                userUpdates = Object.assign({}, userUpdates, {
+                    blockScope: updateBlockScope(curr, userUpdates.blockScope)
+                });
             }
         } else {
             curr = null;

@@ -93,23 +93,21 @@ function getChildEntitiesSeenByUserForParent(id, user, progressKey, seenKey) {
  * 
  * @param {Object} user
  * @param {String} collectionId
- * @param {Array} seriesSeen
+ * @param {Array} seen
+ * @param {String} progressKey
+ * @param {String} seenKey
  * @return {Array}
 */
-function updateCollectionProgress(user, collectionId, seriesSeen) {
-    const collectionProgress = user.collectionProgress || [];
-    const collectionIndex = collectionProgress.findIndex(
-        cp => cp.id === collectionId
-    );
+function updateProgressForEntity(user, id, seen, progressKey, seenKey) {
+    const progress = user[progressKey] || [];
+    const index = progress.findIndex(cp => cp.id === id);
 
-    if (collectionIndex === -1) {
-        return collectionProgress.concat({ id: collectionId, seriesSeen });
+    if (index === -1) {
+        return progress.concat({ id: id, [seenKey]: seen });
     }
 
-    return collectionProgress.map((cp, i) => {
-        return i === collectionIndex
-            ? Object.assign({}, cp, { seriesSeen })
-            : cp;
+    return progress.map((cp, i) => {
+        return i === index ? Object.assign({}, cp, { [seenKey]: seen }) : cp;
     });
 }
 
@@ -130,5 +128,5 @@ module.exports = {
     getPreviousMessageInHistory,
     getChildEntitiesSeenByUserForParent,
     isNextMessageBlock,
-    updateCollectionProgress
+    updateProgressForEntity
 };
