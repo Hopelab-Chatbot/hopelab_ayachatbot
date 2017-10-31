@@ -1,4 +1,9 @@
-const { updateBlockScope, updateHistory, getSeriesSeenByUserForCollection, updateCollectionProgress } = require('./users');
+const {
+    updateBlockScope,
+    updateHistory,
+    getSeriesSeenByUserForCollection,
+    updateCollectionProgress
+} = require('./users');
 const {
     TYPE_COLLECTION,
     TYPE_BLOCK,
@@ -118,12 +123,18 @@ function getAllPublicSeriesForCollection(collectionId, series) {
 function getNextRandomSeries(collectionSeries, seriesSeen) {
     if (collectionSeries.length === seriesSeen.length) {
         // start over at random
-        const nextSeries = collectionSeries[Math.floor(collectionSeries.length * Math.random())];
-        return { nextSeries, seriesSeen: [nextSeries.id]};
+        const nextSeries =
+            collectionSeries[
+                Math.floor(collectionSeries.length * Math.random())
+            ];
+        return { nextSeries, seriesSeen: [nextSeries.id] };
     }
 
-    const seriesLeft = collectionSeries.filter(cs => seriesSeen.indexOf(cs.id) === -1);
-    const nextSeries = seriesLeft[Math.floor(seriesLeft.length * Math.random())];
+    const seriesLeft = collectionSeries.filter(
+        cs => seriesSeen.indexOf(cs.id) === -1
+    );
+    const nextSeries =
+        seriesLeft[Math.floor(seriesLeft.length * Math.random())];
 
     return { nextSeries, seriesSeen: seriesSeen.concat(nextSeries.id) };
 }
@@ -140,10 +151,12 @@ function getNextSequentialSeries(collectionSeries, seriesSeen) {
 
     if (collectionSeries.length === seriesSeen.length) {
         // start over at random
-        return { nextSeries: firstSeries, seriesSeen: [firstSeries.id] }
+        return { nextSeries: firstSeries, seriesSeen: [firstSeries.id] };
     }
 
-    const lastSeen = collectionSeries.findIndex(s => s.id === R.nth(0, R.takeLast(1, seriesSeen)));
+    const lastSeen = collectionSeries.findIndex(
+        s => s.id === R.nth(0, R.takeLast(1, seriesSeen))
+    );
 
     if (lastSeen === collectionSeries.length - 1) {
         return { nextSeries: firstSeries, seriesSeen: [firstSeries.id] };
@@ -151,7 +164,7 @@ function getNextSequentialSeries(collectionSeries, seriesSeen) {
 
     const nextSeries = collectionSeries[lastSeen + 1];
 
-    return { nextSeries, seriesSeen: seriesSeen.concat(nextSeries.id) }
+    return { nextSeries, seriesSeen: seriesSeen.concat(nextSeries.id) };
 }
 
 /**
@@ -163,7 +176,10 @@ function getNextSequentialSeries(collectionSeries, seriesSeen) {
  * @return {Object}
 */
 function getNextSeriesForCollection(collection, series, user) {
-    const collectionSeries = getAllPublicSeriesForCollection(collection.id, series);
+    const collectionSeries = getAllPublicSeriesForCollection(
+        collection.id,
+        series
+    );
 
     const seriesSeen = getSeriesSeenByUserForCollection(collection.id, user);
 
@@ -256,7 +272,15 @@ function getMediaUrlForMessage(type, user, media) {
  * @param {Object} user
  * @return {Object}
 */
-function getMessagesForAction({ action, collections, series, messages, blocks, user, media }) {
+function getMessagesForAction({
+    action,
+    collections,
+    series,
+    messages,
+    blocks,
+    user,
+    media
+}) {
     let messagesToSend = [];
     let curr = messages.find(m => m.id === action);
 
@@ -309,16 +333,24 @@ function getMessagesForAction({ action, collections, series, messages, blocks, u
             if (curr.next.type === TYPE_COLLECTION) {
                 const collection = collections.find(c => c.id === curr.next.id);
 
-                const { nextSeries, seriesSeen } = getNextSeriesForCollection(collection, series, userUpdates);
+                const { nextSeries, seriesSeen } = getNextSeriesForCollection(
+                    collection,
+                    series,
+                    userUpdates
+                );
 
                 userUpdates = Object.assign({}, userUpdates, {
-                    collectionProgress: updateCollectionProgress(userUpdates, collection.id, seriesSeen)
+                    collectionProgress: updateCollectionProgress(
+                        userUpdates,
+                        collection.id,
+                        seriesSeen
+                    )
                 });
-                
+
                 curr = null;
             }
         } else {
-            curr = null
+            curr = null;
         }
     }
 

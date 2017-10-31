@@ -96,14 +96,18 @@ function getSeriesSeenByUserForCollection(collectionId, user) {
 */
 function updateCollectionProgress(user, collectionId, seriesSeen) {
     const collectionProgress = user.collectionProgress || [];
-    const collectionIndex = collectionProgress.findIndex(cp => cp.id === collectionId);
+    const collectionIndex = collectionProgress.findIndex(
+        cp => cp.id === collectionId
+    );
 
     if (collectionIndex === -1) {
         return collectionProgress.concat({ id: collectionId, seriesSeen });
     }
 
     return collectionProgress.map((cp, i) => {
-        return i === collectionIndex ? Object.assign({}, cp, { seriesSeen }) : cp
+        return i === collectionIndex
+            ? Object.assign({}, cp, { seriesSeen })
+            : cp;
     });
 }
 
