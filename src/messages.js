@@ -311,12 +311,14 @@ function getNextMessage(curr, user, messages, blocks) {
  * @return {Object}
 */
 function getFirstMessageForBlock(blockId, messages) {
+    const parentIdMatchesBlockId = R.pathEq(['parent', 'id'], blockId);
+    const isNotPrivate = R.or(R.propEq('private', undefined), R.propEq('private', false));
+    const isStart = R.propEq('start', true);
+
     return R.pathOr(
         {},
         ['0'],
-        messages.filter(
-            m => m.parent && m.parent.id === blockId && !m.private && m.start
-        )
+        messages.filter(R.allPass([parentIdMatchesBlockId, isNotPrivate, isStart]))
     );
 }
 
