@@ -1,4 +1,4 @@
-const { TYPE_BLOCK } = require('./constants');
+const { TYPE_BLOCK, BLOCK_SCOPE } = require('./constants');
 
 const R = require('ramda');
 
@@ -11,7 +11,7 @@ const R = require('ramda');
 function createNewUser(id) {
     return {
         id,
-        blockScope: [],
+        [BLOCK_SCOPE]: [],
         history: [],
         progress: {
             prevMessage: '',

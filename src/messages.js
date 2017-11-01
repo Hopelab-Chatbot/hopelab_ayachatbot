@@ -18,7 +18,9 @@ const {
     COLLECTION_PROGRESS,
     SERIES_PROGRESS,
     SERIES_SEEN,
-    BLOCKS_SEEN
+    BLOCKS_SEEN,
+    COLLECTION_SCOPE,
+    BLOCK_SCOPE
 } = require('./constants');
 
 const R = require('ramda');
@@ -81,10 +83,6 @@ function newConversationTrack(messages, collections) {
         .filter(e => e.parent && e.parent.id === INTRO_CONVERSATION_ID)
         .find(e => e.start === true);
 
-    if (next.type === TYPE_COLLECTION) {
-        // getStartMessageForCollection()
-    }
-
     return {
         action: { type: next.type, id: next.id },
         block: INTRO_BLOCK_ID
@@ -105,19 +103,20 @@ function getActionForMessage({ message, user, messages, collections }) {
     let action;
 
     if (message.quick_reply) {
+        // TODO: Quick Replies Pointing to Collections?
         action = { type: TYPE_MESSAGE, id: message.quick_reply.payload };
     } else {
         const lastMessage = getLastSentMessageInHistory(user);
 
         // TODO: Pickup After Collection
 
-        if (user.blockScope.length && lastMessage && lastMessage.next) {
+        if (user[BLOCK_SCOPE].length && lastMessage && lastMessage.next) {
             action = { type: lastMessage.next.type, id: lastMessage.next.id };
         } else {
             const newTrack = newConversationTrack(messages, collections);
 
             action = newTrack.action;
-            user.blockScope.push(newTrack.block);
+            user[BLOCK_SCOPE].push(newTrack.block);
         }
     }
 
@@ -252,7 +251,7 @@ function getNextBlockForSeries(series, blocks, user) {
 function getNextMessage(curr, user, messages, blocks) {
     let next;
 
-    const { blockScope, history } = user;
+    const { [BLOCK_SCOPE]: blockScope, history } = user;
 
     if (curr.isEnd === true || !curr.next) {
         if (blockScope.length > 0) {
@@ -377,7 +376,7 @@ function getNextMessageForCollection(
 
     // update block scope
     user = Object.assign({}, user, {
-        blockScope: updateBlockScope(message, user.blockScope)
+        [BLOCK_SCOPE]: updateBlockScope(message, user[BLOCK_SCOPE])
     });
 
     return {
@@ -408,13 +407,23 @@ function getMessagesForAction({
 }) {
     let messagesToSend = [];
     let curr;
-    let userUpdates;
+
+    let userUpdates = Object.assign({}, user);
 
     if (action.type === TYPE_MESSAGE) {
         curr = messages.find(m => m.id === action.id);
-        userUpdates = Object.assign({}, user);
     } else if (action.type === TYPE_COLLECTION) {
-        console.log('NEXT ACTION IS COLLECTION');
+        let nextMessage = getNextMessageForCollection(
+            action.id,
+            collections,
+            series,
+            blocks,
+            messages,
+            userUpdates
+        );
+
+        curr = nextMessage.message;
+        userUpdates = nextMessage.user;
     }
 
     while (curr) {
@@ -437,7 +446,7 @@ function getMessagesForAction({
 
         // update block scope
         userUpdates = Object.assign({}, userUpdates, {
-            blockScope: updateBlockScope(curr, userUpdates.blockScope)
+            [BLOCK_SCOPE]: updateBlockScope(curr, userUpdates[BLOCK_SCOPE])
         });
 
         // TODO: Collection and Series?
