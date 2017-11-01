@@ -198,13 +198,16 @@ function receivedMessage({
         )
     });
 
-    const action = getActionForMessage({
+    const { action, userActionUpdates } = getActionForMessage({
         message,
         user: userToUpdate,
         blocks: allBlocks,
+        series: allSeries,
         messages: allMessages,
         collections: allCollections
     });
+
+    userToUpdate = Object.assign({}, userToUpdate, userActionUpdates);
 
     const { messagesToSend, userUpdates } = getMessagesForAction({
         action,

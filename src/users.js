@@ -121,6 +121,19 @@ function isNextMessageBlock(message) {
     return !!message.next && message.next.type === TYPE_BLOCK;
 }
 
+/**
+ * Remove Last Scope Item
+ * 
+ * @param {Object} user
+ * @param {String} scopeId
+ * @return {Object}
+*/
+function popScope(user, scopeId) {
+    return Object.assign({}, user, {
+        [scopeId]: user[scopeId].slice(0, -1)
+    });
+}
+
 module.exports = {
     createNewUser,
     updateBlockScope,
@@ -128,5 +141,6 @@ module.exports = {
     getPreviousMessageInHistory,
     getChildEntitiesSeenByUserForParent,
     isNextMessageBlock,
-    updateProgressForEntity
+    updateProgressForEntity,
+    popScope
 };

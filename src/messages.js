@@ -2,7 +2,8 @@ const {
     updateBlockScope,
     updateHistory,
     getChildEntitiesSeenByUserForParent,
-    updateProgressForEntity
+    updateProgressForEntity,
+    popScope
 } = require('./users');
 const {
     TYPE_COLLECTION,
@@ -95,12 +96,21 @@ function newConversationTrack(messages, collections) {
  * @param {Object} message
  * @param {Object} user
  * @param {Array} blocks
+ * @param {Array} series
  * @param {Array} collections
  * @param {Array} messages
- * @return {String}
+ * @return {Object}
 */
-function getActionForMessage({ message, user, messages, collections }) {
+function getActionForMessage({
+    message,
+    user,
+    blocks,
+    series,
+    messages,
+    collections
+}) {
     let action;
+    let userActionUpdates = user;
 
     if (message.quick_reply) {
         // TODO: Quick Replies Pointing to Collections?
@@ -108,19 +118,50 @@ function getActionForMessage({ message, user, messages, collections }) {
     } else {
         const lastMessage = getLastSentMessageInHistory(user);
 
-        // TODO: Pickup After Collection
+        if (
+            user[BLOCK_SCOPE].length &&
+            user[BLOCK_SCOPE].length > 1 &&
+            lastMessage &&
+            lastMessage.next
+        ) {
+            action = { type: lastMessage.next.type, id: lastMessage.next.id };
+        } else if (user[COLLECTION_SCOPE] && user[COLLECTION_SCOPE].length) {
+            let nextMessage = getNextMessageForCollection(
+                user[COLLECTION_SCOPE][user[COLLECTION_SCOPE].length - 1],
+                collections,
+                series,
+                blocks,
+                messages,
+                userActionUpdates
+            );
 
-        if (user[BLOCK_SCOPE].length && lastMessage && lastMessage.next) {
+            action = {
+                type: nextMessage.message.type,
+                id: nextMessage.message.id
+            };
+            userActionUpdates = nextMessage.user;
+        } else if (
+            user[BLOCK_SCOPE].length &&
+            user[BLOCK_SCOPE].length === 1 &&
+            lastMessage &&
+            lastMessage.next
+        ) {
             action = { type: lastMessage.next.type, id: lastMessage.next.id };
         } else {
             const newTrack = newConversationTrack(messages, collections);
 
             action = newTrack.action;
-            user[BLOCK_SCOPE].push(newTrack.block);
+            userActionUpdates = popScope(user, BLOCK_SCOPE);
+
+            userActionUpdates = Object.assign({}, userActionUpdates, {
+                [BLOCK_SCOPE]: userActionUpdates[BLOCK_SCOPE].concat(
+                    newTrack.block
+                )
+            });
         }
     }
 
-    return action;
+    return { action, userActionUpdates };
 }
 
 /**
@@ -251,39 +292,13 @@ function getNextBlockForSeries(series, blocks, user) {
 function getNextMessage(curr, user, messages, blocks) {
     let next;
 
-    const { [BLOCK_SCOPE]: blockScope, history } = user;
+    const {
+        [BLOCK_SCOPE]: blockScope,
+        [COLLECTION_SCOPE]: collectionScope,
+        history
+    } = user;
 
-    if (curr.isEnd === true || !curr.next) {
-        if (blockScope.length > 0) {
-            const currentBlock = blockScope[blockScope.length - 1];
-
-            const lastCurrentBlockMessageInHistory = history
-                .slice()
-                .reverse()
-                .find(
-                    m =>
-                        m.block === currentBlock &&
-                        m.next &&
-                        m.next.type === TYPE_BLOCK
-                );
-
-            if (
-                !lastCurrentBlockMessageInHistory ||
-                !lastCurrentBlockMessageInHistory.next
-            ) {
-                return;
-            }
-
-            // TODO: revisit this, maybe make this simpler
-            const pointerToNextBlock =
-                lastCurrentBlockMessageInHistory.next.after;
-
-            next = messages.find(m => m.id === pointerToNextBlock);
-        } else {
-            // done
-            next = null;
-        }
-    } else if (curr.next && curr.next.type === TYPE_BLOCK) {
+    if (curr.next && curr.next.type === TYPE_BLOCK) {
         const nextBlock = blocks.find(b => b.id === curr.next.id);
         next = messages.find(m => m.id === nextBlock.startMessage);
     } else {
@@ -344,6 +359,12 @@ function getNextMessageForCollection(
 ) {
     const collection = collections.find(c => c.id === collectionId);
 
+    userUpdates = Object.assign({}, userUpdates, {
+        [COLLECTION_SCOPE]: (userUpdates[COLLECTION_SCOPE] || []).concat(
+            collectionId
+        )
+    });
+
     const {
         next: nextSeries,
         seenEntities: seriesSeen
@@ -356,6 +377,7 @@ function getNextMessageForCollection(
     );
 
     let user = Object.assign({}, userUpdates, {
+        [BLOCK_SCOPE]: userUpdates[BLOCK_SCOPE].concat(nextBlock.id),
         [COLLECTION_PROGRESS]: updateProgressForEntity(
             userUpdates,
             collection.id,
@@ -373,11 +395,6 @@ function getNextMessageForCollection(
     });
 
     const message = getFirstMessageForBlock(nextBlock.id, messages);
-
-    // update block scope
-    user = Object.assign({}, user, {
-        [BLOCK_SCOPE]: updateBlockScope(message, user[BLOCK_SCOPE])
-    });
 
     return {
         message,
@@ -449,8 +466,6 @@ function getMessagesForAction({
             [BLOCK_SCOPE]: updateBlockScope(curr, userUpdates[BLOCK_SCOPE])
         });
 
-        // TODO: Collection and Series?
-
         // update history
         userUpdates = Object.assign({}, userUpdates, {
             history: updateHistory(curr, userUpdates.history)
@@ -467,9 +482,7 @@ function getMessagesForAction({
                     {},
                     getNextMessage(curr, userUpdates, messages, blocks)
                 );
-            }
-
-            if (curr.next.type === TYPE_COLLECTION) {
+            } else if (curr.next.type === TYPE_COLLECTION) {
                 let nextMessage = getNextMessageForCollection(
                     curr.next.id,
                     collections,
@@ -483,7 +496,50 @@ function getMessagesForAction({
                 userUpdates = nextMessage.user;
             }
         } else {
-            curr = null;
+            if (
+                userUpdates[COLLECTION_SCOPE] &&
+                userUpdates[COLLECTION_SCOPE].length
+            ) {
+                const collectionScopeLeavingId =
+                    userUpdates[COLLECTION_SCOPE][
+                        userUpdates[COLLECTION_SCOPE].length - 1
+                    ];
+
+                const collectionScopeLeaving = collections.find(
+                    c => c.id === collectionScopeLeavingId
+                );
+
+                if (collectionScopeLeaving && collectionScopeLeaving.next) {
+                    if (collectionScopeLeaving.next.type === TYPE_COLLECTION) {
+                        let nextMessage = getNextMessageForCollection(
+                            collectionScopeLeaving.next.id,
+                            collections,
+                            series,
+                            blocks,
+                            messages,
+                            userUpdates
+                        );
+
+                        curr = nextMessage.message;
+                        userUpdates = popScope(userUpdates, COLLECTION_SCOPE);
+                    } else if (
+                        collectionScopeLeaving.next.type === TYPE_MESSAGE
+                    ) {
+                        curr = messages.find(
+                            m => m.id === collectionScopeLeaving.next.id
+                        );
+                        userUpdates = popScope(userUpdates, COLLECTION_SCOPE);
+                    } else {
+                        curr = null;
+                        userUpdates = popScope(userUpdates, COLLECTION_SCOPE);
+                    }
+                } else {
+                    curr = null;
+                    userUpdates = popScope(userUpdates, COLLECTION_SCOPE);
+                }
+            } else {
+                curr = null;
+            }
         }
     }
 
