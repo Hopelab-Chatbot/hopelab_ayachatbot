@@ -81,8 +81,7 @@ function getLastSentMessageInHistory(user) {
 function newConversationTrack(messages, collections) {
     const next = messages
         .concat(collections)
-        .filter(e => e.parent && e.parent.id === INTRO_CONVERSATION_ID)
-        .find(e => e.start === true);
+        .find(R.both(R.pathEq(['parent', 'id'], INTRO_CONVERSATION_ID), R.propEq('start', true)))
 
     return {
         action: { type: next.type, id: next.id },
@@ -119,15 +118,13 @@ function getActionForMessage({
         const lastMessage = getLastSentMessageInHistory(user);
 
         if (
-            user[BLOCK_SCOPE].length &&
-            user[BLOCK_SCOPE].length > 1 &&
-            lastMessage &&
-            lastMessage.next
+            R.gt(R.path([BLOCK_SCOPE, 'length'], user), 1) &&
+            R.path(['next'], lastMessage)
         ) {
             action = { type: lastMessage.next.type, id: lastMessage.next.id };
         } else if (user[COLLECTION_SCOPE] && user[COLLECTION_SCOPE].length) {
             let nextMessage = getNextMessageForCollection(
-                user[COLLECTION_SCOPE][user[COLLECTION_SCOPE].length - 1],
+                R.last(user[COLLECTION_SCOPE]),
                 collections,
                 series,
                 blocks,
@@ -141,10 +138,8 @@ function getActionForMessage({
             };
             userActionUpdates = nextMessage.user;
         } else if (
-            user[BLOCK_SCOPE].length &&
-            user[BLOCK_SCOPE].length === 1 &&
-            lastMessage &&
-            lastMessage.next
+            R.pathEq([BLOCK_SCOPE, 'length'], 1, user) &&
+            R.path(['next'], lastMessage)
         ) {
             action = { type: lastMessage.next.type, id: lastMessage.next.id };
         } else {
@@ -210,7 +205,7 @@ function getNextSequentialEntityFor(totalEntities, seenEntities) {
     }
 
     const lastSeen = totalEntities.findIndex(
-        t => t.id === R.nth(0, R.takeLast(1, seenEntities))
+        entity => entity.id === R.nth(0, R.takeLast(1, seenEntities))
     );
 
     if (lastSeen === totalEntities.length - 1) {
@@ -509,30 +504,25 @@ function getMessagesForAction({
                     c => c.id === collectionScopeLeavingId
                 );
 
-                if (collectionScopeLeaving && collectionScopeLeaving.next) {
-                    if (collectionScopeLeaving.next.type === TYPE_COLLECTION) {
-                        let nextMessage = getNextMessageForCollection(
-                            collectionScopeLeaving.next.id,
-                            collections,
-                            series,
-                            blocks,
-                            messages,
-                            userUpdates
-                        );
+                if (R.pathEq(['next', 'type'], TYPE_COLLECTION, collectionScopeLeaving || {})) {
+                    let nextMessage = getNextMessageForCollection(
+                        collectionScopeLeaving.next.id,
+                        collections,
+                        series,
+                        blocks,
+                        messages,
+                        userUpdates
+                    );
 
-                        curr = nextMessage.message;
-                        userUpdates = popScope(userUpdates, COLLECTION_SCOPE);
-                    } else if (
-                        collectionScopeLeaving.next.type === TYPE_MESSAGE
-                    ) {
-                        curr = messages.find(
-                            m => m.id === collectionScopeLeaving.next.id
-                        );
-                        userUpdates = popScope(userUpdates, COLLECTION_SCOPE);
-                    } else {
-                        curr = null;
-                        userUpdates = popScope(userUpdates, COLLECTION_SCOPE);
-                    }
+                    curr = nextMessage.message;
+                    userUpdates = popScope(userUpdates, COLLECTION_SCOPE);
+                } else if (
+                    R.pathEq(['next', 'type'], TYPE_MESSAGE, collectionScopeLeaving || {})
+                ) {
+                    curr = messages.find(
+                        m => m.id === collectionScopeLeaving.next.id
+                    );
+                    userUpdates = popScope(userUpdates, COLLECTION_SCOPE);
                 } else {
                     curr = null;
                     userUpdates = popScope(userUpdates, COLLECTION_SCOPE);

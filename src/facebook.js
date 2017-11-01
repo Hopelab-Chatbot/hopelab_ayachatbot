@@ -158,7 +158,7 @@ function sendAllMessagesToMessenger(messages, senderID, user) {
         .then(() => {
             updateUser(user)
                 .then(() => {
-                    console.error(`User ${user.id} updated successfully`);
+                    console.log(`User ${user.id} updated successfully`);
                 })
                 .catch(e => console.error('Error: updateUser', e));
         })

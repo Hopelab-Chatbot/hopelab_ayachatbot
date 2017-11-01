@@ -101,8 +101,9 @@ function getChildEntitiesSeenByUserForParent(id, user, progressKey, seenKey) {
 function updateProgressForEntity(user, id, seen, progressKey, seenKey) {
     const progress = user[progressKey] || [];
     const index = progress.findIndex(cp => cp.id === id);
+    const isUnknownEntity = R.equals(-1);
 
-    if (index === -1) {
+    if (isUnknownEntity(index)) {
         return progress.concat({ id: id, [seenKey]: seen });
     }
 
@@ -129,9 +130,7 @@ function isNextMessageBlock(message) {
  * @return {Object}
 */
 function popScope(user, scopeId) {
-    return Object.assign({}, user, {
-        [scopeId]: user[scopeId].slice(0, -1)
-    });
+    return R.over(R.lensProp(scopeId), R.init, user);
 }
 
 module.exports = {
