@@ -312,7 +312,7 @@ function getNextMessage(curr, user, messages, blocks) {
 */
 function getFirstMessageForBlock(blockId, messages) {
     const parentIdMatchesBlockId = R.pathEq(['parent', 'id'], blockId);
-    const isNotPrivate = R.or(R.propEq('private', undefined), R.propEq('private', false));
+    const isNotPrivate = R.compose(R.not, R.prop('private'));
     const isStart = R.propEq('start', true);
 
     return R.pathOr(
