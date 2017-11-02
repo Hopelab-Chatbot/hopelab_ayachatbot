@@ -26,9 +26,23 @@ const TYPE_QUESTION = 'question';
 const TYPE_BLOCK = 'block';
 const TYPE_IMAGE = 'image';
 const TYPE_VIDEO = 'video';
+const TYPE_ANSWER = 'answer';
 
 // entity keys
 const INTRO_CONVERSATION_ID = 'intro-conversation';
+const INTRO_BLOCK_ID = 'intro-block';
+
+// LOGIC RULES
+const LOGIC_SEQUENTIAL = 'sequential';
+const LOGIC_RANDOM = 'random';
+
+// user data keys
+const COLLECTION_SCOPE = 'collection-scope';
+const BLOCK_SCOPE = 'block-scope';
+const COLLECTION_PROGRESS = 'collection-progress';
+const SERIES_PROGRESS = 'series-progress';
+const SERIES_SEEN = 'series-seen';
+const BLOCKS_SEEN = 'blocks-seen';
 
 // caching time
 const ONE_DAY_IN_MILLISECONDS = 1000 * 60 * 60 * 24;
@@ -59,5 +73,14 @@ module.exports = {
     TYPING_TIME_IN_MILLISECONDS,
     FB_MESSAGE_TYPE,
     FB_TYPING_ON_TYPE,
-    INTRO_CONVERSATION_ID
+    INTRO_CONVERSATION_ID,
+    INTRO_BLOCK_ID,
+    LOGIC_SEQUENTIAL,
+    LOGIC_RANDOM,
+    COLLECTION_PROGRESS,
+    SERIES_PROGRESS,
+    SERIES_SEEN,
+    BLOCKS_SEEN,
+    COLLECTION_SCOPE,
+    BLOCK_SCOPE
 };

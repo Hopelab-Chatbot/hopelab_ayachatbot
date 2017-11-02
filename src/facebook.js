@@ -11,7 +11,8 @@ const {
     FB_PAGE_ACCESS_TOKEN,
     TYPING_TIME_IN_MILLISECONDS,
     FB_MESSAGE_TYPE,
-    FB_TYPING_ON_TYPE
+    FB_TYPING_ON_TYPE,
+    TYPE_ANSWER
 } = require('./constants');
 
 const { getMessagesForAction, getActionForMessage } = require('./messages');
@@ -147,6 +148,26 @@ function sendMessage(recipientId, content) {
 /**
  * Receive Message From Facebook Messenger
  * 
+ * @param {Array} messages
+ * @param {String} senderID
+ * @param {Object} user
+ * @return {Promise}
+*/
+function sendAllMessagesToMessenger(messages, senderID, user) {
+    return promiseSerial(messages.map(msg => sendMessage(senderID, msg)))
+        .then(() => {
+            updateUser(user)
+                .then(() => {
+                    console.log(`User ${user.id} updated successfully`);
+                })
+                .catch(e => console.error('Error: updateUser', e));
+        })
+        .catch(e => console.error('error: promiseSerial', e));
+}
+
+/**
+ * Receive Message From Facebook Messenger
+ * 
  * @param {Object} event
  * @return {void}
 */
@@ -168,7 +189,7 @@ function receivedMessage({
     userToUpdate = Object.assign({}, userToUpdate, {
         history: updateHistory(
             {
-                type: 'answer',
+                type: TYPE_ANSWER,
                 timestamp: Date.now(),
                 message,
                 previous: prevMessage.id
@@ -177,49 +198,35 @@ function receivedMessage({
         )
     });
 
-    const action = getActionForMessage({
+    const { action, userActionUpdates } = getActionForMessage({
         message,
         user: userToUpdate,
         blocks: allBlocks,
+        series: allSeries,
         messages: allMessages,
         collections: allCollections
     });
 
-    // ::: :::: :::
-    // ::: TODO :::
-    // ::: :::: :::
-    // track collections, series, blocks here
+    userToUpdate = Object.assign({}, userToUpdate, userActionUpdates);
 
-    const { messagesToSend, history, blockScope } = getMessagesForAction({
+    const { messagesToSend, userUpdates } = getMessagesForAction({
         action,
+        collections: allCollections,
         messages: allMessages,
+        series: allSeries,
         blocks: allBlocks,
         user: userToUpdate,
         media
     });
 
-    userToUpdate = Object.assign({}, userToUpdate, {
-        history,
-        blockScope
-    });
+    userToUpdate = Object.assign({}, userToUpdate, userUpdates);
 
     const messagesWithTyping = R.intersperse(
         { type: FB_TYPING_ON_TYPE },
         messagesToSend
     );
 
-    // send all messages out to Messenger
-    promiseSerial(messagesWithTyping.map(msg => sendMessage(senderID, msg)))
-        .then(() => {
-            updateUser(userToUpdate)
-                .then(() => {
-                    console.error(
-                        `User ${userToUpdate.id} updated successfully`
-                    );
-                })
-                .catch(e => console.error('Error: updateUser', e));
-        })
-        .catch(e => console.error('error: promiseSerial', e));
+    sendAllMessagesToMessenger(messagesWithTyping, senderID, userToUpdate);
 }
 
 module.exports = {
