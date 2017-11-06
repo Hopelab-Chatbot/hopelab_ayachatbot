@@ -466,10 +466,7 @@ function getMessagesForAction({
         }
 
         userUpdates = Object.assign({}, userUpdates, {
-            [BLOCK_SCOPE]: updateBlockScope(curr, userUpdates[BLOCK_SCOPE])
-        });
-
-        userUpdates = Object.assign({}, userUpdates, {
+            [BLOCK_SCOPE]: updateBlockScope(curr, userUpdates[BLOCK_SCOPE]),
             history: updateHistory(curr, userUpdates.history)
         });
 
