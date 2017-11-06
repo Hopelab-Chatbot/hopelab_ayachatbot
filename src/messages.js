@@ -465,17 +465,11 @@ function getMessagesForAction({
             });
         }
 
-        // update block scope
         userUpdates = Object.assign({}, userUpdates, {
-            [BLOCK_SCOPE]: updateBlockScope(curr, userUpdates[BLOCK_SCOPE])
-        });
-
-        // update history
-        userUpdates = Object.assign({}, userUpdates, {
+            [BLOCK_SCOPE]: updateBlockScope(curr, userUpdates[BLOCK_SCOPE]),
             history: updateHistory(curr, userUpdates.history)
         });
 
-        // if it's a question
         if (
             curr.messageType === TYPE_QUESTION ||
             curr.messageType === TYPE_QUESTION_WITH_REPLIES
