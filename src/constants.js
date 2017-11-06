@@ -23,6 +23,7 @@ const DB_MEDIA = 'media';
 const TYPE_COLLECTION = 'collection';
 const TYPE_MESSAGE = 'message';
 const TYPE_QUESTION = 'question';
+const TYPE_QUESTION_WITH_REPLIES = 'questionWithReplies';
 const TYPE_BLOCK = 'block';
 const TYPE_IMAGE = 'image';
 const TYPE_VIDEO = 'video';
@@ -65,6 +66,7 @@ module.exports = {
     TYPE_COLLECTION,
     TYPE_MESSAGE,
     TYPE_QUESTION,
+    TYPE_QUESTION_WITH_REPLIES,
     TYPE_BLOCK,
     TYPE_IMAGE,
     TYPE_VIDEO,
