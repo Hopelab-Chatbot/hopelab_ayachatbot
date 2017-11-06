@@ -12,6 +12,7 @@ const {
     TYPE_IMAGE,
     TYPE_VIDEO,
     TYPE_QUESTION,
+    TYPE_QUESTION_WITH_REPLIES,
     LOGIC_SEQUENTIAL,
     LOGIC_RANDOM,
     INTRO_CONVERSATION_ID,
@@ -469,7 +470,7 @@ function getMessagesForAction({
         });
 
         // if it's a question
-        if (curr.messageType === TYPE_QUESTION) {
+        if (curr.messageType === TYPE_QUESTION || curr.messageType === TYPE_QUESTION_WITH_REPLIES) {
             break;
         }
 
