@@ -81,7 +81,12 @@ function getLastSentMessageInHistory(user) {
 function newConversationTrack(messages, collections) {
     const next = messages
         .concat(collections)
-        .find(R.both(R.pathEq(['parent', 'id'], INTRO_CONVERSATION_ID), R.propEq('start', true)))
+        .find(
+            R.both(
+                R.pathEq(['parent', 'id'], INTRO_CONVERSATION_ID),
+                R.propEq('start', true)
+            )
+        );
 
     return {
         action: { type: next.type, id: next.id },
@@ -112,8 +117,7 @@ function getActionForMessage({
     let userActionUpdates = user;
 
     if (message.quick_reply) {
-        // TODO: Quick Replies Pointing to Collections?
-        action = { type: TYPE_MESSAGE, id: message.quick_reply.payload };
+        action = JSON.parse(message.quick_reply.payload);
     } else {
         const lastMessage = getLastSentMessageInHistory(user);
 
@@ -318,7 +322,9 @@ function getFirstMessageForBlock(blockId, messages) {
     return R.pathOr(
         {},
         ['0'],
-        messages.filter(R.allPass([parentIdMatchesBlockId, isNotPrivate, isStart]))
+        messages.filter(
+            R.allPass([parentIdMatchesBlockId, isNotPrivate, isStart])
+        )
     );
 }
 
@@ -506,7 +512,13 @@ function getMessagesForAction({
                     c => c.id === collectionScopeLeavingId
                 );
 
-                if (R.pathEq(['next', 'type'], TYPE_COLLECTION, collectionScopeLeaving || {})) {
+                if (
+                    R.pathEq(
+                        ['next', 'type'],
+                        TYPE_COLLECTION,
+                        collectionScopeLeaving || {}
+                    )
+                ) {
                     let nextMessage = getNextMessageForCollection(
                         collectionScopeLeaving.next.id,
                         collections,
@@ -519,7 +531,11 @@ function getMessagesForAction({
                     curr = nextMessage.message;
                     userUpdates = popScope(userUpdates, COLLECTION_SCOPE);
                 } else if (
-                    R.pathEq(['next', 'type'], TYPE_MESSAGE, collectionScopeLeaving || {})
+                    R.pathEq(
+                        ['next', 'type'],
+                        TYPE_MESSAGE,
+                        collectionScopeLeaving || {}
+                    )
                 ) {
                     curr = messages.find(
                         m => m.id === collectionScopeLeaving.next.id
