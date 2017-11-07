@@ -447,8 +447,6 @@ function getMessagesForAction({
         userUpdates = nextMessage.user;
     }
 
-    
-
     while (curr) {
         if (
             curr.messageType === TYPE_IMAGE ||
