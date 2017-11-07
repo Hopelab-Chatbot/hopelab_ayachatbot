@@ -319,14 +319,12 @@ function getFirstMessageForBlock(blockId, messages) {
     const parentIdMatchesBlockId = R.pathEq(['parent', 'id'], blockId);
     const isNotPrivate = R.compose(R.not, R.prop('private'));
     const isStart = R.propEq('start', true);
+    const isValidMessage = R.allPass([parentIdMatchesBlockId, isNotPrivate, isStart]);
 
-    return R.pathOr(
-        null,
-        ['0'],
-        messages.filter(
-            R.allPass([parentIdMatchesBlockId, isNotPrivate, isStart])
-        )
-    );
+    return R.compose(
+      R.head,
+      R.filter(isValidMessage)
+    )(messages);
 }
 
 /**
