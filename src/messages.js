@@ -321,7 +321,7 @@ function getFirstMessageForBlock(blockId, messages) {
     const isStart = R.propEq('start', true);
 
     return R.pathOr(
-        {},
+        null,
         ['0'],
         messages.filter(
             R.allPass([parentIdMatchesBlockId, isNotPrivate, isStart])
@@ -446,6 +446,8 @@ function getMessagesForAction({
         curr = nextMessage.message;
         userUpdates = nextMessage.user;
     }
+
+    
 
     while (curr) {
         if (
