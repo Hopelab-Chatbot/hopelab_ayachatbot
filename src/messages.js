@@ -52,14 +52,24 @@ function makePlatformMessagePayload(action, messages) {
  * @return {Object}
 */
 function makePlatformMediaMessagePayload(type, url) {
-    return {
-        attachment: {
-            type,
-            payload: {
-                url
-            }
-        }
-    };
+    return type === 'image'
+        ? {
+              attachment: {
+                  type,
+                  payload: {
+                      url
+                  }
+              }
+          }
+        : {
+              attachment: {
+                  type: 'template',
+                  payload: {
+                      template_type: 'open_graph',
+                      elements: [{ url }]
+                  }
+              }
+          };
 }
 
 /**
@@ -319,12 +329,13 @@ function getFirstMessageForBlock(blockId, messages) {
     const parentIdMatchesBlockId = R.pathEq(['parent', 'id'], blockId);
     const isNotPrivate = R.compose(R.not, R.prop('private'));
     const isStart = R.propEq('start', true);
-    const isValidMessage = R.allPass([parentIdMatchesBlockId, isNotPrivate, isStart]);
+    const isValidMessage = R.allPass([
+        parentIdMatchesBlockId,
+        isNotPrivate,
+        isStart
+    ]);
 
-    return R.compose(
-      R.head,
-      R.filter(isValidMessage)
-    )(messages);
+    return R.compose(R.head, R.filter(isValidMessage))(messages);
 }
 
 /**
@@ -450,11 +461,12 @@ function getMessagesForAction({
             curr.messageType === TYPE_IMAGE ||
             curr.messageType === TYPE_VIDEO
         ) {
-            const url = getMediaUrlForMessage(curr.messageType, user, media);
-
             messagesToSend.push({
                 type: TYPE_MESSAGE,
-                message: makePlatformMediaMessagePayload(curr.messageType, url)
+                message: makePlatformMediaMessagePayload(
+                    curr.messageType,
+                    curr.url
+                )
             });
         } else {
             messagesToSend.push({
