@@ -204,7 +204,8 @@ function receivedMessage({
         blocks: allBlocks,
         series: allSeries,
         messages: allMessages,
-        collections: allCollections
+        collections: allCollections,
+        conversations: allConversations
     });
 
     userToUpdate = Object.assign({}, userToUpdate, userActionUpdates);
