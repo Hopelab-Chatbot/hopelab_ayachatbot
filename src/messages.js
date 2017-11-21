@@ -99,7 +99,10 @@ function conversationIsLiveAndNotIntro(conversation) {
  * @return {String}
 */
 function getRandomConversationId(conversations) {
-    return R.prop('id', conversations[Math.floor(Math.random()*conversations.length)]);
+    return R.prop(
+        'id',
+        conversations[Math.floor(Math.random() * conversations.length)]
+    );
 }
 
 /**
@@ -109,7 +112,20 @@ function getRandomConversationId(conversations) {
  * @return {String}
 */
 function getRandomConversationTrack(conversations) {
-    return getRandomConversationId(conversations.filter(conversationIsLiveAndNotIntro));
+    return getRandomConversationId(
+        conversations.filter(conversationIsLiveAndNotIntro)
+    );
+}
+
+/**
+ * Check if the assigned conversation track is gone
+ * 
+ * @param {String} conversation
+ * @param {Array} conversations
+ * @return {Boolean}
+*/
+function assignedConversationTrackIsDeleted(conversation, conversations) {
+    return conversations.indexOf(conversation) === -1;
 }
 
 /**
@@ -127,8 +143,16 @@ function newConversationTrack(conversations, messages, collections, user) {
     if (!user.introConversationSeen) {
         conversationTrack = INTRO_CONVERSATION_ID;
         user.introConversationSeen = true;
-    } else if (!user.assignedConversationTrack) {
-        user.assignedConversationTrack = getRandomConversationTrack(conversations);
+    } else if (
+        !user.assignedConversationTrack ||
+        assignedConversationTrackIsDeleted(
+            user.assignedConversationTrack,
+            conversations
+        )
+    ) {
+        user.assignedConversationTrack = getRandomConversationTrack(
+            conversations
+        );
         conversationTrack = user.assignedConversationTrack;
     } else {
         conversationTrack = user.assignedConversationTrack;
@@ -174,7 +198,10 @@ function getActionForMessage({
     let userActionUpdates = user;
 
     if (message.quick_reply) {
-        return { action: JSON.parse(message.quick_reply.payload), userActionUpdates };
+        return {
+            action: JSON.parse(message.quick_reply.payload),
+            userActionUpdates
+        };
     }
 
     let action;
@@ -206,15 +233,18 @@ function getActionForMessage({
     ) {
         action = { type: lastMessage.next.type, id: lastMessage.next.id };
     } else {
-        const newTrack = newConversationTrack(conversations, messages, collections, user);
+        const newTrack = newConversationTrack(
+            conversations,
+            messages,
+            collections,
+            user
+        );
 
         action = newTrack.action;
         userActionUpdates = popScope(user, BLOCK_SCOPE);
 
         userActionUpdates = Object.assign({}, userActionUpdates, {
-            [BLOCK_SCOPE]: userActionUpdates[BLOCK_SCOPE].concat(
-                newTrack.block
-            )
+            [BLOCK_SCOPE]: userActionUpdates[BLOCK_SCOPE].concat(newTrack.block)
         });
     }
 
