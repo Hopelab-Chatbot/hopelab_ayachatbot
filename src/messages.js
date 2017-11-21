@@ -475,9 +475,14 @@ function getMessagesForAction({
             });
         }
 
-        userUpdates = Object.assign({}, userUpdates, {
+        userUpdates = R.merge(userUpdates, {
             [BLOCK_SCOPE]: updateBlockScope(curr, userUpdates[BLOCK_SCOPE]),
-            history: updateHistory(curr, userUpdates.history)
+            history: updateHistory(
+                R.merge(curr, {
+                    timestamp: Date.now()
+                }),
+                userUpdates.history
+            )
         });
 
         if (
