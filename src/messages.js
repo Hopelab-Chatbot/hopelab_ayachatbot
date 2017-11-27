@@ -83,25 +83,94 @@ function getLastSentMessageInHistory(user) {
 }
 
 /**
+ * Check if conversation is live and not the intro
+ * 
+ * @param {Object} conversation
+ * @return {Boolean}
+*/
+function conversationIsLiveAndNotIntro(conversation) {
+    return conversation.isLive && conversation.id !== INTRO_CONVERSATION_ID;
+}
+
+/**
+ * Get a random conversation track id
+ * 
+ * @param {Array} conversations
+ * @return {String}
+*/
+function getRandomConversationId(conversations) {
+    return R.prop(
+        'id',
+        conversations[Math.floor(Math.random() * conversations.length)]
+    );
+}
+
+/**
+ * Get a random conversation track (not including intro)
+ * 
+ * @param {Array} conversations
+ * @return {String}
+*/
+function getRandomConversationTrack(conversations) {
+    return getRandomConversationId(
+        conversations.filter(conversationIsLiveAndNotIntro)
+    );
+}
+
+/**
+ * Check if the assigned conversation track is gone
+ * 
+ * @param {String} conversation
+ * @param {Array} conversations
+ * @return {Boolean}
+*/
+function assignedConversationTrackIsDeleted(conversation, conversations) {
+    return conversations.indexOf(conversation) === -1;
+}
+
+/**
  * Start a new Converation Track
  * 
+ * @param {Array} conversations
  * @param {Array} messages
  * @param {Array} collections
+ * @param {Object} user
  * @return {Object}
 */
-function newConversationTrack(messages, collections) {
+function newConversationTrack(conversations, messages, collections, user) {
+    let conversationTrack;
+
+    if (!user.introConversationSeen) {
+        conversationTrack = INTRO_CONVERSATION_ID;
+        user.introConversationSeen = true;
+    } else if (
+        !user.assignedConversationTrack ||
+        assignedConversationTrackIsDeleted(
+            user.assignedConversationTrack,
+            conversations
+        )
+    ) {
+        user.assignedConversationTrack = getRandomConversationTrack(
+            conversations
+        );
+        conversationTrack = user.assignedConversationTrack;
+    } else {
+        conversationTrack = user.assignedConversationTrack;
+    }
+
     const next = messages
         .concat(collections)
         .find(
             R.both(
-                R.pathEq(['parent', 'id'], INTRO_CONVERSATION_ID),
+                R.pathEq(['parent', 'id'], conversationTrack),
                 R.propEq('start', true)
             )
         );
 
     return {
         action: { type: next.type, id: next.id },
-        block: INTRO_BLOCK_ID
+        block: INTRO_BLOCK_ID,
+        user
     };
 }
 
@@ -113,6 +182,7 @@ function newConversationTrack(messages, collections) {
  * @param {Array} blocks
  * @param {Array} series
  * @param {Array} collections
+ * @param {Array} conversations
  * @param {Array} messages
  * @return {Object}
 */
@@ -122,53 +192,60 @@ function getActionForMessage({
     blocks,
     series,
     messages,
-    collections
+    collections,
+    conversations
 }) {
-    let action;
     let userActionUpdates = user;
 
     if (message.quick_reply) {
-        action = JSON.parse(message.quick_reply.payload);
+        return {
+            action: JSON.parse(message.quick_reply.payload),
+            userActionUpdates
+        };
+    }
+
+    let action;
+    const lastMessage = getLastSentMessageInHistory(user);
+
+    if (
+        R.gt(R.path([BLOCK_SCOPE, 'length'], user), 1) &&
+        R.path(['next'], lastMessage)
+    ) {
+        action = { type: lastMessage.next.type, id: lastMessage.next.id };
+    } else if (user[COLLECTION_SCOPE] && user[COLLECTION_SCOPE].length) {
+        let nextMessage = getNextMessageForCollection(
+            R.last(user[COLLECTION_SCOPE]),
+            collections,
+            series,
+            blocks,
+            messages,
+            userActionUpdates
+        );
+
+        action = {
+            type: nextMessage.message.type,
+            id: nextMessage.message.id
+        };
+        userActionUpdates = nextMessage.user;
+    } else if (
+        R.pathEq([BLOCK_SCOPE, 'length'], 1, user) &&
+        R.path(['next'], lastMessage)
+    ) {
+        action = { type: lastMessage.next.type, id: lastMessage.next.id };
     } else {
-        const lastMessage = getLastSentMessageInHistory(user);
+        const newTrack = newConversationTrack(
+            conversations,
+            messages,
+            collections,
+            user
+        );
 
-        if (
-            R.gt(R.path([BLOCK_SCOPE, 'length'], user), 1) &&
-            R.path(['next'], lastMessage)
-        ) {
-            action = { type: lastMessage.next.type, id: lastMessage.next.id };
-        } else if (user[COLLECTION_SCOPE] && user[COLLECTION_SCOPE].length) {
-            let nextMessage = getNextMessageForCollection(
-                R.last(user[COLLECTION_SCOPE]),
-                collections,
-                series,
-                blocks,
-                messages,
-                userActionUpdates
-            );
+        action = newTrack.action;
+        userActionUpdates = popScope(user, BLOCK_SCOPE);
 
-            action = {
-                type: nextMessage.message.type,
-                id: nextMessage.message.id
-            };
-            userActionUpdates = nextMessage.user;
-        } else if (
-            R.pathEq([BLOCK_SCOPE, 'length'], 1, user) &&
-            R.path(['next'], lastMessage)
-        ) {
-            action = { type: lastMessage.next.type, id: lastMessage.next.id };
-        } else {
-            const newTrack = newConversationTrack(messages, collections);
-
-            action = newTrack.action;
-            userActionUpdates = popScope(user, BLOCK_SCOPE);
-
-            userActionUpdates = Object.assign({}, userActionUpdates, {
-                [BLOCK_SCOPE]: userActionUpdates[BLOCK_SCOPE].concat(
-                    newTrack.block
-                )
-            });
-        }
+        userActionUpdates = Object.assign({}, userActionUpdates, {
+            [BLOCK_SCOPE]: userActionUpdates[BLOCK_SCOPE].concat(newTrack.block)
+        });
     }
 
     return { action, userActionUpdates };
