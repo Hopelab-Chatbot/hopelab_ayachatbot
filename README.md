@@ -10,7 +10,7 @@ yarn
 
 Running application:
 
-You need a few environment variables to be in place for this work properly locally.
+## Environment Variables
 
 Currently these variables are:
 
