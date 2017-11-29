@@ -41,4 +41,24 @@ TODO: add details about code structure
 
 ## Application Architecture
 
-TODO: add details about application architecture
+The main premise is that there is a hierarchy of nested structures.
+
+`conversation` -> `collection` -> `series` -> `block` -> `message`
+
+Each of these types can be a list of the given type. Each entity can have a parent with an `id` that points so it's parent. So, a collection will have a parent with an `id` that points to a `conversation`.
+
+The main pieces ultimately are the `message` which are what have the content which is displayed to the user when interacting with the Bot. The messages can have a `messageType` because there are different types of messages that can be sent to the user.
+
+Message Types:
+
+```
+const TYPE_QUESTION = 'question';
+const TYPE_QUESTION_WITH_REPLIES = 'questionWithReplies';
+const TYPE_TEXT = 'text';
+const TYPE_IMAGE = 'image';
+const TYPE_VIDEO = 'video';
+```
+
+Messages are chained together with a `next` pointer which can point to the `id` of another `message`. *IMPORTANT*: Messages are nested inside of `block` but can also appear at the top level under a `conversation`. So a conversation really can have `collection` and `message`. Also, a `message` points to another `message` and also can point to a `collection` and vice-versa. 
+
+When nesting a `collection`, the Bot will follow the nested structure and find the `series` and `block` where the `message` content is. One thing to note here is that `collection` and `series` can both have `logic` rules which say what order they should be followed when displaying content. To do this, we have to keep track of what `collection` and `series` have been `seen` for a given unique `user`. With this information, we can tell which entities they should see next.
