@@ -62,3 +62,18 @@ const TYPE_VIDEO = 'video';
 Messages are chained together with a `next` pointer that point to the `id` of another `message` or `collection`. *IMPORTANT*: Messages are nested inside of `block` but can also appear at the top level under a `conversation`. So a `conversatio`n really can have `collection` and `message`. Also, a `message` points to another `message` and also can point to a `collection` and vice-versa. 
 
 When nesting a `collection` inside of a `conversation`, the Bot will follow the nested structure and find the child `series` and `block` that match the given parent id. Once the Bot finds the `block`, it can search the `message` list and find which message it should show the user. One thing to note here is that `collection` and `series` can both have `logic` rules which say what order they should be followed when displaying content. To do this, we have to keep track of what `collection` and `series` have been `seen` for a given unique `user`. With this information, we can tell which entities they should see next.
+
+## User Entity
+
+Each user that messages the Bot will automatically have a unique ID that is their facebook ID. We use this to store the user. The user has properties which are important to tracking how the Bot interacts with the user once the message the Bot.
+
+Progress Tracking Keys:
+
+```
+const COLLECTION_SCOPE = 'collection-scope';
+const BLOCK_SCOPE = 'block-scope';
+const COLLECTION_PROGRESS = 'collection-progress';
+const SERIES_PROGRESS = 'series-progress';
+const SERIES_SEEN = 'series-seen';
+const BLOCKS_SEEN = 'blocks-seen';
+```
