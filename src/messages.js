@@ -270,7 +270,11 @@ function getAllPublicChildren(id, children) {
  * @return {Object}
 */
 function getNextRandomEntityFor(totalEntities, seenEntities) {
-    if (totalEntities.length === seenEntities.length) {
+    if (!totalEntities.length) {
+        return { next: {}, seenEntities: [] };
+    }
+
+    if ((totalEntities.length === seenEntities.length) || (seenEntities.length > totalEntities.length)) {
         const next =
             totalEntities[Math.floor(totalEntities.length * Math.random())];
         return { next, seenEntities: [next.id] };
@@ -290,9 +294,13 @@ function getNextRandomEntityFor(totalEntities, seenEntities) {
  * @return {Object}
 */
 function getNextSequentialEntityFor(totalEntities, seenEntities) {
+    if (!totalEntities.length) {
+        return { next: {}, seenEntities: [] };
+    }
+
     const first = totalEntities[0] || {};
 
-    if (totalEntities.length === seenEntities.length) {
+    if ((totalEntities.length === seenEntities.length) || (seenEntities.length > totalEntities.length)) {
         return { next: first, seenEntities: [first.id] };
     }
 
