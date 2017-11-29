@@ -29,6 +29,8 @@ You'll also need to do this again when the Bot is running on the Prod environmen
 
 ### Setup a Mock DB with some fake data:
 
+This doesn't actually load fake data, but it can be used to reset the data for the Bot so that the message data structure is fresh.
+
 ```bash
 yarn run mock-db
 ```
