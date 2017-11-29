@@ -45,9 +45,9 @@ The main premise is that there is a hierarchy of nested structures.
 
 `conversation` -> `collection` -> `series` -> `block` -> `message`
 
-Each of these types can be a list of the given type. Each entity can have a parent with an `id` that points so it's parent. So, a collection will have a parent with an `id` that points to a `conversation`.
+Each of these types can be a list of the given type. Each entity can have a parent with an `id` that points to it's parent. So, a `collectio`n will have a parent with an `id` that points to a `conversation`.
 
-The main pieces ultimately are the `message` which are what have the content which is displayed to the user when interacting with the Bot. The messages can have a `messageType` because there are different types of messages that can be sent to the user.
+The main pieces ultimately are the `message` which have the content that is displayed to the user when interacting with the Bot. The messages have a `messageType` because there are different types of messages that can be sent to the user.
 
 Message Types:
 
@@ -59,6 +59,6 @@ const TYPE_IMAGE = 'image';
 const TYPE_VIDEO = 'video';
 ```
 
-Messages are chained together with a `next` pointer which can point to the `id` of another `message`. *IMPORTANT*: Messages are nested inside of `block` but can also appear at the top level under a `conversation`. So a conversation really can have `collection` and `message`. Also, a `message` points to another `message` and also can point to a `collection` and vice-versa. 
+Messages are chained together with a `next` pointer that point to the `id` of another `message` or `collection`. *IMPORTANT*: Messages are nested inside of `block` but can also appear at the top level under a `conversation`. So a `conversatio`n really can have `collection` and `message`. Also, a `message` points to another `message` and also can point to a `collection` and vice-versa. 
 
-When nesting a `collection`, the Bot will follow the nested structure and find the `series` and `block` where the `message` content is. One thing to note here is that `collection` and `series` can both have `logic` rules which say what order they should be followed when displaying content. To do this, we have to keep track of what `collection` and `series` have been `seen` for a given unique `user`. With this information, we can tell which entities they should see next.
+When nesting a `collection` inside of a `conversation`, the Bot will follow the nested structure and find the child `series` and `block` that match the given parent id. Once the Bot finds the `block`, it can search the `message` list and find which message it should show the user. One thing to note here is that `collection` and `series` can both have `logic` rules which say what order they should be followed when displaying content. To do this, we have to keep track of what `collection` and `series` have been `seen` for a given unique `user`. With this information, we can tell which entities they should see next.
