@@ -17,6 +17,8 @@ These are obtained from `https://developers.facebook.com`.
 ```
 FB_VERIFY_TOKEN
 FB_PAGE_ACCESS_TOKEN
+REDIS_HOST
+REDIS_PORT
 ```
 
 ## Running app locally with Facebook Messenger:
