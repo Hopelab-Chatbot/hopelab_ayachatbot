@@ -617,6 +617,8 @@ function getMessagesForAction({
                         collectionScopeLeaving || {}
                     )
                 ) {
+                    userUpdates = popScope(userUpdates, COLLECTION_SCOPE);
+                    
                     let nextMessage = getNextMessageForCollection(
                         collectionScopeLeaving.next.id,
                         collections,
@@ -627,7 +629,7 @@ function getMessagesForAction({
                     );
 
                     curr = nextMessage.message;
-                    userUpdates = popScope(userUpdates, COLLECTION_SCOPE);
+                    userUpdates = nextMessage.user;
                 } else if (
                     R.pathEq(
                         ['next', 'type'],
