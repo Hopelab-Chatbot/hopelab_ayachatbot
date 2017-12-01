@@ -63,6 +63,7 @@ module.exports = {
     DB_BLOCKS,
     DB_MEDIA,
     DB_USER_HISTORY,
+    TYPE_ANSWER,
     TYPE_COLLECTION,
     TYPE_MESSAGE,
     TYPE_QUESTION,
