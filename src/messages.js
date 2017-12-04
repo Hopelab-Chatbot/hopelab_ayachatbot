@@ -29,7 +29,7 @@ const R = require('ramda');
 
 /**
  * Create Specific Platform Payload
- * 
+ *
  * @param {String} action
  * @param {Array} messages
  * @return {Object}
@@ -74,7 +74,7 @@ function makePlatformMediaMessagePayload(type, url) {
 
 /**
  * Get the last message sent to user in history
- * 
+ *
  * @param {Object} user
  * @return {Object}
 */
@@ -84,7 +84,7 @@ function getLastSentMessageInHistory(user) {
 
 /**
  * Check if conversation is live and not the intro
- * 
+ *
  * @param {Object} conversation
  * @return {Boolean}
 */
@@ -94,7 +94,7 @@ function conversationIsLiveAndNotIntro(conversation) {
 
 /**
  * Get a random conversation track id
- * 
+ *
  * @param {Array} conversations
  * @return {String}
 */
@@ -107,7 +107,7 @@ function getRandomConversationId(conversations) {
 
 /**
  * Get a random conversation track (not including intro)
- * 
+ *
  * @param {Array} conversations
  * @return {String}
 */
@@ -119,7 +119,7 @@ function getRandomConversationTrack(conversations) {
 
 /**
  * Check if the assigned conversation track is gone
- * 
+ *
  * @param {String} conversation
  * @param {Array} conversations
  * @return {Boolean}
@@ -130,7 +130,7 @@ function assignedConversationTrackIsDeleted(conversation, conversations) {
 
 /**
  * Start a new Converation Track
- * 
+ *
  * @param {Array} conversations
  * @param {Array} messages
  * @param {Array} collections
@@ -176,7 +176,7 @@ function newConversationTrack(conversations, messages, collections, user) {
 
 /**
  * Get the next Action for incoming message
- * 
+ *
  * @param {Object} message
  * @param {Object} user
  * @param {Array} blocks
@@ -208,7 +208,7 @@ function getActionForMessage({
     const lastMessage = getLastSentMessageInHistory(user);
 
     if (
-        R.gt(R.path([BLOCK_SCOPE, 'length'], user), 1) &&
+        lastMessage &&
         R.path(['next'], lastMessage)
     ) {
         action = { type: lastMessage.next.type, id: lastMessage.next.id };
@@ -253,7 +253,7 @@ function getActionForMessage({
 
 /**
  * Get All Public Children Whose Parent Matches ID
- * 
+ *
  * @param {String} id
  * @param {Array} children
  * @return {Array}
@@ -264,7 +264,7 @@ function getAllPublicChildren(id, children) {
 
 /**
  * Get Next Random Entity
- * 
+ *
  * @param {Array} totalEntities
  * @param {Array} seenEntities
  * @return {Object}
@@ -288,7 +288,7 @@ function getNextRandomEntityFor(totalEntities, seenEntities) {
 
 /**
  * Get Next Sequential Entity
- * 
+ *
  * @param {Array} totalEntities
  * @param {Array} seenEntities
  * @return {Object}
@@ -319,7 +319,7 @@ function getNextSequentialEntityFor(totalEntities, seenEntities) {
 
 /**
  * Get Next Message For a Collection
- * 
+ *
  * @param {Object} collection
  * @param {Array} series
  * @param {Object} user
@@ -348,7 +348,7 @@ function getNextSeriesForCollection(collection, series, user) {
 
 /**
  * Get Next Block For a Series
- * 
+ *
  * @param {Object} collection
  * @param {Array} series
  * @param {Object} user
@@ -377,7 +377,7 @@ function getNextBlockForSeries(series, blocks, user) {
 
 /**
  * Get Next Message
- * 
+ *
  * @param {Object} currentMessage
  * @param {Object} user
  * @param {Array} messages
@@ -405,7 +405,7 @@ function getNextMessage(curr, user, messages, blocks) {
 
 /**
  * Construct Outgoing Messages
- * 
+ *
  * @param {String} blockId
  * @param {Array} messages
  * @return {Object}
@@ -425,7 +425,7 @@ function getFirstMessageForBlock(blockId, messages) {
 
 /**
  * Construct Outgoing Messages
- * 
+ *
  * @param {String} type
  * @param {Object} user
  * @param {Object} media
@@ -438,7 +438,7 @@ function getMediaUrlForMessage(type, user, media) {
 
 /**
  * Get Message for a Collection
- * 
+ *
  * @param {String} collectionId
  * @param {Array} collections
  * @param {Array} series
@@ -502,7 +502,7 @@ function getNextMessageForCollection(
 
 /**
  * Construct Outgoing Messages
- * 
+ *
  * @param {String} action
  * @param {Array} collections
  * @param {Array} series
@@ -618,7 +618,7 @@ function getMessagesForAction({
                     )
                 ) {
                     userUpdates = popScope(userUpdates, COLLECTION_SCOPE);
-                    
+
                     let nextMessage = getNextMessageForCollection(
                         collectionScopeLeaving.next.id,
                         collections,
