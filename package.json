@@ -26,6 +26,7 @@
     "mock-db": "node ./src/mockDatabaseSetup.js",
     "prettify": "prettier --write './**/*.js'",
     "start": "node index.js",
+    "debug": "node --inspect index.js",
     "test": "mocha"
   },
   "prettier": {

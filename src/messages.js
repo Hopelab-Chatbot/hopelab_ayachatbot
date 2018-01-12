@@ -37,7 +37,8 @@ const R = require('ramda');
 function makePlatformMessagePayload(action, messages) {
     const message = messages.find(m => m.id === action);
 
-    if (message && message.quick_replies) {
+    if (message && message.messageType === TYPE_QUESTION_WITH_REPLIES &&
+        message.quick_replies) {
         return { text: message.text, quick_replies: message.quick_replies };
     }
 
