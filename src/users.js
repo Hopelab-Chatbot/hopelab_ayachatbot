@@ -1,17 +1,18 @@
-const { TYPE_BLOCK, BLOCK_SCOPE } = require('./constants');
+const {
+  TYPE_BLOCK,
+} = require('./constants');
 
 const R = require('ramda');
 
 /**
  * Create New User
- * 
+ *
  * @param {String} id
  * @return {Object}
 */
 function createNewUser(id) {
     return {
         id,
-        [BLOCK_SCOPE]: [],
         history: [],
         progress: {
             prevMessage: '',
@@ -21,29 +22,8 @@ function createNewUser(id) {
 }
 
 /**
- * Update Block Scope
- * 
- * @param {Object} currentMessage
- * @param {Array} blockScope
- * @return {Array}
-*/
-function updateBlockScope(currentMessage, blockScope) {
-    const blockScopeToUpdate = blockScope.slice();
-
-    if (currentMessage.isEnd === true || !currentMessage.next) {
-        blockScopeToUpdate.pop();
-    }
-
-    if (isNextMessageBlock(currentMessage)) {
-        blockScopeToUpdate.push(currentMessage.next.id);
-    }
-
-    return blockScopeToUpdate;
-}
-
-/**
  * Update History with Message
- * 
+ *
  * @param {Object} currentMessage
  * @param {Array} history
  * @return {Array}
@@ -58,7 +38,7 @@ function updateHistory(currentMessage, history) {
 
 /**
  * Get Previous Message in User History
- * 
+ *
  * @param {Object} messages
  * @param {Object} user
  * @return {Object}
@@ -73,7 +53,7 @@ function getPreviousMessageInHistory(messages, user) {
 
 /**
  * Get List of Child Entities Seen by User
- * 
+ *
  * @param {String} id
  * @param {Object} user
  * @param {String} progressKey
@@ -90,7 +70,7 @@ function getChildEntitiesSeenByUserForParent(id, user, progressKey, seenKey) {
 
 /**
  * Update the user's series progress for a collection
- * 
+ *
  * @param {Object} user
  * @param {String} collectionId
  * @param {Array} seen
@@ -114,7 +94,7 @@ function updateProgressForEntity(user, id, seen, progressKey, seenKey) {
 
 /**
  * Is Next Message a Block?
- * 
+ *
  * @param {Object} message
  * @return {Boolean}
 */
@@ -124,7 +104,7 @@ function isNextMessageBlock(message) {
 
 /**
  * Remove Last Scope Item
- * 
+ *
  * @param {Object} user
  * @param {String} scopeId
  * @return {Object}
@@ -135,7 +115,6 @@ function popScope(user, scopeId) {
 
 module.exports = {
     createNewUser,
-    updateBlockScope,
     updateHistory,
     getPreviousMessageInHistory,
     getChildEntitiesSeenByUserForParent,

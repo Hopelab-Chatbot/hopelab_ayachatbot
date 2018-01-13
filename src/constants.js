@@ -39,7 +39,6 @@ const LOGIC_RANDOM = 'random';
 
 // user data keys
 const COLLECTION_SCOPE = 'collection-scope';
-const BLOCK_SCOPE = 'block-scope';
 const COLLECTION_PROGRESS = 'collection-progress';
 const SERIES_PROGRESS = 'series-progress';
 const SERIES_SEEN = 'series-seen';
@@ -85,5 +84,4 @@ module.exports = {
     SERIES_SEEN,
     BLOCKS_SEEN,
     COLLECTION_SCOPE,
-    BLOCK_SCOPE
 };
