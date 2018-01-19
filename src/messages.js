@@ -37,7 +37,12 @@ function makePlatformMessagePayload(action, messages) {
 
     if (message && message.messageType === TYPE_QUESTION_WITH_REPLIES &&
         message.quick_replies) {
-        return { text: message.text, quick_replies: message.quick_replies };
+        let quick_replies = message.quick_replies.map(qr => (
+          qr.payload === undefined ?
+            Object.assign({}, qr, {payload: "{}"}) :
+            qr
+        ));
+        return { text: message.text, quick_replies };
     }
 
     return { text: message.text };
