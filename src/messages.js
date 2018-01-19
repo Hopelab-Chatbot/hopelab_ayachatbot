@@ -1,5 +1,4 @@
 const {
-    updateBlockScope,
     updateHistory,
     getChildEntitiesSeenByUserForParent,
     updateProgressForEntity,
@@ -22,7 +21,6 @@ const {
     SERIES_SEEN,
     BLOCKS_SEEN,
     COLLECTION_SCOPE,
-    BLOCK_SCOPE
 } = require('./constants');
 
 const R = require('ramda');
@@ -39,7 +37,12 @@ function makePlatformMessagePayload(action, messages) {
 
     if (message && message.messageType === TYPE_QUESTION_WITH_REPLIES &&
         message.quick_replies) {
-        return { text: message.text, quick_replies: message.quick_replies };
+        let quick_replies = message.quick_replies.map(qr => (
+          qr.payload === undefined ?
+            Object.assign({}, qr, {payload: "{}"}) :
+            qr
+        ));
+        return { text: message.text, quick_replies };
     }
 
     return { text: message.text };
@@ -199,10 +202,13 @@ function getActionForMessage({
     let userActionUpdates = user;
 
     if (message.quick_reply) {
-        return {
-            action: JSON.parse(message.quick_reply.payload),
-            userActionUpdates
-        };
+        let action = JSON.parse(message.quick_reply.payload);
+        if (!!action.id) {
+          return {
+              action,
+              userActionUpdates
+          };
+        }
     }
 
     let action;
@@ -228,11 +234,6 @@ function getActionForMessage({
             id: nextMessage.message.id
         };
         userActionUpdates = nextMessage.user;
-    } else if (
-        R.pathEq([BLOCK_SCOPE, 'length'], 1, user) &&
-        R.path(['next'], lastMessage)
-    ) {
-        action = { type: lastMessage.next.type, id: lastMessage.next.id };
     } else {
         const newTrack = newConversationTrack(
             conversations,
@@ -242,11 +243,8 @@ function getActionForMessage({
         );
 
         action = newTrack.action;
-        userActionUpdates = popScope(user, BLOCK_SCOPE);
 
-        userActionUpdates = Object.assign({}, userActionUpdates, {
-            [BLOCK_SCOPE]: userActionUpdates[BLOCK_SCOPE].concat(newTrack.block)
-        });
+        userActionUpdates = Object.assign({}, userActionUpdates);
     }
 
     return { action, userActionUpdates };
@@ -389,7 +387,6 @@ function getNextMessage(curr, user, messages, blocks) {
     let next;
 
     const {
-        [BLOCK_SCOPE]: blockScope,
         [COLLECTION_SCOPE]: collectionScope,
         history
     } = user;
@@ -476,7 +473,6 @@ function getNextMessageForCollection(
     );
 
     let user = Object.assign({}, userUpdates, {
-        [BLOCK_SCOPE]: userUpdates[BLOCK_SCOPE].concat(nextBlock.id),
         [COLLECTION_PROGRESS]: updateProgressForEntity(
             userUpdates,
             collection.id,
@@ -562,7 +558,6 @@ function getMessagesForAction({
         }
 
         userUpdates = R.merge(userUpdates, {
-            [BLOCK_SCOPE]: updateBlockScope(curr, userUpdates[BLOCK_SCOPE]),
             history: updateHistory(
                 R.merge(curr, {
                     timestamp: Date.now()

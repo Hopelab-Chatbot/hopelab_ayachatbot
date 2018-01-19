@@ -12,6 +12,7 @@ const {
     TYPING_TIME_IN_MILLISECONDS,
     FB_MESSAGE_TYPE,
     FB_TYPING_ON_TYPE,
+    FB_MESSAGING_TYPE_RESPONSE,
     TYPE_ANSWER
 } = require('./constants');
 
@@ -21,7 +22,7 @@ const { promiseSerial } = require('./utils');
 
 /**
  * Get User Details
- * 
+ *
  * @param {String} userId
  * @return {Promise}
 */
@@ -56,7 +57,7 @@ function getUserDetails(userId) {
 
 /**
  * Send Message to Facebook API
- * 
+ *
  * @param {Object} messageData
  * @return {Promise<String>}
 */
@@ -88,7 +89,7 @@ function callSendAPI(messageData) {
 
 /**
  * Send a follow-up message to a user
- * 
+ *
  * @param {String} recipientId
  * @param {Object} content
  * @return {Promise<String>}
@@ -101,7 +102,7 @@ function sendFollowUpMessageToUser(recipientId, content) {
 
 /**
  * Create the FB Message Payload
- * 
+ *
  * @param {String} recipientId
  * @param {Object} content
  * @return {Object}
@@ -109,7 +110,10 @@ function sendFollowUpMessageToUser(recipientId, content) {
 function createMessagePayload(recipientId, content) {
     const { type, message } = content;
 
+    // TODO: handle UPDATE types as well
+    //      (messages sent 24 hours after initial contact)
     let payload = {
+        messaging_type: FB_MESSAGING_TYPE_RESPONSE,
         recipient: {
             id: recipientId
         }
@@ -126,7 +130,7 @@ function createMessagePayload(recipientId, content) {
 
 /**
  * Async Wrapper for callSendAPI
- * 
+ *
  * @param {String} recipientId
  * @param {Object} content
  * @return {Promise<String>}
@@ -147,7 +151,7 @@ function sendMessage(recipientId, content) {
 
 /**
  * Receive Message From Facebook Messenger
- * 
+ *
  * @param {Array} messages
  * @param {String} senderID
  * @param {Object} user
@@ -167,7 +171,7 @@ function sendAllMessagesToMessenger(messages, senderID, user) {
 
 /**
  * Receive Message From Facebook Messenger
- * 
+ *
  * @param {Object} event
  * @return {void}
 */

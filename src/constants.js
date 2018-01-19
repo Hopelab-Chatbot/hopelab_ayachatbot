@@ -8,6 +8,8 @@ const FB_GRAPH_ROOT_URL = 'https://graph.facebook.com/v2.6/';
 const TYPING_TIME_IN_MILLISECONDS = 1000;
 const FB_MESSAGE_TYPE = 'message';
 const FB_TYPING_ON_TYPE = 'typing_on';
+const FB_MESSAGING_TYPE_RESPONSE = 'RESPONSE';
+const FB_MESSAGING_TYPE_UPDATE = 'UPDATE';
 
 // database keys
 const DB_USERS = 'users';
@@ -39,7 +41,6 @@ const LOGIC_RANDOM = 'random';
 
 // user data keys
 const COLLECTION_SCOPE = 'collection-scope';
-const BLOCK_SCOPE = 'block-scope';
 const COLLECTION_PROGRESS = 'collection-progress';
 const SERIES_PROGRESS = 'series-progress';
 const SERIES_SEEN = 'series-seen';
@@ -76,6 +77,8 @@ module.exports = {
     TYPING_TIME_IN_MILLISECONDS,
     FB_MESSAGE_TYPE,
     FB_TYPING_ON_TYPE,
+    FB_MESSAGING_TYPE_RESPONSE,
+    FB_MESSAGING_TYPE_UPDATE,
     INTRO_CONVERSATION_ID,
     INTRO_BLOCK_ID,
     LOGIC_SEQUENTIAL,
@@ -85,5 +88,4 @@ module.exports = {
     SERIES_SEEN,
     BLOCKS_SEEN,
     COLLECTION_SCOPE,
-    BLOCK_SCOPE
 };
