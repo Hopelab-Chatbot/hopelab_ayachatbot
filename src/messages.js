@@ -12,6 +12,8 @@ const {
     TYPE_VIDEO,
     TYPE_QUESTION,
     TYPE_QUESTION_WITH_REPLIES,
+    ACTION_RETRY_QUICK_REPLY,
+    QUICK_REPLY_RETRY_MESSAGE,
     LOGIC_SEQUENTIAL,
     LOGIC_RANDOM,
     INTRO_CONVERSATION_ID,
@@ -201,6 +203,20 @@ function getActionForMessage({
 }) {
     let userActionUpdates = user;
 
+
+    const lastMessage = getLastSentMessageInHistory(user);
+
+    if (
+      lastMessage &&
+      lastMessage.messageType === TYPE_QUESTION_WITH_REPLIES &&
+      !message.quick_reply
+    ) {
+        return {
+          action: {type: ACTION_RETRY_QUICK_REPLY},
+          userActionUpdates
+        };
+    }
+
     if (message.quick_reply) {
         let action = JSON.parse(message.quick_reply.payload);
         if (!!action.id) {
@@ -212,7 +228,7 @@ function getActionForMessage({
     }
 
     let action;
-    const lastMessage = getLastSentMessageInHistory(user);
+
 
     if (
         lastMessage &&
@@ -522,7 +538,22 @@ function getMessagesForAction({
 
     let userUpdates = Object.assign({}, user);
 
-    if (action.type === TYPE_MESSAGE) {
+    if (action.type === ACTION_RETRY_QUICK_REPLY) {
+      curr = {
+          type: TYPE_MESSAGE,
+          message: { text: QUICK_REPLY_RETRY_MESSAGE }
+      };
+      messagesToSend.push(curr);
+      userUpdates = R.merge(userUpdates, {
+          history: updateHistory(
+              R.merge(curr, {
+                  timestamp: Date.now()
+              }),
+              userUpdates.history
+          )
+      });
+      curr = Object.assign({}, getLastSentMessageInHistory(user));
+    } else if (action.type === TYPE_MESSAGE) {
         curr = messages.find(m => m.id === action.id);
     } else if (action.type === TYPE_COLLECTION) {
         let nextMessage = getNextMessageForCollection(

@@ -21,6 +21,9 @@ const DB_USER_HISTORY = 'user-history';
 const DB_BLOCKS = 'blocks';
 const DB_MEDIA = 'media';
 
+// Special actions
+const ACTION_RETRY_QUICK_REPLY = 'ACTION_RETRY_QUICK_REPLY';
+
 // data types
 const TYPE_COLLECTION = 'collection';
 const TYPE_MESSAGE = 'message';
@@ -50,6 +53,8 @@ const BLOCKS_SEEN = 'blocks-seen';
 const ONE_DAY_IN_MILLISECONDS = 1000 * 60 * 60 * 24;
 const ONE_WEEK_IN_MILLISECONDS = 1000 * 60 * 60 * 24 * 7 * 4;
 
+const QUICK_REPLY_RETRY_MESSAGE = "Sorry, I didn't understand. Could you try using my buttons this time?";
+
 module.exports = {
     REST_PORT,
     FB_VERIFY_TOKEN,
@@ -64,6 +69,8 @@ module.exports = {
     DB_BLOCKS,
     DB_MEDIA,
     DB_USER_HISTORY,
+    ACTION_RETRY_QUICK_REPLY,
+    QUICK_REPLY_RETRY_MESSAGE,
     TYPE_ANSWER,
     TYPE_COLLECTION,
     TYPE_MESSAGE,
