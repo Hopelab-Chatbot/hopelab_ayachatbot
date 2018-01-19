@@ -202,10 +202,13 @@ function getActionForMessage({
     let userActionUpdates = user;
 
     if (message.quick_reply) {
-        return {
-            action: JSON.parse(message.quick_reply.payload),
-            userActionUpdates
-        };
+        let action = JSON.parse(message.quick_reply.payload);
+        if (!!action.id) {
+          return {
+              action,
+              userActionUpdates
+          };
+        }
     }
 
     let action;
