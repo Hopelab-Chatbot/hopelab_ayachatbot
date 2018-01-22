@@ -13,8 +13,10 @@ const {
     TYPE_QUESTION,
     TYPE_QUESTION_WITH_REPLIES,
     ACTION_RETRY_QUICK_REPLY,
+    ACTION_COME_BACK_LATER,
     END_OF_CONVERSATION_ID,
     QUICK_REPLY_RETRY_MESSAGE,
+    END_OF_CONVERSATION_MESSAGE,
     LOGIC_SEQUENTIAL,
     LOGIC_RANDOM,
     INTRO_CONVERSATION_ID,
@@ -87,6 +89,10 @@ function makePlatformMediaMessagePayload(type, url) {
 */
 function getLastSentMessageInHistory(user) {
     return user.history[user.history.length - 2];
+}
+
+function getLastMessageFromUser(user) {
+    return user.history[user.history.length - 1];
 }
 
 /**
@@ -207,25 +213,41 @@ function getActionForMessage({
 
     const lastMessage = getLastSentMessageInHistory(user);
 
+    if (R.path(['next', 'id'], lastMessage) === END_OF_CONVERSATION_ID) {
+      return {
+        action: { type: ACTION_COME_BACK_LATER },
+        userActionUpdates
+      };
+    }
+
     if (
-      lastMessage &&
-      lastMessage.messageType === TYPE_QUESTION_WITH_REPLIES &&
+      R.path(['messageType'], lastMessage) === TYPE_QUESTION_WITH_REPLIES &&
+      !!message.quick_reply
+    ) {
+      let action = JSON.parse(message.quick_reply.payload);
+      if (action.id === END_OF_CONVERSATION_ID) {
+        return {
+          action: {type: ACTION_COME_BACK_LATER},
+          userActionUpdates
+        };
+      }
+
+      if (!!action.id) {
+        return {
+            action,
+            userActionUpdates
+        };
+      }
+    }
+
+    if (
+      R.path(['messageType'], lastMessage) === TYPE_QUESTION_WITH_REPLIES &&
       !message.quick_reply
     ) {
         return {
           action: {type: ACTION_RETRY_QUICK_REPLY},
           userActionUpdates
         };
-    }
-
-    if (message.quick_reply) {
-        let action = JSON.parse(message.quick_reply.payload);
-        if (!!action.id) {
-          return {
-              action,
-              userActionUpdates
-          };
-        }
     }
 
     let action;
@@ -554,6 +576,22 @@ function getMessagesForAction({
           )
       });
       curr = Object.assign({}, getLastSentMessageInHistory(user));
+    } else if (action.type === ACTION_COME_BACK_LATER) {
+      curr = {
+          type: TYPE_MESSAGE,
+          message: { text: END_OF_CONVERSATION_MESSAGE }
+      };
+      messagesToSend.push(curr);
+      curr.next = { id : END_OF_CONVERSATION_ID };
+      userUpdates = R.merge(userUpdates, {
+          history: updateHistory(
+              R.merge(curr, {
+                  timestamp: Date.now()
+              }),
+              userUpdates.history
+          )
+      });
+      curr = null;
     } else if (action.type === TYPE_MESSAGE) {
         curr = messages.find(m => m.id === action.id);
     } else if (action.type === TYPE_COLLECTION) {

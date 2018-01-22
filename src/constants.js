@@ -57,7 +57,9 @@ const BLOCKS_SEEN = 'blocks-seen';
 const ONE_DAY_IN_MILLISECONDS = 1000 * 60 * 60 * 24;
 const ONE_WEEK_IN_MILLISECONDS = 1000 * 60 * 60 * 24 * 7 * 4;
 
+// Special Messages
 const QUICK_REPLY_RETRY_MESSAGE = "Sorry, I didn't understand. Could you try using my buttons this time?";
+const END_OF_CONVERSATION_MESSAGE = "That's all I've got for today.  Let's talk some more tomorrow."
 
 module.exports = {
     REST_PORT,
@@ -78,6 +80,7 @@ module.exports = {
     ACTION_RESTART_CONVERSATION,
     END_OF_CONVERSATION_ID,
     QUICK_REPLY_RETRY_MESSAGE,
+    END_OF_CONVERSATION_MESSAGE,
     TYPE_ANSWER,
     TYPE_COLLECTION,
     TYPE_MESSAGE,
