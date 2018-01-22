@@ -13,6 +13,7 @@ const {
     TYPE_QUESTION,
     TYPE_QUESTION_WITH_REPLIES,
     ACTION_RETRY_QUICK_REPLY,
+    END_OF_CONVERSATION_ID,
     QUICK_REPLY_RETRY_MESSAGE,
     LOGIC_SEQUENTIAL,
     LOGIC_RANDOM,
@@ -604,7 +605,7 @@ function getMessagesForAction({
             break;
         }
 
-        if (curr.next) {
+        if (curr.next && curr.next.id !== END_OF_CONVERSATION_ID) {
             if (curr.next.type === TYPE_MESSAGE) {
                 curr = Object.assign(
                     {},
