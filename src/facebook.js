@@ -143,8 +143,8 @@ function createMessagePayload(
  * @param {Object} content
  * @return {Promise<String>}
 */
-function sendMessage(recipientId, content) {
-    const messageData = createMessagePayload(recipientId, content);
+function sendMessage(recipientId, content, fbMessagingType=FB_MESSAGING_TYPE_RESPONSE) {
+    const messageData = createMessagePayload(recipientId, content, fbMessagingType);
     const time =
         content.type === FB_MESSAGE_TYPE ? TYPING_TIME_IN_MILLISECONDS : 0;
 
@@ -165,8 +165,8 @@ function sendMessage(recipientId, content) {
  * @param {Object} user
  * @return {Promise}
 */
-function sendAllMessagesToMessenger(messages, senderID, user) {
-    return promiseSerial(messages.map(msg => sendMessage(senderID, msg)))
+function sendAllMessagesToMessenger(messages, senderID, user, fbMessagingType=FB_MESSAGING_TYPE_RESPONSE) {
+    return promiseSerial(messages.map(msg => sendMessage(senderID, msg, fbMessagingType)))
         .then(() => {
             updateUser(user)
                 .then(() => {
@@ -260,19 +260,35 @@ function sendPushMessagesToUsers({
       media
   });
 
-  return Promise.all(actions.map(action => {
-    if (action.user && action.user.id) {
-      return sendFollowUpMessageToUser(
-        action.user.id,
-        {
-          type: FB_MESSAGE_TYPE,
-          message: { text: "TODO: fix this message" }
-        }
-      );
-    }
+  return actions.map(({action, userActionUpdates}) => {
+    let userToUpdate = Object.assign({}, userActionUpdates);
+    if (!userToUpdate.history) {return undefined;}
+    const { messagesToSend, userUpdates } = getMessagesForAction({
+        action,
+        collections: allCollections,
+        messages: allMessages,
+        series: allSeries,
+        blocks: allBlocks,
+        user: userToUpdate,
+        media
+    });
 
-    return Promise.resolve();
-  }));
+    userToUpdate = Object.assign({}, userToUpdate, userUpdates);
+
+    const messagesWithTyping = R.intersperse(
+        { type: FB_TYPING_ON_TYPE },
+        messagesToSend
+    );
+
+    return sendAllMessagesToMessenger(
+      messagesWithTyping,
+      userToUpdate.id,
+      userToUpdate,
+      FB_MESSAGING_TYPE_UPDATE
+    );
+  })
+
+
 }
 
 module.exports = {

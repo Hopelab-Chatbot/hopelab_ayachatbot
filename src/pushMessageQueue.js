@@ -14,14 +14,14 @@ function start() {
   );
 
   pushMessageQueue.process(function(job, done) {
-    console.warn('working on job');
-    updateUsers().then((data) => {
-      console.warn("Job complete");
+    console.log("processing the push message queue", Date.now());
+    updateUsers().then(() => {
+      console.log("Done processing queue", Date.now());
       done();
     });
   });
 
-  pushMessageQueue.add({}, {repeat: {cron: '* * * * *'}})
+  pushMessageQueue.add({}, {repeat: {cron: '*/20 * * * *'}})
 }
 
 module.exports = { start };

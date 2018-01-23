@@ -24,8 +24,8 @@ const DB_MEDIA = 'media';
 // Special actions
 const ACTION_RETRY_QUICK_REPLY = 'ACTION_RETRY_QUICK_REPLY';
 const ACTION_COME_BACK_LATER = 'ACTION_COME_BACK_LATER';
-const ACTION_RESTART_CONVERSATION = 'ACTION_RESTART_CONVERSATION';
 const ACTION_NO_UPDATE_NEEDED = 'ACTION_NO_UPDATE_NEEDED';
+const ACTION_UPDATE_AND_RESEND_LAST_MESSAGE = 'ACTION_UPDATE_AND_RESEND_LAST_MESSAGE';
 
 const END_OF_CONVERSATION_ID = 'END-OF-CONVERSATION-ID';
 
@@ -62,12 +62,13 @@ const ONE_WEEK_IN_MILLISECONDS = 1000 * 60 * 60 * 24 * 7 * 4;
 // Special Messages
 const QUICK_REPLY_RETRY_MESSAGE = "Sorry, I didn't understand. Could you try using my buttons this time?";
 const END_OF_CONVERSATION_MESSAGE = "That's all I've got for today.  Let's talk some more tomorrow.";
+const UPDATE_USER_MESSAGE = "Hi! Don't forget about me!";
 
 // hours from midnight (military time) eg 2 is 2am.
 const CUT_OFF_HOUR_FOR_NEW_MESSAGES = 2;
 
 // minutes of inactivty before update is sent
-const MINUTES_OF_INACTIVITY_BEFORE_UPDATE_MESSAGE = (24 * 60) + 5;
+const MINUTES_OF_INACTIVITY_BEFORE_UPDATE_MESSAGE = (24 * 60) + 3;
 
 module.exports = {
     REST_PORT,
@@ -85,11 +86,12 @@ module.exports = {
     DB_USER_HISTORY,
     ACTION_RETRY_QUICK_REPLY,
     ACTION_COME_BACK_LATER,
-    ACTION_RESTART_CONVERSATION,
     ACTION_NO_UPDATE_NEEDED,
+    ACTION_UPDATE_AND_RESEND_LAST_MESSAGE,
     END_OF_CONVERSATION_ID,
     QUICK_REPLY_RETRY_MESSAGE,
     END_OF_CONVERSATION_MESSAGE,
+    UPDATE_USER_MESSAGE,
     TYPE_ANSWER,
     TYPE_COLLECTION,
     TYPE_MESSAGE,

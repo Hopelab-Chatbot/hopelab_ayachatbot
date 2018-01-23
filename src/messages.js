@@ -17,9 +17,11 @@ const {
     ACTION_RETRY_QUICK_REPLY,
     ACTION_COME_BACK_LATER,
     ACTION_NO_UPDATE_NEEDED,
+    ACTION_UPDATE_AND_RESEND_LAST_MESSAGE,
     END_OF_CONVERSATION_ID,
     QUICK_REPLY_RETRY_MESSAGE,
     END_OF_CONVERSATION_MESSAGE,
+    UPDATE_USER_MESSAGE,
     LOGIC_SEQUENTIAL,
     LOGIC_RANDOM,
     INTRO_CONVERSATION_ID,
@@ -95,8 +97,17 @@ function makePlatformMediaMessagePayload(type, url) {
  * @return {Object}
 */
 function getLastSentMessageInHistory(user) {
-    return user.history[user.history.length - 2];
+    if (!(R.path(['history', 'length'], user))) { return undefined; }
+
+    for (let i = user.history.length - 1; i >= 0; i--) {
+        if (user.history[i].type !== TYPE_ANSWER) {
+          return user.history[i];
+        }
+    }
+
+    return undefined;
 }
+
 
 /**
  * Check if conversation is live and not the intro
@@ -267,14 +278,45 @@ function shouldReceiveUpdate(user) {
     return minutesSinceLastActivity > MINUTES_OF_INACTIVITY_BEFORE_UPDATE_MESSAGE;
 }
 
-function getUserUpdateAction(user) {
+function getUserUpdateAction({
+  user,
+  conversations,
+  messages,
+  collections,
+}) {
+  let userActionUpdates = Object.assign({}, user);
   if (shouldReceiveUpdate(user)) {
-    return {
-      action: {id: "UPDATE_NOW", user}
+    const lastMessage = getLastSentMessageInHistory(user);
+    if (
+      R.path(['next', 'id'], lastMessage) === END_OF_CONVERSATION_ID
+    ) {
+      const newTrack = newConversationTrack(
+          conversations,
+          messages,
+          collections,
+          user
+      );
+
+      let action = newTrack.action;
+
+      userActionUpdates = Object.assign({}, userActionUpdates);
+
+      return {
+        action,
+        userActionUpdates
+      };
     }
+
+    return {
+      action: {
+        type: ACTION_UPDATE_AND_RESEND_LAST_MESSAGE
+      },
+      userActionUpdates
+    }
+
   } else {
     return {
-      action: {id: ACTION_NO_UPDATE_NEEDED }
+      action: {type: ACTION_NO_UPDATE_NEEDED }
     };
   }
 }
@@ -289,9 +331,14 @@ function getUpdateActionForUsers({
   media
 }) {
   return users.reduce((acc, user) => {
-    let {action} = getUserUpdateAction(user);
-    if (action.id !== ACTION_NO_UPDATE_NEEDED) {
-      acc.push(action);
+    let {action, userActionUpdates} = getUserUpdateAction({
+      user,
+      conversations: allConversations,
+      messages: allMessages,
+      collections: allCollections,
+    });
+    if (action.type !== ACTION_NO_UPDATE_NEEDED) {
+      acc.push({action, userActionUpdates});
     };
     return acc;
   }, []);
@@ -709,10 +756,16 @@ function getMessagesForAction({
 
     let userUpdates = Object.assign({}, user);
 
-    if (action.type === ACTION_RETRY_QUICK_REPLY) {
+    if (
+      action.type === ACTION_RETRY_QUICK_REPLY ||
+      action.type === ACTION_UPDATE_AND_RESEND_LAST_MESSAGE
+    ) {
+      const updateMessage = action.type === ACTION_RETRY_QUICK_REPLY ?
+          QUICK_REPLY_RETRY_MESSAGE :
+          UPDATE_USER_MESSAGE;
       curr = {
           type: TYPE_MESSAGE,
-          message: { text: QUICK_REPLY_RETRY_MESSAGE }
+          message: { text: updateMessage }
       };
 
       messagesToSend.push(curr);
