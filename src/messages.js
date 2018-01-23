@@ -11,9 +11,17 @@ const {
     TYPE_IMAGE,
     TYPE_VIDEO,
     TYPE_QUESTION,
+    TYPE_ANSWER,
     TYPE_QUESTION_WITH_REPLIES,
+    MESSAGE_TYPE_TEXT,
     ACTION_RETRY_QUICK_REPLY,
+    ACTION_COME_BACK_LATER,
+    ACTION_NO_UPDATE_NEEDED,
+    ACTION_UPDATE_AND_RESEND_LAST_MESSAGE,
+    END_OF_CONVERSATION_ID,
     QUICK_REPLY_RETRY_MESSAGE,
+    END_OF_CONVERSATION_MESSAGE,
+    UPDATE_USER_MESSAGE,
     LOGIC_SEQUENTIAL,
     LOGIC_RANDOM,
     INTRO_CONVERSATION_ID,
@@ -23,9 +31,13 @@ const {
     SERIES_SEEN,
     BLOCKS_SEEN,
     COLLECTION_SCOPE,
+    CUT_OFF_HOUR_FOR_NEW_MESSAGES,
+    MINUTES_OF_INACTIVITY_BEFORE_UPDATE_MESSAGE,
 } = require('./constants');
 
 const R = require('ramda');
+
+const moment = require('moment');
 
 /**
  * Create Specific Platform Payload
@@ -85,8 +97,17 @@ function makePlatformMediaMessagePayload(type, url) {
  * @return {Object}
 */
 function getLastSentMessageInHistory(user) {
-    return user.history[user.history.length - 2];
+    if (!(R.path(['history', 'length'], user))) { return undefined; }
+
+    for (let i = user.history.length - 1; i >= 0; i--) {
+        if (user.history[i].type !== TYPE_ANSWER) {
+          return user.history[i];
+        }
+    }
+
+    return undefined;
 }
+
 
 /**
  * Check if conversation is live and not the intro
@@ -180,6 +201,149 @@ function newConversationTrack(conversations, messages, collections, user) {
     };
 }
 
+function findLastUserAnswer(user) {
+  if (!user.history) { return undefined; }
+
+  for(let i = user.history.length - 1; i >= 0; i--) {
+    if (user.history[i].type === TYPE_ANSWER) {
+      return user.history[i];
+    }
+  }
+
+  return undefined;
+}
+
+function findLastNonConversationEndMessage(user) {
+  if (!user.history) { return undefined; }
+
+  for(let i = user.history.length - 1; i >= 0; i--) {
+    if (
+      user.history[i].id !== END_OF_CONVERSATION_ID &&
+      user.history[i].type !== TYPE_ANSWER
+    ) {
+      return user.history[i];
+    }
+  }
+
+  return undefined;
+}
+
+function hasUpdateSinceLastAnswer(user, lastAnswer) {
+  if (!lastAnswer) { return false; }
+  if (!user.history) { return false; }
+
+  for(let i = user.history.length - 1; i >= 0; i--) {
+    if (user.history[i].isUpdate) {
+      return user.history[i].isUpdate.timestamp > lastAnswer.timestamp;
+    }
+  }
+
+  return false;
+}
+
+function atEndOfConversationAndShouldRestart(user, timeNow, cutOffHour, cutOffMinute=0) {
+    const lastMessage = getLastSentMessageInHistory(user);
+
+    if (R.path(['next', 'id'], lastMessage) !== END_OF_CONVERSATION_ID) {
+        return false;
+    }
+    const lastRealMessage = findLastNonConversationEndMessage(user);
+    if (lastRealMessage) {
+        let cutOffTime = moment().startOf('day').hour(cutOffHour).minute(cutOffMinute).unix();
+        if (timeNow < cutOffTime) {
+            cutOffTime = moment().subtract(1, 'day').startOf('day').hour(cutOffHour).minute(cutOffMinute).unix();
+        }
+
+        return (
+          (timeNow > cutOffTime) &&
+          (cutOffTime * 1000 > lastRealMessage.timestamp)
+        );
+    }
+
+    return false;
+
+}
+
+function shouldReceiveUpdate(user) {
+    const lastAnswer = findLastUserAnswer(user);
+
+    if (hasUpdateSinceLastAnswer(user, lastAnswer)) {
+      return false;
+    }
+
+    let minutesSinceLastActivity = Math.floor(
+      (Date.now() - lastAnswer.timestamp) / 1000 / 60
+    );
+
+    return minutesSinceLastActivity > MINUTES_OF_INACTIVITY_BEFORE_UPDATE_MESSAGE;
+}
+
+function getUserUpdateAction({
+  user,
+  conversations,
+  messages,
+  collections,
+}) {
+  let userActionUpdates = Object.assign({}, user);
+  if (shouldReceiveUpdate(user)) {
+    const lastMessage = getLastSentMessageInHistory(user);
+    if (
+      R.path(['next', 'id'], lastMessage) === END_OF_CONVERSATION_ID
+    ) {
+      const newTrack = newConversationTrack(
+          conversations,
+          messages,
+          collections,
+          user
+      );
+
+      let action = newTrack.action;
+
+      userActionUpdates = Object.assign({}, userActionUpdates);
+
+      return {
+        action,
+        userActionUpdates
+      };
+    }
+
+    return {
+      action: {
+        type: ACTION_UPDATE_AND_RESEND_LAST_MESSAGE
+      },
+      userActionUpdates
+    }
+
+  } else {
+    return {
+      action: {type: ACTION_NO_UPDATE_NEEDED }
+    };
+  }
+}
+
+function getUpdateActionForUsers({
+  users,
+  allConversations,
+  allCollections,
+  allMessages,
+  allSeries,
+  allBlocks,
+  media
+}) {
+  return users.reduce((acc, user) => {
+    let {action, userActionUpdates} = getUserUpdateAction({
+      user,
+      conversations: allConversations,
+      messages: allMessages,
+      collections: allCollections,
+    });
+    if (action.type !== ACTION_NO_UPDATE_NEEDED) {
+      acc.push({action, userActionUpdates});
+    };
+    return acc;
+  }, []);
+}
+
 /**
  * Get the next Action for incoming message
  *
@@ -207,24 +371,61 @@ function getActionForMessage({
     const lastMessage = getLastSentMessageInHistory(user);
 
     if (
-      lastMessage &&
-      lastMessage.messageType === TYPE_QUESTION_WITH_REPLIES &&
+      R.path(['next', 'id'], lastMessage) === END_OF_CONVERSATION_ID &&
+      atEndOfConversationAndShouldRestart(user, moment().unix(), CUT_OFF_HOUR_FOR_NEW_MESSAGES)
+    ) {
+      const newTrack = newConversationTrack(
+          conversations,
+          messages,
+          collections,
+          user
+      );
+
+      let action = newTrack.action;
+
+      userActionUpdates = Object.assign({}, userActionUpdates);
+
+      return {
+        action,
+        userActionUpdates
+      };
+    }
+
+    if (R.path(['next', 'id'], lastMessage) === END_OF_CONVERSATION_ID) {
+      return {
+        action: { type: ACTION_COME_BACK_LATER },
+        userActionUpdates
+      };
+    }
+
+    if (
+      R.path(['messageType'], lastMessage) === TYPE_QUESTION_WITH_REPLIES &&
+      !!message.quick_reply
+    ) {
+      let action = JSON.parse(message.quick_reply.payload);
+      if (action.id === END_OF_CONVERSATION_ID) {
+        return {
+          action: {type: ACTION_COME_BACK_LATER},
+          userActionUpdates
+        };
+      }
+
+      if (!!action.id) {
+        return {
+            action,
+            userActionUpdates
+        };
+      }
+    }
+
+    if (
+      R.path(['messageType'], lastMessage) === TYPE_QUESTION_WITH_REPLIES &&
       !message.quick_reply
     ) {
         return {
           action: {type: ACTION_RETRY_QUICK_REPLY},
           userActionUpdates
         };
-    }
-
-    if (message.quick_reply) {
-        let action = JSON.parse(message.quick_reply.payload);
-        if (!!action.id) {
-          return {
-              action,
-              userActionUpdates
-          };
-        }
     }
 
     let action;
@@ -513,6 +714,23 @@ function getNextMessageForCollection(
     };
 }
 
+function createCustomMessageForHistory({
+  id,
+  type,
+  messageType,
+  next,
+  text
+}) {
+  return {
+    id,
+    type,
+    messageType,
+    next,
+    text,
+    timestamp: Date.now()
+  }
+}
+
 /**
  * Construct Outgoing Messages
  *
@@ -538,12 +756,26 @@ function getMessagesForAction({
 
     let userUpdates = Object.assign({}, user);
 
-    if (action.type === ACTION_RETRY_QUICK_REPLY) {
+    if (
+      action.type === ACTION_RETRY_QUICK_REPLY ||
+      action.type === ACTION_UPDATE_AND_RESEND_LAST_MESSAGE
+    ) {
+      const updateMessage = action.type === ACTION_RETRY_QUICK_REPLY ?
+          QUICK_REPLY_RETRY_MESSAGE :
+          UPDATE_USER_MESSAGE;
       curr = {
           type: TYPE_MESSAGE,
-          message: { text: QUICK_REPLY_RETRY_MESSAGE }
+          message: { text: updateMessage }
       };
+
       messagesToSend.push(curr);
+
+      curr = createCustomMessageForHistory({
+          type: TYPE_MESSAGE,
+          messageType: MESSAGE_TYPE_TEXT,
+          text: curr.message.text,
+      });
+
       userUpdates = R.merge(userUpdates, {
           history: updateHistory(
               R.merge(curr, {
@@ -553,6 +785,29 @@ function getMessagesForAction({
           )
       });
       curr = Object.assign({}, getLastSentMessageInHistory(user));
+    } else if (action.type === ACTION_COME_BACK_LATER) {
+      curr = {
+          type: TYPE_MESSAGE,
+          message: { text: END_OF_CONVERSATION_MESSAGE },
+      };
+      messagesToSend.push(curr);
+
+      curr = createCustomMessageForHistory({
+          id: END_OF_CONVERSATION_ID,
+          type: TYPE_MESSAGE,
+          messageType: MESSAGE_TYPE_TEXT,
+          text: curr.message.text,
+          next: {id: END_OF_CONVERSATION_ID }
+      });
+      userUpdates = R.merge(userUpdates, {
+          history: updateHistory(
+              R.merge(curr, {
+                  timestamp: Date.now()
+              }),
+              userUpdates.history
+          )
+      });
+      curr = null;
     } else if (action.type === TYPE_MESSAGE) {
         curr = messages.find(m => m.id === action.id);
     } else if (action.type === TYPE_COLLECTION) {
@@ -604,7 +859,7 @@ function getMessagesForAction({
             break;
         }
 
-        if (curr.next) {
+        if (curr.next && curr.next.id !== END_OF_CONVERSATION_ID) {
             if (curr.next.type === TYPE_MESSAGE) {
                 curr = Object.assign(
                     {},
@@ -689,6 +944,7 @@ module.exports = {
     makePlatformMediaMessagePayload,
     getMessagesForAction,
     getActionForMessage,
+    getUpdateActionForUsers,
     updateHistory,
     getNextMessage,
     getMediaUrlForMessage

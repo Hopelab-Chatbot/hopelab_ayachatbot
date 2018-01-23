@@ -23,6 +23,11 @@ const DB_MEDIA = 'media';
 
 // Special actions
 const ACTION_RETRY_QUICK_REPLY = 'ACTION_RETRY_QUICK_REPLY';
+const ACTION_COME_BACK_LATER = 'ACTION_COME_BACK_LATER';
+const ACTION_NO_UPDATE_NEEDED = 'ACTION_NO_UPDATE_NEEDED';
+const ACTION_UPDATE_AND_RESEND_LAST_MESSAGE = 'ACTION_UPDATE_AND_RESEND_LAST_MESSAGE';
+
+const END_OF_CONVERSATION_ID = 'END-OF-CONVERSATION-ID';
 
 // data types
 const TYPE_COLLECTION = 'collection';
@@ -33,6 +38,7 @@ const TYPE_BLOCK = 'block';
 const TYPE_IMAGE = 'image';
 const TYPE_VIDEO = 'video';
 const TYPE_ANSWER = 'answer';
+const MESSAGE_TYPE_TEXT = 'text';
 
 // entity keys
 const INTRO_CONVERSATION_ID = 'intro-conversation';
@@ -53,7 +59,16 @@ const BLOCKS_SEEN = 'blocks-seen';
 const ONE_DAY_IN_MILLISECONDS = 1000 * 60 * 60 * 24;
 const ONE_WEEK_IN_MILLISECONDS = 1000 * 60 * 60 * 24 * 7 * 4;
 
+// Special Messages
 const QUICK_REPLY_RETRY_MESSAGE = "Sorry, I didn't understand. Could you try using my buttons this time?";
+const END_OF_CONVERSATION_MESSAGE = "That's all I've got for today.  Let's talk some more tomorrow.";
+const UPDATE_USER_MESSAGE = "Hi! Don't forget about me!";
+
+// hours from midnight (military time) eg 2 is 2am.
+const CUT_OFF_HOUR_FOR_NEW_MESSAGES = 2;
+
+// minutes of inactivty before update is sent
+const MINUTES_OF_INACTIVITY_BEFORE_UPDATE_MESSAGE = (24 * 60) + 3;
 
 module.exports = {
     REST_PORT,
@@ -70,7 +85,13 @@ module.exports = {
     DB_MEDIA,
     DB_USER_HISTORY,
     ACTION_RETRY_QUICK_REPLY,
+    ACTION_COME_BACK_LATER,
+    ACTION_NO_UPDATE_NEEDED,
+    ACTION_UPDATE_AND_RESEND_LAST_MESSAGE,
+    END_OF_CONVERSATION_ID,
     QUICK_REPLY_RETRY_MESSAGE,
+    END_OF_CONVERSATION_MESSAGE,
+    UPDATE_USER_MESSAGE,
     TYPE_ANSWER,
     TYPE_COLLECTION,
     TYPE_MESSAGE,
@@ -79,6 +100,7 @@ module.exports = {
     TYPE_BLOCK,
     TYPE_IMAGE,
     TYPE_VIDEO,
+    MESSAGE_TYPE_TEXT,
     ONE_DAY_IN_MILLISECONDS,
     ONE_WEEK_IN_MILLISECONDS,
     TYPING_TIME_IN_MILLISECONDS,
@@ -95,4 +117,6 @@ module.exports = {
     SERIES_SEEN,
     BLOCKS_SEEN,
     COLLECTION_SCOPE,
+    CUT_OFF_HOUR_FOR_NEW_MESSAGES,
+    MINUTES_OF_INACTIVITY_BEFORE_UPDATE_MESSAGE,
 };
