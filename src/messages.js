@@ -11,7 +11,9 @@ const {
     TYPE_IMAGE,
     TYPE_VIDEO,
     TYPE_QUESTION,
+    TYPE_ANSWER,
     TYPE_QUESTION_WITH_REPLIES,
+    MESSAGE_TYPE_TEXT,
     ACTION_RETRY_QUICK_REPLY,
     ACTION_COME_BACK_LATER,
     END_OF_CONVERSATION_ID,
@@ -26,9 +28,12 @@ const {
     SERIES_SEEN,
     BLOCKS_SEEN,
     COLLECTION_SCOPE,
+    CUT_OFF_HOUR_FOR_NEW_MESSAGES,
 } = require('./constants');
 
 const R = require('ramda');
+
+const moment = require('moment');
 
 /**
  * Create Specific Platform Payload
@@ -187,6 +192,44 @@ function newConversationTrack(conversations, messages, collections, user) {
     };
 }
 
+function findLastNonConversationEndMessage(user) {
+  if (!user.history) { return undefined; }
+
+  for(let i = user.history.length - 1; i >= 0; i--) {
+    if (
+      user.history[i].id !== END_OF_CONVERSATION_ID &&
+      user.history[i].type !== TYPE_ANSWER
+    ) {
+      return user.history[i];
+    }
+  }
+
+  return undefined;
+}
+
+function atEndOfConversationAndShouldRestart(user, timeNow, cutOffHour, cutOffMinute=0) {
+    const lastMessage = getLastSentMessageInHistory(user);
+
+    if (R.path(['next', 'id'], lastMessage) !== END_OF_CONVERSATION_ID) {
+        return false;
+    }
+    const lastRealMessage = findLastNonConversationEndMessage(user);
+    if (lastRealMessage) {
+        let cutOffTime = moment().startOf('day').hour(cutOffHour).minute(cutOffMinute).unix();
+        if (timeNow < cutOffTime) {
+            cutOffTime = moment().subtract(1, 'day').startOf('day').hour(cutOffHour).minute(cutOffMinute).unix();
+        }
+
+        return (
+          (timeNow > cutOffTime) &&
+          (cutOffTime * 1000 > lastRealMessage.timestamp)
+        );
+    }
+
+    return false;
+
+}
+
 /**
  * Get the next Action for incoming message
  *
@@ -212,6 +255,27 @@ function getActionForMessage({
 
 
     const lastMessage = getLastSentMessageInHistory(user);
+
+    if (
+      R.path(['next', 'id'], lastMessage) === END_OF_CONVERSATION_ID &&
+      atEndOfConversationAndShouldRestart(user, moment().unix(), CUT_OFF_HOUR_FOR_NEW_MESSAGES)
+    ) {
+      const newTrack = newConversationTrack(
+          conversations,
+          messages,
+          collections,
+          user
+      );
+
+      let action = newTrack.action;
+
+      userActionUpdates = Object.assign({}, userActionUpdates);
+
+      return {
+        action,
+        userActionUpdates
+      };
+    }
 
     if (R.path(['next', 'id'], lastMessage) === END_OF_CONVERSATION_ID) {
       return {
@@ -536,6 +600,23 @@ function getNextMessageForCollection(
     };
 }
 
+function createCustomMessageForHistory({
+  id,
+  type,
+  messageType,
+  next,
+  text
+}) {
+  return {
+    id,
+    type,
+    messageType,
+    next,
+    text,
+    timestamp: Date.now()
+  }
+}
+
 /**
  * Construct Outgoing Messages
  *
@@ -566,7 +647,15 @@ function getMessagesForAction({
           type: TYPE_MESSAGE,
           message: { text: QUICK_REPLY_RETRY_MESSAGE }
       };
+
       messagesToSend.push(curr);
+
+      curr = createCustomMessageForHistory({
+          type: TYPE_MESSAGE,
+          messageType: MESSAGE_TYPE_TEXT,
+          text: curr.message.text,
+      });
+
       userUpdates = R.merge(userUpdates, {
           history: updateHistory(
               R.merge(curr, {
@@ -579,10 +668,17 @@ function getMessagesForAction({
     } else if (action.type === ACTION_COME_BACK_LATER) {
       curr = {
           type: TYPE_MESSAGE,
-          message: { text: END_OF_CONVERSATION_MESSAGE }
+          message: { text: END_OF_CONVERSATION_MESSAGE },
       };
       messagesToSend.push(curr);
-      curr.next = { id : END_OF_CONVERSATION_ID };
+
+      curr = createCustomMessageForHistory({
+          id: END_OF_CONVERSATION_ID,
+          type: TYPE_MESSAGE,
+          messageType: MESSAGE_TYPE_TEXT,
+          text: curr.message.text,
+          next: {id: END_OF_CONVERSATION_ID }
+      });
       userUpdates = R.merge(userUpdates, {
           history: updateHistory(
               R.merge(curr, {

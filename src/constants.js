@@ -37,6 +37,7 @@ const TYPE_BLOCK = 'block';
 const TYPE_IMAGE = 'image';
 const TYPE_VIDEO = 'video';
 const TYPE_ANSWER = 'answer';
+const MESSAGE_TYPE_TEXT = 'text';
 
 // entity keys
 const INTRO_CONVERSATION_ID = 'intro-conversation';
@@ -59,7 +60,11 @@ const ONE_WEEK_IN_MILLISECONDS = 1000 * 60 * 60 * 24 * 7 * 4;
 
 // Special Messages
 const QUICK_REPLY_RETRY_MESSAGE = "Sorry, I didn't understand. Could you try using my buttons this time?";
-const END_OF_CONVERSATION_MESSAGE = "That's all I've got for today.  Let's talk some more tomorrow."
+const END_OF_CONVERSATION_MESSAGE = "That's all I've got for today.  Let's talk some more tomorrow.";
+
+// hours from midnight (military time) eg 2 is 2am.
+const CUT_OFF_HOUR_FOR_NEW_MESSAGES = 2;
+
 
 module.exports = {
     REST_PORT,
@@ -89,6 +94,7 @@ module.exports = {
     TYPE_BLOCK,
     TYPE_IMAGE,
     TYPE_VIDEO,
+    MESSAGE_TYPE_TEXT,
     ONE_DAY_IN_MILLISECONDS,
     ONE_WEEK_IN_MILLISECONDS,
     TYPING_TIME_IN_MILLISECONDS,
@@ -105,4 +111,5 @@ module.exports = {
     SERIES_SEEN,
     BLOCKS_SEEN,
     COLLECTION_SCOPE,
+    CUT_OFF_HOUR_FOR_NEW_MESSAGES,
 };

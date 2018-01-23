@@ -13,6 +13,7 @@
     "config": "^1.28.1",
     "express": "^4.15.4",
     "json-bigint": "^0.2.3",
+    "moment": "^2.20.1",
     "ramda": "^0.24.1",
     "redis": "^2.8.0",
     "request": "^2.81.0",
