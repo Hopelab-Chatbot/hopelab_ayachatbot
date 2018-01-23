@@ -13,10 +13,16 @@ const {
     FB_MESSAGE_TYPE,
     FB_TYPING_ON_TYPE,
     FB_MESSAGING_TYPE_RESPONSE,
-    TYPE_ANSWER
+    FB_MESSAGING_TYPE_UPDATE,
+    TYPE_ANSWER,
+    TYPE_MESSAGE,
 } = require('./constants');
 
-const { getMessagesForAction, getActionForMessage } = require('./messages');
+const {
+  getMessagesForAction,
+  getActionForMessage,
+  getUpdateActionForUsers
+} = require('./messages');
 
 const { promiseSerial } = require('./utils');
 
@@ -95,9 +101,9 @@ function callSendAPI(messageData) {
  * @return {Promise<String>}
 */
 function sendFollowUpMessageToUser(recipientId, content) {
-    const messageData = createMessagePayload(recipientId, content);
+    const messageData = createMessagePayload(recipientId, content, FB_MESSAGING_TYPE_UPDATE);
 
-    callSendAPI(messageData);
+    return callSendAPI(messageData);
 }
 
 /**
@@ -107,13 +113,15 @@ function sendFollowUpMessageToUser(recipientId, content) {
  * @param {Object} content
  * @return {Object}
 */
-function createMessagePayload(recipientId, content) {
+function createMessagePayload(
+  recipientId,
+  content,
+  fbMessagingType=FB_MESSAGING_TYPE_RESPONSE
+) {
     const { type, message } = content;
 
-    // TODO: handle UPDATE types as well
-    //      (messages sent 24 hours after initial contact)
     let payload = {
-        messaging_type: FB_MESSAGING_TYPE_RESPONSE,
+        messaging_type: fbMessagingType,
         recipient: {
             id: recipientId
         }
@@ -234,7 +242,41 @@ function receivedMessage({
     sendAllMessagesToMessenger(messagesWithTyping, senderID, userToUpdate);
 }
 
+function sendPushMessagesToUsers({
+  users,
+  allConversations,
+  allCollections,
+  allMessages,
+  allSeries,
+  allBlocks,
+  media
+}) {
+  const actions = getUpdateActionForUsers({users,
+      allConversations,
+      allCollections,
+      allMessages,
+      allSeries,
+      allBlocks,
+      media
+  });
+
+  return Promise.all(actions.map(action => {
+    if (action.user && action.user.id) {
+      return sendFollowUpMessageToUser(
+        action.user.id,
+        {
+          type: FB_MESSAGE_TYPE,
+          message: { text: "TODO: fix this message" }
+        }
+      );
+    }
+
+    return Promise.resolve();
+  }));
+}
+
 module.exports = {
     getUserDetails,
-    receivedMessage
+    receivedMessage,
+    sendPushMessagesToUsers,
 };

@@ -22,7 +22,7 @@ const { createNewUser } = require('./users');
 
 /**
  * Set User in Cache
- * 
+ *
  * @param {Object} user
  * @return {Promise}
 */
@@ -35,7 +35,7 @@ const setUserInCache = user => users =>
 
 /**
  * Update User By ID
- * 
+ *
  * @param {Object} user
  * @return {Promise}
 */
@@ -57,7 +57,7 @@ const updateUser = user =>
 
 /**
  * Find User By Id
- * 
+ *
  * @param {String} id
  * @return {Object}
 */
@@ -69,7 +69,7 @@ const findUserById = id => users => ({
 
 /**
  * Create a User in Database
- * 
+ *
  * @param {Object} { id, user, users }
  * @return {Promise<Object>}
 */
@@ -94,7 +94,7 @@ function createUserIfNotExisting({ id, user, users }) {
 
 /**
  * Get User By ID
- * 
+ *
  * @param {String} id
  * @return {Promise<Object>}
 */
@@ -115,9 +115,25 @@ const getUserById = id =>
             });
     });
 
+
+const getUsers = () =>
+    new Promise(resolve => {
+      cacheUtils
+          .getItem(DB_USERS)
+          .then(JSON.parse)
+          .then(resolve)
+          .catch(e => {
+              // no item found matching cacheKey
+              console.error(
+                  `error: getUsers - cacheUtils.getItem(${DB_USERS})`,
+                  e
+              );
+          });
+    });
+
 /**
  * Get Conversations
- * 
+ *
  * @return {Promise<Array>}
 */
 const getConversations = () =>
@@ -136,7 +152,7 @@ const getConversations = () =>
 
 /**
  * Get Collections
- * 
+ *
  * @return {Promise<Array>}
 */
 const getCollections = () =>
@@ -155,7 +171,7 @@ const getCollections = () =>
 
 /**
  * Get Series
- * 
+ *
  * @return {Promise<Array>}
 */
 const getSeries = () =>
@@ -174,7 +190,7 @@ const getSeries = () =>
 
 /**
  * Get Messages
- * 
+ *
  * @return {Promise<Array>}
 */
 const getMessages = () =>
@@ -190,7 +206,7 @@ const getMessages = () =>
 
 /**
  * Get Blocks
- * 
+ *
  * @return {Promise<Array>}
 */
 const getBlocks = () =>
@@ -209,7 +225,7 @@ const getBlocks = () =>
 
 /**
  * Get Media
- * 
+ *
  * @return {Promise<Object>}
 */
 const getMedia = () =>
@@ -226,33 +242,15 @@ const getMedia = () =>
             });
     });
 
-/**
- * Get user History
- * 
- * @return {Promise<Array>}
-*/
-const getUserHistory = () =>
-    new Promise(resolve => {
-        cacheUtils
-            .getItem(DB_USER_HISTORY)
-            .then(JSON.parse)
-            .then(resolve)
-            .catch(e => {
-                console.error(
-                    `error: getUserHistory - cacheUtils.getItem(${DB_USER_HISTORY})`,
-                    e
-                );
-            });
-    });
 
 module.exports = {
     getUserById,
+    getUsers,
     getConversations,
     getCollections,
     getSeries,
     getMessages,
     getBlocks,
     getMedia,
-    getUserHistory,
     updateUser
 };

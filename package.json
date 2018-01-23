@@ -10,6 +10,7 @@
     "alien-node-redis-utils": "^1.2.0",
     "alien-node-winston-utils": "^0.0.4",
     "body-parser": "^1.18.1",
+    "bull": "^3.3.8",
     "config": "^1.28.1",
     "express": "^4.15.4",
     "json-bigint": "^0.2.3",

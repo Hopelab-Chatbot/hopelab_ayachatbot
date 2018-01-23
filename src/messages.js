@@ -16,6 +16,7 @@ const {
     MESSAGE_TYPE_TEXT,
     ACTION_RETRY_QUICK_REPLY,
     ACTION_COME_BACK_LATER,
+    ACTION_NO_UPDATE_NEEDED,
     END_OF_CONVERSATION_ID,
     QUICK_REPLY_RETRY_MESSAGE,
     END_OF_CONVERSATION_MESSAGE,
@@ -29,6 +30,7 @@ const {
     BLOCKS_SEEN,
     COLLECTION_SCOPE,
     CUT_OFF_HOUR_FOR_NEW_MESSAGES,
+    MINUTES_OF_INACTIVITY_BEFORE_UPDATE_MESSAGE,
 } = require('./constants');
 
 const R = require('ramda');
@@ -94,10 +96,6 @@ function makePlatformMediaMessagePayload(type, url) {
 */
 function getLastSentMessageInHistory(user) {
     return user.history[user.history.length - 2];
-}
-
-function getLastMessageFromUser(user) {
-    return user.history[user.history.length - 1];
 }
 
 /**
@@ -192,6 +190,18 @@ function newConversationTrack(conversations, messages, collections, user) {
     };
 }
 
+function findLastUserAnswer(user) {
+  if (!user.history) { return undefined; }
+
+  for(let i = user.history.length - 1; i >= 0; i--) {
+    if (user.history[i].type === TYPE_ANSWER) {
+      return user.history[i];
+    }
+  }
+
+  return undefined;
+}
+
 function findLastNonConversationEndMessage(user) {
   if (!user.history) { return undefined; }
 
@@ -205,6 +215,19 @@ function findLastNonConversationEndMessage(user) {
   }
 
   return undefined;
+}
+
+function hasUpdateSinceLastAnswer(user, lastAnswer) {
+  if (!lastAnswer) { return false; }
+  if (!user.history) { return false; }
+
+  for(let i = user.history.length - 1; i >= 0; i--) {
+    if (user.history[i].isUpdate) {
+      return user.history[i].isUpdate.timestamp > lastAnswer.timestamp;
+    }
+  }
+
+  return false;
 }
 
 function atEndOfConversationAndShouldRestart(user, timeNow, cutOffHour, cutOffMinute=0) {
@@ -228,6 +251,50 @@ function atEndOfConversationAndShouldRestart(user, timeNow, cutOffHour, cutOffMi
 
     return false;
 
+}
+
+function shouldReceiveUpdate(user) {
+    const lastAnswer = findLastUserAnswer(user);
+
+    if (hasUpdateSinceLastAnswer(user, lastAnswer)) {
+      return false;
+    }
+
+    let minutesSinceLastActivity = Math.floor(
+      (Date.now() - lastAnswer.timestamp) / 1000 / 60
+    );
+
+    return minutesSinceLastActivity > MINUTES_OF_INACTIVITY_BEFORE_UPDATE_MESSAGE;
+}
+
+function getUserUpdateAction(user) {
+  if (shouldReceiveUpdate(user)) {
+    return {
+      action: {id: "UPDATE_NOW", user}
+    }
+  } else {
+    return {
+      action: {id: ACTION_NO_UPDATE_NEEDED }
+    };
+  }
+}
+
+function getUpdateActionForUsers({
+  users,
+  allConversations,
+  allCollections,
+  allMessages,
+  allSeries,
+  allBlocks,
+  media
+}) {
+  return users.reduce((acc, user) => {
+    let {action} = getUserUpdateAction(user);
+    if (action.id !== ACTION_NO_UPDATE_NEEDED) {
+      acc.push(action);
+    };
+    return acc;
+  }, []);
 }
 
 /**
@@ -824,6 +891,7 @@ module.exports = {
     makePlatformMediaMessagePayload,
     getMessagesForAction,
     getActionForMessage,
+    getUpdateActionForUsers,
     updateHistory,
     getNextMessage,
     getMediaUrlForMessage
