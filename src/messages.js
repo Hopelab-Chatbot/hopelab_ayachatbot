@@ -234,7 +234,7 @@ function hasUpdateSinceLastAnswer(user, lastAnswer) {
 
   for(let i = user.history.length - 1; i >= 0; i--) {
     if (user.history[i].isUpdate) {
-      return user.history[i].isUpdate.timestamp > lastAnswer.timestamp;
+      return user.history[i].timestamp > lastAnswer.timestamp;
     }
   }
 

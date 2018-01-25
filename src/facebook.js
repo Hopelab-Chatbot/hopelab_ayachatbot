@@ -262,7 +262,11 @@ function sendPushMessagesToUsers({
 
   return actions.map(({action, userActionUpdates}) => {
     let userToUpdate = Object.assign({}, userActionUpdates);
-    if (!userToUpdate.history) {return undefined;}
+    const originalHistoryLength = R.path(['history', 'length'], userToUpdate);
+
+    if (!originalHistoryLength) {
+      return Promise.resolve();
+    }
     const { messagesToSend, userUpdates } = getMessagesForAction({
         action,
         collections: allCollections,
@@ -274,6 +278,15 @@ function sendPushMessagesToUsers({
     });
 
     userToUpdate = Object.assign({}, userToUpdate, userUpdates);
+
+    const history = userToUpdate.history.map((h, index) => {
+      if (index >= originalHistoryLength && h.type !== TYPE_ANSWER) {
+        return Object.assign({}, h, {isUpdate: true});
+      }
+      return h;
+    });
+
+    userToUpdate = Object.assign({}, userToUpdate, {history});
 
     const messagesWithTyping = R.intersperse(
         { type: FB_TYPING_ON_TYPE },

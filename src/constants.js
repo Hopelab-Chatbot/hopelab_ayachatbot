@@ -69,6 +69,7 @@ const CUT_OFF_HOUR_FOR_NEW_MESSAGES = 2;
 
 // minutes of inactivty before update is sent
 const MINUTES_OF_INACTIVITY_BEFORE_UPDATE_MESSAGE = (24 * 60) + 3;
+const CRONTAB_FOR_MESSAGE_UPDATE_CHECK = '*/20 * * * *';
 
 module.exports = {
     REST_PORT,
@@ -119,4 +120,5 @@ module.exports = {
     COLLECTION_SCOPE,
     CUT_OFF_HOUR_FOR_NEW_MESSAGES,
     MINUTES_OF_INACTIVITY_BEFORE_UPDATE_MESSAGE,
+    CRONTAB_FOR_MESSAGE_UPDATE_CHECK,
 };

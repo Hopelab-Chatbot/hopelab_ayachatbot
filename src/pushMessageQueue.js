@@ -1,6 +1,7 @@
 const Queue = require('bull');
 const config = require('config');
 const updateUsers = require('./updateUsers');
+const { CRONTAB_FOR_MESSAGE_UPDATE_CHECK } = require('./constants');
 
 function start() {
   const pushMessageQueue = Queue(
@@ -21,7 +22,7 @@ function start() {
     });
   });
 
-  pushMessageQueue.add({}, {repeat: {cron: '*/20 * * * *'}})
+  pushMessageQueue.add({}, {repeat: {cron: CRONTAB_FOR_MESSAGE_UPDATE_CHECK}});
 }
 
 module.exports = { start };
