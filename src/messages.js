@@ -17,7 +17,6 @@ const {
     ACTION_RETRY_QUICK_REPLY,
     ACTION_COME_BACK_LATER,
     ACTION_NO_UPDATE_NEEDED,
-    ACTION_UPDATE_AND_RESEND_LAST_MESSAGE,
     END_OF_CONVERSATION_ID,
     QUICK_REPLY_RETRY_MESSAGE,
     END_OF_CONVERSATION_MESSAGE,
@@ -286,34 +285,21 @@ function getUserUpdateAction({
 }) {
   let userActionUpdates = Object.assign({}, user);
   if (shouldReceiveUpdate(user)) {
-    const lastMessage = getLastSentMessageInHistory(user);
-    if (
-      R.path(['next', 'id'], lastMessage) === END_OF_CONVERSATION_ID
-    ) {
-      const newTrack = newConversationTrack(
-          conversations,
-          messages,
-          collections,
-          user
-      );
+    const newTrack = newConversationTrack(
+        conversations,
+        messages,
+        collections,
+        user
+    );
 
-      let action = newTrack.action;
+    let action = newTrack.action;
 
-      userActionUpdates = Object.assign({}, userActionUpdates);
-
-      return {
-        action,
-        userActionUpdates
-      };
-    }
+    userActionUpdates = Object.assign({}, userActionUpdates);
 
     return {
-      action: {
-        type: ACTION_UPDATE_AND_RESEND_LAST_MESSAGE
-      },
+      action,
       userActionUpdates
-    }
-
+    };
   } else {
     return {
       action: {type: ACTION_NO_UPDATE_NEEDED }
@@ -756,13 +742,8 @@ function getMessagesForAction({
 
     let userUpdates = Object.assign({}, user);
 
-    if (
-      action.type === ACTION_RETRY_QUICK_REPLY ||
-      action.type === ACTION_UPDATE_AND_RESEND_LAST_MESSAGE
-    ) {
-      const updateMessage = action.type === ACTION_RETRY_QUICK_REPLY ?
-          QUICK_REPLY_RETRY_MESSAGE :
-          UPDATE_USER_MESSAGE;
+    if (action.type === ACTION_RETRY_QUICK_REPLY) {
+      const updateMessage = QUICK_REPLY_RETRY_MESSAGE;
       curr = {
           type: TYPE_MESSAGE,
           message: { text: updateMessage }
