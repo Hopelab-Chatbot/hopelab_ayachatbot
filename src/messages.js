@@ -69,24 +69,12 @@ function makePlatformMessagePayload(action, messages) {
  * @return {Object}
 */
 function makePlatformMediaMessagePayload(type, url) {
-    return type === 'image'
-        ? {
-              attachment: {
-                  type,
-                  payload: {
-                      url
-                  }
-              }
-          }
-        : {
-              attachment: {
-                  type: 'template',
-                  payload: {
-                      template_type: 'open_graph',
-                      elements: [{ url }]
-                  }
-              }
-          };
+    return  {
+      attachment: {
+        type,
+        payload: { url }
+      }
+    };
 }
 
 /**
