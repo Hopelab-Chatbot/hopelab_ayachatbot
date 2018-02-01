@@ -318,6 +318,10 @@ function getUpdateActionForUsers({
   }, []);
 }
 
+function doesMessageStillExit(message, messages) {
+  return !!(messages.find(m => message.id === m.id));
+}
+
 /**
  * Get the next Action for incoming message
  *
@@ -368,6 +372,28 @@ function getActionForMessage({
     if (R.path(['next', 'id'], lastMessage) === END_OF_CONVERSATION_ID) {
       return {
         action: { type: ACTION_COME_BACK_LATER },
+        userActionUpdates
+      };
+    }
+
+    if (
+      R.path(['next', 'id'], lastMessage) &&
+      (!doesMessageStillExit(lastMessage, messages) ||
+       !doesMessageStillExit(lastMessage.next, messages))
+    ) {
+      const newTrack = newConversationTrack(
+          conversations,
+          messages,
+          collections,
+          user
+      );
+
+      let action = newTrack.action;
+
+      userActionUpdates = Object.assign({}, userActionUpdates);
+
+      return {
+        action,
         userActionUpdates
       };
     }
