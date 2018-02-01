@@ -61,6 +61,10 @@ function makePlatformMessagePayload(action, messages) {
     return { text: message.text };
 }
 
+function isYouTubeVideo(url) {
+  return url && url.includes("www.youtube.com");
+}
+
 /**
  * Create Specific Platform Media Payload
  *
@@ -69,13 +73,26 @@ function makePlatformMessagePayload(action, messages) {
  * @return {Object}
 */
 function makePlatformMediaMessagePayload(type, url) {
-    return  {
-      attachment: {
-        type,
-        payload: { url }
-      }
-    };
+    if (type === 'image' || !isYouTubeVideo(url)) {
+      return  {
+        attachment: {
+          type,
+          payload: { url }
+        }
+      };
+    } else {
+      return {
+        attachment: {
+          type: 'template',
+          payload: {
+              template_type: 'open_graph',
+              elements: [{ url }]
+          }
+        }
+      };
+    }
 }
+
 
 /**
  * Get the last message sent to user in history
