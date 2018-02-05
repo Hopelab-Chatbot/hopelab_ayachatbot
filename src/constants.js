@@ -60,7 +60,7 @@ const ONE_WEEK_IN_MILLISECONDS = 1000 * 60 * 60 * 24 * 7 * 4;
 
 // Special Messages
 const QUICK_REPLY_RETRY_MESSAGE = "Sorry can’t compute! 🤖 Buttons plz";
-const END_OF_CONVERSATION_MESSAGE = "Sorry! I’m hanging out with my bot friends for the rest of the day 💅. Plus I want to make sure we talk a bit every day so you get the most out of our chats. Text me tomorrow?";
+const END_OF_CONVERSATION_MESSAGE = "Sorry! I’m hanging out with my bot friends for the rest of the day 💅. Plus I want to make sure we talk a bit every day so you get the most out of our chats. Text me tomorrow!";
 const UPDATE_USER_MESSAGE = "Hi! Don't forget about me!";
 
 // hours from midnight (military time) eg 2 is 2am.
