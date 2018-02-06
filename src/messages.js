@@ -68,6 +68,13 @@ function isYouTubeVideo(url) {
   return url && url.includes("www.youtube.com");
 }
 
+function getMediaAttachmentId(type, url, media) {
+  if (!!media[type] && Array.isArray(media[type])) {
+    return R.path(['attachment_id'], media[type].find(m => m.url === url));
+  }
+  return undefined;
+}
+
 /**
  * Create Specific Platform Media Payload
  *
@@ -75,8 +82,19 @@ function isYouTubeVideo(url) {
  * @param {String} url
  * @return {Object}
 */
-function makePlatformMediaMessagePayload(type, url) {
-    if (type === 'image' || !isYouTubeVideo(url)) {
+function makePlatformMediaMessagePayload(type, url, media) {
+    const attachment_id = getMediaAttachmentId(type, url, media);
+
+    if (attachment_id) {
+      return {
+        attachment: {
+          type,
+          payload: {
+            attachment_id
+          }
+        }
+      }
+    } else if (type === 'image' || !isYouTubeVideo(url)) {
       return  {
         attachment: {
           type,
@@ -891,7 +909,8 @@ function getMessagesForAction({
                 type: TYPE_MESSAGE,
                 message: makePlatformMediaMessagePayload(
                     curr.messageType,
-                    curr.url
+                    curr.url,
+                    media
                 )
             });
         } else {
