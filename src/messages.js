@@ -17,10 +17,13 @@ const {
     ACTION_RETRY_QUICK_REPLY,
     ACTION_COME_BACK_LATER,
     ACTION_NO_UPDATE_NEEDED,
+    ACTION_CRISIS_REPONSE,
+    CRISIS_KEYWORDS,
     END_OF_CONVERSATION_ID,
     QUICK_REPLY_RETRY_MESSAGE,
     END_OF_CONVERSATION_MESSAGE,
     UPDATE_USER_MESSAGE,
+    CRISIS_RESPONSE_MESSAGE,
     LOGIC_SEQUENTIAL,
     LOGIC_RANDOM,
     INTRO_CONVERSATION_ID,
@@ -339,6 +342,18 @@ function doesMessageStillExit(message, messages) {
   return !!(messages.find(m => message.id === m.id));
 }
 
+function isCrisisMessage(message, crisisKeywords) {
+  if (!message || !message.text) {
+    return false;
+  }
+  const textArray = message.text.toLowerCase().match(/\S+/g) || [];
+  const text = textArray.join(' ');
+
+  return crisisKeywords.reduce((acc, word) => (
+    acc ? acc : text.includes(word)
+  ), false);
+}
+
 /**
  * Get the next Action for incoming message
  *
@@ -364,6 +379,13 @@ function getActionForMessage({
 
 
     const lastMessage = getLastSentMessageInHistory(user);
+
+    if (isCrisisMessage(message, CRISIS_KEYWORDS)) {
+      return {
+        action: { type: ACTION_CRISIS_REPONSE },
+        userActionUpdates
+      };
+    }
 
     if (
       R.path(['next', 'id'], lastMessage) === END_OF_CONVERSATION_ID &&
@@ -774,7 +796,30 @@ function getMessagesForAction({
 
     let userUpdates = Object.assign({}, user);
 
-    if (action.type === ACTION_RETRY_QUICK_REPLY) {
+    if (action.type === ACTION_CRISIS_REPONSE) {
+      curr = {
+        type: TYPE_MESSAGE,
+        message: { text: CRISIS_RESPONSE_MESSAGE }
+      };
+
+      messagesToSend.push(curr);
+
+      curr = createCustomMessageForHistory({
+          type: TYPE_MESSAGE,
+          messageType: MESSAGE_TYPE_TEXT,
+          text: curr.message.text,
+      });
+
+      userUpdates = R.merge(userUpdates, {
+          history: updateHistory(
+              R.merge(curr, {
+                  timestamp: Date.now()
+              }),
+              userUpdates.history
+          )
+      });
+      curr = null;
+    } else if (action.type === ACTION_RETRY_QUICK_REPLY) {
       const updateMessage = QUICK_REPLY_RETRY_MESSAGE;
       curr = {
           type: TYPE_MESSAGE,
