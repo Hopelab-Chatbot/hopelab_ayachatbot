@@ -395,6 +395,7 @@ function getActionForMessage({
 
     if (
       R.path(['next', 'id'], lastMessage) &&
+      lastMessage.messageType !== TYPE_QUESTION_WITH_REPLIES &&
       (!doesMessageStillExit(lastMessage, messages) ||
        !doesMessageStillExit(lastMessage.next, messages))
     ) {
