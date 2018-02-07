@@ -63,10 +63,21 @@ const ONE_WEEK_IN_MILLISECONDS = 1000 * 60 * 60 * 24 * 7 * 4;
 const QUICK_REPLY_RETRY_MESSAGE = "Sorry can’t compute! 🤖 Buttons plz";
 const END_OF_CONVERSATION_MESSAGE = "Sorry! I’m hanging out with my bot friends for the rest of the day 💅. Plus I want to make sure we talk a bit every day so you get the most out of our chats. Text me tomorrow!";
 const UPDATE_USER_MESSAGE = "Hi! Don't forget about me!";
-const CRISIS_RESPONSE_MESSAGE = "I hope everything is ok. Your response included a few words that indicate you may be struggling. Do you want to talk to a real person at Crisis Text Line? If so, text...";
+const CRISIS_RESPONSE_MESSAGE = "I hope everything is ok. Your response included a few words that indicate you may be struggling. Do you want to talk to a real person at Crisis Text Line? If so, text 741741.";
 
 // Crisis Keywords
-const CRISIS_KEYWORDS = ['suicide', 'kill', 'hurt myself'];
+const CRISIS_KEYWORDS = [
+  'suicide',
+  'kill',
+  'hurt myself',
+  'don\'t want to live',
+  'bridge',
+  'what is the point',
+  'whats the point',
+  'harm',
+  'hurt',
+  'gun'
+];
 
 // hours from midnight (military time) eg 2 is 2am.
 const CUT_OFF_HOUR_FOR_NEW_MESSAGES = 2;
