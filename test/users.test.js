@@ -1,4 +1,4 @@
-const expect = require('expect');
+const expect = require('chai').expect;
 const testModule = require('../src/users');
 const { TYPE_BLOCK, TYPE_MESSAGE } = require('../src/constants');
 
@@ -7,7 +7,7 @@ describe('Users Module', () => {
         it('returns a default user object for given id', () => {
             const newUser = testModule.createNewUser('12345');
 
-            expect(newUser.id).toEqual('12345');
+            expect(newUser.id).to.equal('12345');
         });
     });
 
@@ -17,10 +17,10 @@ describe('Users Module', () => {
             let blockScope;
 
             blockScope = testModule.updateBlockScope({ isEnd: true }, blocks);
-            expect(blockScope.length).toEqual(2);
+            expect(blockScope.length).to.equal(2);
 
             blockScope = testModule.updateBlockScope({ isEnd: false }, blocks);
-            expect(blockScope.length).toEqual(3);
+            expect(blockScope.length).to.equal(3);
         });
 
         it('pushes a new block scope in if current message points to a next block', () => {
@@ -31,10 +31,10 @@ describe('Users Module', () => {
                 { next: { id: 'block-2', type: TYPE_BLOCK } },
                 blocks
             );
-            expect(blockScope.length).toEqual(4);
+            expect(blockScope.length).to.equal(4);
 
             blockScope = testModule.updateBlockScope({}, blocks);
-            expect(blockScope.length).toEqual(3);
+            expect(blockScope.length).to.equal(3);
         });
     });
 
@@ -44,7 +44,7 @@ describe('Users Module', () => {
 
             const newHistory = testModule.updateHistory({}, history);
 
-            expect(newHistory.length).toEqual(4);
+            expect(newHistory.length).to.equal(4);
         });
     });
 
@@ -57,12 +57,12 @@ describe('Users Module', () => {
                 messages,
                 user
             );
-            expect(message).toEqual(messages[0]);
+            expect(message).to.equal(messages[0]);
 
             message = testModule.getPreviousMessageInHistory(messages, {
                 history: []
             });
-            expect(message).toEqual({});
+            expect(message).to.equal({});
         });
     });
 
@@ -72,15 +72,15 @@ describe('Users Module', () => {
                 testModule.isNextMessageBlock({
                     next: { id: 'block-1', type: TYPE_BLOCK }
                 })
-            ).toBe(true);
+            ).to.be.true;
 
             expect(
                 testModule.isNextMessageBlock({
                     next: { id: 'message-1', type: TYPE_MESSAGE }
                 })
-            ).toBe(false);
+            ).to.be.false;
 
-            expect(testModule.isNextMessageBlock({ next: {} })).toBe(false);
+            expect(testModule.isNextMessageBlock({ next: {} })).to.be.false;
         });
     });
 });

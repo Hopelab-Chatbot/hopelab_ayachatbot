@@ -1,31 +1,64 @@
-const expect = require('expect');
+const expect = require('chai').expect;
 const testModule = require('../src/messages');
-const { TYPE_BLOCK } = require('../src/constants');
+const {
+  TYPE_BLOCK,
+  TYPE_QUESTION_WITH_REPLIES,
+  TYPE_MESSAGE,
+} = require('../src/constants');
 
 const media = require('../stubs/media.json');
 
 describe('Messages Module', () => {
     it('should have an getActionForMessage function', () => {
-        expect(typeof testModule.getActionForMessage).toEqual('function');
+        expect(typeof testModule.getActionForMessage).to.equal('function');
     });
 
     describe('makePlatformMessagePayload', () => {
         const messages = [
-            { id: 1, text: 'message text' },
-            { id: 2, text: 'quick reply text', quick_replies: [{}, {}] }
+            {
+              id: 1,
+              text: 'message text',
+              messageType: TYPE_MESSAGE
+            },
+            {
+              id: 2,
+              text: 'quick reply text',
+              quick_replies: [
+                {title: "stuff", payload: "{\"id\":\"1234\",\"type\":\"message\"}"},
+                {title: "other stuff", payload: "{\"id\":\"1234\",\"type\":\"message\"}"}
+              ],
+              messageType: TYPE_QUESTION_WITH_REPLIES,
+            },
+            {
+              id: 3,
+              text: 'quick reply text',
+              quick_replies: [{}],
+              messageType: TYPE_QUESTION_WITH_REPLIES,
+            }
         ];
 
         it('creates a platform specific text message payload for facebook', () => {
             const message = testModule.makePlatformMessagePayload(1, messages);
-
-            expect(message.text).toEqual(messages[0].text);
+            expect(message.text).to.equal(messages[0].text);
         });
 
         it('creates a platform specific quick reply message payload for facebook', () => {
             const message = testModule.makePlatformMessagePayload(2, messages);
 
-            expect(message.text).toEqual(messages[1].text);
-            expect(message.quick_replies).toEqual(messages[1].quick_replies);
+            expect(message.text).to.equal(messages[1].text);
+            const qrSolutions = messages[1].quick_replies;
+            expect(message.quick_replies.length).to.equal(2);
+            expect(message.quick_replies).to.deep.equal(qrSolutions);
+        });
+
+        it('creats a quick reply message even if the payload is undefined', () => {
+            const message = testModule.makePlatformMessagePayload(3, messages);
+
+            expect(message.text).to.equal(messages[2].text);
+            const qrSolutions = messages[2].quick_replies;
+            expect(message.quick_replies.length).to.equal(1);
+            expect(message.quick_replies[0].title).to.be.undefined;
+            expect(message.quick_replies[0].payload).to.equal("{}")
         });
     });
 
@@ -51,7 +84,7 @@ describe('Messages Module', () => {
                 []
             );
 
-            expect(action).toEqual(messages.quickReply.quick_reply.payload);
+            expect(action).to.equal(messages.quickReply.quick_reply.payload);
         });
 
         it('returns pointer to next message from last message in history if there is block scope', () => {
@@ -61,7 +94,7 @@ describe('Messages Module', () => {
                 []
             );
 
-            expect(action).toEqual(user.history[0].next.id);
+            expect(action).to.equal(user.history[0].next.id);
         });
 
         it('starts from beginning if there is no block scope', () => {
@@ -72,7 +105,7 @@ describe('Messages Module', () => {
                 blocks
             );
 
-            expect(action).toEqual(blocks[0].startMessage);
+            expect(action).to.equal(blocks[0].startMessage);
         });
     });
 
@@ -98,7 +131,7 @@ describe('Messages Module', () => {
                 []
             );
 
-            expect(message).toEqual(messages[1]);
+            expect(message).to.equal(messages[1]);
         });
 
         it('returns null if message is last and block scope is empty', () => {
@@ -120,7 +153,7 @@ describe('Messages Module', () => {
                 [{ id: 'block-2', startMessage: '1' }]
             );
 
-            expect(message).toEqual(messages[0]);
+            expect(message).to.equal(messages[0]);
         });
 
         it('returns the next message id', () => {
@@ -133,7 +166,7 @@ describe('Messages Module', () => {
                 []
             );
 
-            expect(message).toEqual(messages[2]);
+            expect(message).to.equal(messages[2]);
         });
     });
 
@@ -152,7 +185,7 @@ describe('Messages Module', () => {
                 }
             });
 
-            expect(nextMessages.messagesToSend.length).toEqual(2);
+            expect(nextMessages.messagesToSend.length).to.equal(2);
         });
 
         it('returns the correct history for messages sent', () => {
@@ -166,7 +199,7 @@ describe('Messages Module', () => {
                 }
             });
 
-            expect(nextMessages.history.length).toEqual(2);
+            expect(nextMessages.history.length).to.equal(2);
         });
 
         it('returns the correct number of blocks for block scope', () => {
@@ -180,7 +213,7 @@ describe('Messages Module', () => {
                 }
             });
 
-            expect(nextMessages.blockScope.length).toEqual(1);
+            expect(nextMessages.blockScope.length).to.equal(1);
         });
 
         it('handles stringing together media messages', () => {
@@ -195,7 +228,7 @@ describe('Messages Module', () => {
                 media
             });
 
-            expect(nextMessages.messagesToSend.length).toEqual(7);
+            expect(nextMessages.messagesToSend.length).to.equal(7);
         });
     });
 
@@ -204,12 +237,12 @@ describe('Messages Module', () => {
             let url = testModule.getMediaUrlForMessage('image', {}, media);
             let mediaElement = media['image'].find(m => m.url === url);
 
-            expect(mediaElement.url).toEqual(url);
+            expect(mediaElement.url).to.equal(url);
 
             url = testModule.getMediaUrlForMessage('video', {}, media);
             mediaElement = media['video'].find(m => m.url === url);
 
-            expect(mediaElement.url).toEqual(url);
+            expect(mediaElement.url).to.equal(url);
         });
     });
 
@@ -223,16 +256,16 @@ describe('Messages Module', () => {
                 videoUrl
             );
 
-            expect(payload.attachment.type).toEqual('video');
-            expect(payload.attachment.payload.url).toEqual(videoUrl);
+            expect(payload.attachment.type).to.equal('video');
+            expect(payload.attachment.payload.url).to.equal(videoUrl);
 
             payload = testModule.makePlatformMediaMessagePayload(
                 'image',
                 imageUrl
             );
 
-            expect(payload.attachment.type).toEqual('image');
-            expect(payload.attachment.payload.url).toEqual(imageUrl);
+            expect(payload.attachment.type).to.equal('image');
+            expect(payload.attachment.payload.url).to.equal(imageUrl);
         });
     });
 });
