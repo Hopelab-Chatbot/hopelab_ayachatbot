@@ -30,7 +30,8 @@
     "prettify": "prettier --write './**/*.js'",
     "start": "node index.js",
     "debug": "node --inspect index.js",
-    "test": "mocha"
+    "test": "mocha",
+    "test-debug": "mocha --inspect-brk"
   },
   "prettier": {
     "single-quote": true,

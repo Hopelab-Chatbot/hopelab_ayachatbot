@@ -2,9 +2,13 @@ const expect = require('chai').expect;
 const testModule = require('../src/messages');
 const {
   TYPE_BLOCK,
+  TYPE_ANSWER,
+  TYPE_QUESTION,
   TYPE_QUESTION_WITH_REPLIES,
   TYPE_MESSAGE,
 } = require('../src/constants');
+
+const mocks = require('./mock');
 
 const media = require('../stubs/media.json');
 
@@ -63,29 +67,21 @@ describe('Messages Module', () => {
     });
 
     describe('getActionForMessage', () => {
-        const messages = {
-            quickReply: {
-                quick_reply: {
-                    payload: 'quick reply payload'
-                }
-            },
-            text: {}
+        const user1 = {
+            history: [],
         };
-        const user = {
-            history: [{ next: { id: 2 } }, {}],
-            blockScope: ['block-1']
-        };
-        const blocks = [{ id: 'block-1', startMessage: 1 }];
 
-        it('returns a quick reply payload if present', () => {
-            const action = testModule.getActionForMessage(
-                messages.quickReply,
-                {},
-                []
-            );
+        const data = Object.assign({}, {user: user1}, mocks);
 
-            expect(action).to.equal(messages.quickReply.quick_reply.payload);
-        });
+        describe('empty user history', () => {
+          it('gets intro seen state set in user update', () => {
+              const {action, userActionUpdates} = testModule.getActionForMessage(data);
+              expect(userActionUpdates).to.not.be.undefined;
+              expect(userActionUpdates).to.have.all.keys('history', 'introConversationSeen');
+              expect(userActionUpdates.introConversationSeen).to.be.true;
+          });
+        })
+
 
         it('returns pointer to next message from last message in history if there is block scope', () => {
             const action = testModule.getActionForMessage(
