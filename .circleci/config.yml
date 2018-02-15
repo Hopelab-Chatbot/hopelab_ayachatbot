@@ -9,12 +9,11 @@ jobs:
       cache_directories:
         - ~/.cache/yarn
     steps:
-      - test
       - run: yarn install
       - run: yarn test
   deploy:
     requires:
-      - test
+      - build
     docker:
       - image: circleci/node:6.10
     steps:
