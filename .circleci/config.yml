@@ -1,6 +1,6 @@
 version: 2
 jobs:
-  build:
+  test:
     docker:
       - image: circleci/node:6.10
     dependencies:
@@ -8,12 +8,12 @@ jobs:
         - yarn
       cache_directories:
         - ~/.cache/yarn
-    test:
-      override:
-        - yarn test
+    steps:
+      - test
+      - run: yarn test
   deploy:
     requires:
-      - build
+      - test
     docker:
       - image: circleci/node:6.10
     steps:
