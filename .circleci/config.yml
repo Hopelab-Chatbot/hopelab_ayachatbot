@@ -9,6 +9,7 @@ jobs:
       cache_directories:
         - ~/.cache/yarn
     steps:
+      - checkout
       - run: yarn install
       - run: yarn test
   deploy:
