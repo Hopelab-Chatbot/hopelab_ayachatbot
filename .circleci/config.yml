@@ -3,6 +3,19 @@ jobs:
   build:
     docker:
       - image: circleci/node:6.10
+    dependencies:
+      override:
+        - yarn
+      cache_directories:
+        - ~/.cache/yarn
+    test:
+      override:
+        - yarn test
+  deploy:
+    requires:
+      - build
+    docker:
+      - image: circleci/node:6.10
     steps:
       - checkout
       - run: sudo apt install -y rsync
