@@ -22,7 +22,10 @@ function start() {
     });
   });
 
-  pushMessageQueue.add({}, {repeat: {cron: CRONTAB_FOR_MESSAGE_UPDATE_CHECK}});
+  pushMessageQueue.add({}, {
+    repeat: {cron: CRONTAB_FOR_MESSAGE_UPDATE_CHECK},
+    removeOnComplete: true
+  });
 }
 
 module.exports = { start };
