@@ -14,6 +14,7 @@ const {
     TYPE_ANSWER,
     TYPE_QUESTION_WITH_REPLIES,
     MESSAGE_TYPE_TEXT,
+    MESSAGE_TYPE_TRANSITION,
     ACTION_RETRY_QUICK_REPLY,
     ACTION_COME_BACK_LATER,
     ACTION_NO_UPDATE_NEEDED,
@@ -802,6 +803,7 @@ function createCustomMessageForHistory({
 */
 function getMessagesForAction({
     action,
+    conversations,
     collections,
     series,
     messages,
@@ -913,6 +915,34 @@ function getMessagesForAction({
                     media
                 )
             });
+        } else if (
+          curr.messageType === MESSAGE_TYPE_TRANSITION
+        ) {
+          if (curr.text) {
+            messagesToSend.push({
+              type: TYPE_MESSAGE,
+              message: makePlatformMessagePayload(curr.id, messages)
+            });
+          }
+
+          let conversationsForNewTrack = [];
+          if (R.path(['nextConversations', 'length'], curr) > 0) {
+            conversationsForNewTrack = curr.nextConversations.map(nC =>
+              conversations.find(c => c.id === nC.id)
+            ).filter(nc => !!nc);
+          }
+
+          const newTrack = newConversationTrack(
+            conversationsForNewTrack,
+            messages,
+            collections,
+            userUpdates
+          );
+
+          curr = messages.find(m => m.id === newTrack.action.id);
+
+          userUpdates = Object.assign({}, userUpdates, newTrack.user);
+          continue;
         } else {
             messagesToSend.push({
                 type: TYPE_MESSAGE,

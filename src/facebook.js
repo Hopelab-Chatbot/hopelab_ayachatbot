@@ -224,6 +224,7 @@ function receivedMessage({
 
     const { messagesToSend, userUpdates } = getMessagesForAction({
         action,
+        conversations: allConversations,
         collections: allCollections,
         messages: allMessages,
         series: allSeries,
@@ -269,6 +270,7 @@ function sendPushMessagesToUsers({
     }
     const { messagesToSend, userUpdates } = getMessagesForAction({
         action,
+        conversations: allConversations,
         collections: allCollections,
         messages: allMessages,
         series: allSeries,

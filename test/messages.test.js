@@ -6,6 +6,8 @@ const {
   TYPE_QUESTION,
   TYPE_QUESTION_WITH_REPLIES,
   TYPE_MESSAGE,
+  TYPE_CONVERSATION,
+  MESSAGE_TYPE_TRANSITION,
   INTRO_CONVERSATION_ID,
 } = require('../src/constants');
 
@@ -13,6 +15,66 @@ const mocks = require('./mock');
 const usersModule = require('../src/users');
 
 const media = require('../stubs/media.json');
+
+const createModifiedMocksForTransition = (mocks) => {
+  let modifiedMocks = Object.assign(
+    {},
+    mocks,
+    {messages: mocks.messages.slice()},
+    {conversations: mocks.conversations.slice()}
+  );
+
+  const conversationId = '54321abcdefg';
+
+  modifiedMocks.conversations.push({
+    type: TYPE_CONVERSATION,
+    id: conversationId,
+    isLive: true,
+    name: 'test1',
+  });
+  const anotherId = "anotherId456";
+  modifiedMocks.messages.push({
+    type: TYPE_MESSAGE,
+    messageType: TYPE_QUESTION,
+    text: "More stuff",
+    next: {id: anotherId, type: TYPE_MESSAGE},
+    start: true,
+    parent: {type: TYPE_CONVERSATION, id: conversationId}
+  });
+
+  const transitionId = 'transition123';
+  modifiedMocks.messages.push({
+    id: transitionId,
+    type: TYPE_MESSAGE,
+    messageType: MESSAGE_TYPE_TRANSITION,
+    nextConversations: [{id: conversationId, text: 'hi'}]
+  });
+  const previousMessage = {
+    id: 'previous123456',
+    type: TYPE_MESSAGE,
+    messageType: TYPE_QUESTION,
+    text: "Stuff",
+    next: {id: transitionId, type: TYPE_MESSAGE},
+    parent: {type: TYPE_CONVERSATION, id: "intro-conversation"}
+  }
+  modifiedMocks.messages.push(previousMessage);
+
+  modifiedMocks.user = {
+    introConversationSeen: true,
+    assignedConversationTrack: 'intro-conversation',
+    history: [
+      previousMessage,
+      {
+        type: TYPE_ANSWER,
+        timestampe: Date.now(),
+        message: {text: "stuff"},
+        previous: previousMessage.id
+      }
+    ]
+  };
+
+  return modifiedMocks;
+}
 
 describe('Messages Module', () => {
     it('should have an getActionForMessage function', () => {
@@ -114,6 +176,18 @@ describe('Messages Module', () => {
         expect(userActionUpdates).to.exist;
         expect(userActionUpdates.history.length).to.equal(1);
       });
+
+      it('gets the appropriate action for a transition', () => {
+        let modifiedMocks = createModifiedMocksForTransition(mocks);
+        const {action, userActionUpdates} = testModule.getActionForMessage(modifiedMocks);
+
+        expect(action).to.exist;
+        let transitionMessage = modifiedMocks.messages.find(
+          m => m.messageType === MESSAGE_TYPE_TRANSITION
+        );
+        expect(action.id).to.equal(transitionMessage.id);
+        expect(action.type).to.equal(TYPE_MESSAGE);
+      });
     });
 
     describe('getNextMessage', () => {
@@ -208,6 +282,49 @@ describe('Messages Module', () => {
           expect(nextMessages.userUpdates.history[0].message.text).to.equal('hi');
           expect(nextMessages.userUpdates.history[1].messageType).to.equal(TYPE_QUESTION_WITH_REPLIES);
           expect(nextMessages.userUpdates.history[1].id).to.equal('ryBK6QM-G');
+        });
+
+        it('handles transitions correctly', () => {
+          let modifiedMocks = createModifiedMocksForTransition(mocks);
+          let transitionMessage = modifiedMocks.messages.find(
+            m => m.messageType === MESSAGE_TYPE_TRANSITION
+          );
+          let action = {action: {id: transitionMessage.id, type: TYPE_MESSAGE}};
+          const data = Object.assign({}, modifiedMocks, action);
+          const {messagesToSend, userUpdates} = testModule.getMessagesForAction(data);
+
+          expect(messagesToSend).to.exist;
+          expect(Array.isArray(messagesToSend)).to.be.true;
+          expect(messagesToSend.length).to.equal(1);
+          expect(messagesToSend[0].message.text).to.equal("More stuff");
+        });
+
+        it('handles transitions with text', () => {
+          let modifiedMocks = createModifiedMocksForTransition(mocks);
+          const transitionText = "message from transition";
+          const messagesWithTransitionText = modifiedMocks.messages.map(m => (
+            m.messageType === MESSAGE_TYPE_TRANSITION ?
+              Object.assign({}, m, {text: transitionText}) :
+              m
+          ));
+          const mocksWithTransitionText = Object.assign(
+            {},
+            modifiedMocks,
+            {messages: messagesWithTransitionText}
+          );
+
+          let transitionMessage = mocksWithTransitionText.messages.find(
+            m => m.messageType === MESSAGE_TYPE_TRANSITION
+          );
+          let action = {action: {id: transitionMessage.id, type: TYPE_MESSAGE}};
+          const data = Object.assign({}, mocksWithTransitionText, action);
+          const {messagesToSend, userUpdates} = testModule.getMessagesForAction(data);
+
+          expect(messagesToSend).to.exist;
+          expect(Array.isArray(messagesToSend)).to.be.true;
+          expect(messagesToSend.length).to.equal(2);
+          expect(messagesToSend[0].message.text).to.equal(transitionText)
+          expect(messagesToSend[1].message.text).to.equal("More stuff");
         });
     });
 

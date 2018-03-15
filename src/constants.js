@@ -30,6 +30,7 @@ const ACTION_CRISIS_REPONSE = 'ACTION_CRISIS_REPONSE';
 const END_OF_CONVERSATION_ID = 'END-OF-CONVERSATION-ID';
 
 // data types
+const TYPE_CONVERSATION = 'conversation';
 const TYPE_COLLECTION = 'collection';
 const TYPE_MESSAGE = 'message';
 const TYPE_QUESTION = 'question';
@@ -38,6 +39,7 @@ const TYPE_BLOCK = 'block';
 const TYPE_IMAGE = 'image';
 const TYPE_VIDEO = 'video';
 const TYPE_ANSWER = 'answer';
+const MESSAGE_TYPE_TRANSITION = 'transition';
 const MESSAGE_TYPE_TEXT = 'text';
 
 // entity keys
@@ -111,6 +113,7 @@ module.exports = {
     CRISIS_RESPONSE_MESSAGE,
     CRISIS_KEYWORDS,
     TYPE_ANSWER,
+    TYPE_CONVERSATION,
     TYPE_COLLECTION,
     TYPE_MESSAGE,
     TYPE_QUESTION,
@@ -119,6 +122,7 @@ module.exports = {
     TYPE_IMAGE,
     TYPE_VIDEO,
     MESSAGE_TYPE_TEXT,
+    MESSAGE_TYPE_TRANSITION,
     ONE_DAY_IN_MILLISECONDS,
     ONE_WEEK_IN_MILLISECONDS,
     TYPING_TIME_IN_MILLISECONDS,
