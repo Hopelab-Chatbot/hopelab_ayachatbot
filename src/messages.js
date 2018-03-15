@@ -145,29 +145,18 @@ function conversationIsLiveAndNotIntro(conversation) {
     return conversation.isLive && conversation.id !== INTRO_CONVERSATION_ID;
 }
 
-/**
- * Get a random conversation track id
- *
- * @param {Array} conversations
- * @return {String}
-*/
-function getRandomConversationId(conversations) {
-    return R.prop(
-        'id',
-        conversations[Math.floor(Math.random() * conversations.length)]
-    );
-}
 
 /**
- * Get a random conversation track (not including intro)
+ * Get a random conversation track
  *
  * @param {Array} conversations
  * @return {String}
 */
 function getRandomConversationTrack(conversations) {
-    return getRandomConversationId(
-        conversations.filter(conversationIsLiveAndNotIntro)
-    );
+  return R.prop(
+    'id',
+    conversations[Math.floor(Math.random() * conversations.length)]
+  );
 }
 
 /**
@@ -313,7 +302,7 @@ function getUserUpdateAction({
   let userActionUpdates = Object.assign({}, user);
   if (shouldReceiveUpdate(user)) {
     const newTrack = newConversationTrack(
-        conversations,
+        conversations.filter(conversationIsLiveAndNotIntro),
         messages,
         collections,
         user
@@ -411,7 +400,7 @@ function getActionForMessage({
       atEndOfConversationAndShouldRestart(user, moment().unix(), CUT_OFF_HOUR_FOR_NEW_MESSAGES)
     ) {
       const newTrack = newConversationTrack(
-          conversations,
+          conversations.filter(conversationIsLiveAndNotIntro),
           messages,
           collections,
           user
@@ -441,7 +430,7 @@ function getActionForMessage({
        !doesMessageStillExit(lastMessage.next, messages))
     ) {
       const newTrack = newConversationTrack(
-          conversations,
+          conversations.filter(conversationIsLiveAndNotIntro),
           messages,
           collections,
           user
@@ -512,7 +501,7 @@ function getActionForMessage({
         userActionUpdates = nextMessage.user;
     } else {
         const newTrack = newConversationTrack(
-            conversations,
+            conversations.filter(conversationIsLiveAndNotIntro),
             messages,
             collections,
             user

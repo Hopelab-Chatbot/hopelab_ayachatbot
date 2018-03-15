@@ -325,6 +325,15 @@ describe('Messages Module', () => {
           expect(messagesToSend.length).to.equal(2);
           expect(messagesToSend[0].message.text).to.equal(transitionText)
           expect(messagesToSend[1].message.text).to.equal("More stuff");
+
+          expect(userUpdates).to.exist;
+          expect(userUpdates.history).to.exist;
+          expect(userUpdates.history.length).to.equal(3);
+          expect(userUpdates.history[2].text).to.equal("More stuff");
+
+          const currentConversation =
+            modifiedMocks.conversations[modifiedMocks.conversations.length - 1];
+          expect(userUpdates.assignedConversationTrack).to.equal(currentConversation.id);
         });
     });
 
