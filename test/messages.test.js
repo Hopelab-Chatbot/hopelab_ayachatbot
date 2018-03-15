@@ -188,6 +188,30 @@ describe('Messages Module', () => {
         expect(action.id).to.equal(transitionMessage.id);
         expect(action.type).to.equal(TYPE_MESSAGE);
       });
+
+      it('can transition back to the intro', () => {
+        const modifiedMocks = createModifiedMocksForTransition(mocks);
+        const newMessages = modifiedMocks.messages.map(m => (
+          m.messageType === MESSAGE_TYPE_TRANSITION ?
+            Object.assign(
+              {},
+              m,
+              {nextConversations: [{id: 'intro-conversation', text: 'yolo'}]}
+            ) : m
+        ));
+
+
+        const transitionMessage =
+          newMessages.find(m => m.messageType === MESSAGE_TYPE_TRANSITION);
+        expect(modifiedMocks.user.introConversationSeen).to.be.true;
+        const newMocks = Object.assign({}, modifiedMocks, {messages: newMessages});
+        const {action, userActionUpdates} = testModule.getActionForMessage(newMocks);
+
+        expect(action).to.exist;
+        expect(action.id).to.equal(transitionMessage.id);
+        expect(userActionUpdates).to.exist;
+        expect(userActionUpdates.introConversationSeen).to.be.true;
+      });
     });
 
     describe('getNextMessage', () => {
@@ -334,6 +358,43 @@ describe('Messages Module', () => {
           const currentConversation =
             modifiedMocks.conversations[modifiedMocks.conversations.length - 1];
           expect(userUpdates.assignedConversationTrack).to.equal(currentConversation.id);
+        });
+
+        it('can transition back to the intro', () => {
+          const modifiedMocks = createModifiedMocksForTransition(mocks);
+          const newMessages = modifiedMocks.messages.map(m => (
+            m.messageType === MESSAGE_TYPE_TRANSITION ?
+              Object.assign(
+                {},
+                m,
+                {nextConversations: [{id: 'intro-conversation', text: 'yolo'}]}
+              ) : m
+          ));
+
+
+          const transitionMessage =
+            newMessages.find(m => m.messageType === MESSAGE_TYPE_TRANSITION);
+          expect(modifiedMocks.user.introConversationSeen).to.be.true;
+          const newMocks = Object.assign(
+            {},
+            modifiedMocks,
+            {messages: newMessages},
+            {action: {id: transitionMessage.id, type: TYPE_MESSAGE}}
+          );
+
+          const {messagesToSend, userUpdates} =
+            testModule.getMessagesForAction(newMocks);
+
+          expect(messagesToSend).to.exist;
+          expect(userUpdates).to.exist;
+          expect(Array.isArray(messagesToSend)).to.be.true;
+          expect(messagesToSend.length).to.equal(3);
+          const firstMessageOfIntro = newMessages.find(m => (
+            m.parent && m.parent.id === 'intro-conversation' && m.start
+          ));
+
+          expect(messagesToSend[0].message.text).to.equal(firstMessageOfIntro.text);
+
         });
     });
 
