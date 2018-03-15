@@ -10,6 +10,7 @@ const {
 } = require('../src/constants');
 
 const mocks = require('./mock');
+const usersModule = require('../src/users');
 
 const media = require('../stubs/media.json');
 
@@ -89,6 +90,30 @@ describe('Messages Module', () => {
           expect(action.id).to.eq(firstIntroMessage.id);
         })
       });
+
+      it('starts in the assigned conversation track', () => {
+        let user = { user: {
+          introConversationSeen: true,
+          assignedConversationTrack: 'r1IJzNy-G',
+          history: [
+            {
+              type: TYPE_ANSWER,
+              timestampe: Date.now(),
+              message: {text: "hi"},
+              previous: undefined
+            }
+          ]
+        }};
+
+        const data = Object.assign({}, user, mocks);
+        const {action, userActionUpdates} = testModule.getActionForMessage(data);
+
+        expect(action.id).to.equal('ryBK6QM-G');
+        expect(action.type).to.equal(TYPE_MESSAGE);
+
+        expect(userActionUpdates).to.exist;
+        expect(userActionUpdates.history.length).to.equal(1);
+      });
     });
 
     describe('getNextMessage', () => {
@@ -153,65 +178,59 @@ describe('Messages Module', () => {
     });
 
     describe('getMessagesForAction', () => {
-        const messages = require('../stubs/messages.json');
-        const blocks = require('../stubs/blocks.json');
-
         it('returns the next set of messages', () => {
-            // let nextMessages = testModule.getMessagesForAction({
-            //     action: blocks[0].startMessage,
-            //     messages,
-            //     blocks,
-            //     user: {
-            //         blockScope: [],
-            //         history: []
-            //     }
-            // });
-            //
-            // expect(nextMessages.messagesToSend.length).to.equal(2);
+          let action = {action: {id: "ryEn5QyZf", type: TYPE_MESSAGE}};
+          let user = { user: {
+            introConversationSeen: true,
+            history: [
+              {
+                type: TYPE_ANSWER,
+                timestampe: Date.now(),
+                message: {text: "hi"},
+                previous: undefined
+              }
+            ]
+          }};
+
+          let data = Object.assign({}, action, mocks, user);
+          let nextMessages = testModule.getMessagesForAction(data);
+          expect(nextMessages.messagesToSend.length).to.equal(3);
+          expect(nextMessages.messagesToSend[2].message.quick_replies.length).to.equal(2);
+
+          expect(nextMessages.userUpdates.history.length).to.equal(4);
+          expect(nextMessages.userUpdates.history[0].type).to.equal(TYPE_ANSWER);
+          expect(nextMessages.userUpdates.history[0].message.text).to.equal('hi');
+          expect(nextMessages.userUpdates.history[3].messageType).to.equal(TYPE_QUESTION_WITH_REPLIES);
         });
 
-        // it('returns the correct history for messages sent', () => {
-        //     let nextMessages = testModule.getMessagesForAction({
-        //         action: blocks[0].startMessage,
-        //         messages,
-        //         blocks,
-        //         user: {
-        //             blockScope: [],
-        //             history: []
-        //         }
-        //     });
-        //
-        //     expect(nextMessages.history.length).to.equal(2);
-        // });
-        //
-        // it('returns the correct number of blocks for block scope', () => {
-        //     let nextMessages = testModule.getMessagesForAction({
-        //         action: blocks[0].startMessage,
-        //         messages,
-        //         blocks,
-        //         user: {
-        //             blockScope: [blocks[0].id],
-        //             history: []
-        //         }
-        //     });
-        //
-        //     expect(nextMessages.blockScope.length).to.equal(1);
-        // });
-        //
-        // it('handles stringing together media messages', () => {
-        //     let nextMessages = testModule.getMessagesForAction({
-        //         action: 'message-204',
-        //         messages,
-        //         blocks,
-        //         user: {
-        //             blockScope: ['block-1', 'block-2'],
-        //             history: []
-        //         },
-        //         media
-        //     });
-        //
-        //     expect(nextMessages.messagesToSend.length).to.equal(7);
-        // });
+        it('gets the message within a conversation track', () => {
+          let action = {action: {id: 'ryBK6QM-G', type: TYPE_MESSAGE}};
+          let user = { user: {
+            introConversationSeen: true,
+            assignedConversationTrack: 'r1IJzNy-G',
+            history: [
+              {
+                type: TYPE_ANSWER,
+                timestampe: Date.now(),
+                message: {text: "hi"},
+                previous: undefined
+              }
+            ]
+          }};
+
+          let data = Object.assign({}, action, mocks, user);
+          let nextMessages = testModule.getMessagesForAction(data);
+
+          expect(nextMessages.messagesToSend.length).to.equal(1);
+          expect(nextMessages.messagesToSend[0].message.quick_replies.length).to.equal(2);
+          expect(nextMessages.messagesToSend[0].message.text).to.equal("Hey, you free to talk?");
+
+          expect(nextMessages.userUpdates.history.length).to.equal(2);
+          expect(nextMessages.userUpdates.history[0].type).to.equal(TYPE_ANSWER);
+          expect(nextMessages.userUpdates.history[0].message.text).to.equal('hi');
+          expect(nextMessages.userUpdates.history[1].messageType).to.equal(TYPE_QUESTION_WITH_REPLIES);
+          expect(nextMessages.userUpdates.history[1].id).to.equal('ryBK6QM-G');
+        });
     });
 
     describe('getMediaUrlForMessage', () => {
@@ -229,25 +248,37 @@ describe('Messages Module', () => {
     });
 
     describe('makePlatformMediaMessagePayload', () => {
-        it('creates a payload for a media element', () => {
-        //     const videoUrl = 'http://video';
-        //     const imageUrl = 'http://image';
-        //
-        //     let payload = testModule.makePlatformMediaMessagePayload(
-        //         'video',
-        //         videoUrl
-        //     );
-        //
-        //     expect(payload.attachment.type).to.equal('video');
-        //     expect(payload.attachment.payload.url).to.equal(videoUrl);
-        //
-        //     payload = testModule.makePlatformMediaMessagePayload(
-        //         'image',
-        //         imageUrl
-        //     );
-        //
-        //     expect(payload.attachment.type).to.equal('image');
-        //     expect(payload.attachment.payload.url).to.equal(imageUrl);
-        });
+      it('creates a payload for an image', () => {
+        const url = 'https://www.test.com/img.png';
+        const payload = testModule.makePlatformMediaMessagePayload('image', url);
+        expect(payload).to.exist;
+        expect(payload.attachment).to.exist;
+        expect(payload.attachment.type).to.equal('image');
+        expect(payload.attachment.payload).to.exist;
+        expect(payload.attachment.payload.url).to.equal(url);
+      });
+
+      it('creates a payload for a video that has not been uploaded to facebook', () => {
+        const url = 'https://www.test.com/video.mp4';
+        const payload = testModule.makePlatformMediaMessagePayload('video', url);
+        expect(payload).to.exist;
+        expect(payload.attachment).to.exist;
+        expect(payload.attachment.type).to.equal('video');
+        expect(payload.attachment.payload).to.exist;
+        expect(payload.attachment.payload.url).to.equal(url);
+      })
+
+      it('creates a payload for a video that HAS been uploaded to facebook', () => {
+        const url = 'https://www.test.com/video.mp4';
+        let attachment_id = '4';
+        const media = {video: [{url, attachment_id}]};
+        const payload = testModule.makePlatformMediaMessagePayload('video', url, media);
+
+        expect(payload).to.exist;
+        expect(payload.attachment).to.exist;
+        expect(payload.attachment.type).to.equal('video');
+        expect(payload.attachment.payload).to.exist;
+        expect(payload.attachment.payload.attachment_id).to.equal(attachment_id);
+      })
     });
 });

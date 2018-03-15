@@ -69,7 +69,7 @@ function isYouTubeVideo(url) {
 }
 
 function getMediaAttachmentId(type, url, media) {
-  if (!!media[type] && Array.isArray(media[type])) {
+  if (R.path([type], media) && Array.isArray(media[type])) {
     return R.path(['attachment_id'], media[type].find(m => m.url === url));
   }
   return undefined;
