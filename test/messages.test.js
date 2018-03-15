@@ -303,10 +303,9 @@ describe('Messages Module', () => {
           let modifiedMocks = createModifiedMocksForTransition(mocks);
           const transitionText = "message from transition";
           const messagesWithTransitionText = modifiedMocks.messages.map(m => (
-            m.messageType === MESSAGE_TYPE_TRANSITION ? {
-              ...m,
-              text: transitionText
-            } : m
+            m.messageType === MESSAGE_TYPE_TRANSITION ?
+              Object.assign({}, m, {text: transitionText}) :
+              m
           ));
           const mocksWithTransitionText = Object.assign(
             {},
