@@ -179,7 +179,6 @@ describe('Messages Module', () => {
 
       it('gets the appropriate action for a transition', () => {
         let modifiedMocks = createModifiedMocksForTransition(mocks);
-        debugger;
         const {action, userActionUpdates} = testModule.getActionForMessage(modifiedMocks);
 
         expect(action).to.exist;
@@ -283,6 +282,50 @@ describe('Messages Module', () => {
           expect(nextMessages.userUpdates.history[0].message.text).to.equal('hi');
           expect(nextMessages.userUpdates.history[1].messageType).to.equal(TYPE_QUESTION_WITH_REPLIES);
           expect(nextMessages.userUpdates.history[1].id).to.equal('ryBK6QM-G');
+        });
+
+        it('handles transitions correctly', () => {
+          let modifiedMocks = createModifiedMocksForTransition(mocks);
+          let transitionMessage = modifiedMocks.messages.find(
+            m => m.messageType === MESSAGE_TYPE_TRANSITION
+          );
+          let action = {action: {id: transitionMessage.id, type: TYPE_MESSAGE}};
+          const data = Object.assign({}, modifiedMocks, action);
+          const {messagesToSend, userUpdates} = testModule.getMessagesForAction(data);
+
+          expect(messagesToSend).to.exist;
+          expect(Array.isArray(messagesToSend)).to.be.true;
+          expect(messagesToSend.length).to.equal(1);
+          expect(messagesToSend[0].message.text).to.equal("More stuff");
+        });
+
+        it('handles transitions with text', () => {
+          let modifiedMocks = createModifiedMocksForTransition(mocks);
+          const transitionText = "message from transition";
+          const messagesWithTransitionText = modifiedMocks.messages.map(m => (
+            m.messageType === MESSAGE_TYPE_TRANSITION ? {
+              ...m,
+              text: transitionText
+            } : m
+          ));
+          const mocksWithTransitionText = Object.assign(
+            {},
+            modifiedMocks,
+            {messages: messagesWithTransitionText}
+          );
+
+          let transitionMessage = mocksWithTransitionText.messages.find(
+            m => m.messageType === MESSAGE_TYPE_TRANSITION
+          );
+          let action = {action: {id: transitionMessage.id, type: TYPE_MESSAGE}};
+          const data = Object.assign({}, mocksWithTransitionText, action);
+          const {messagesToSend, userUpdates} = testModule.getMessagesForAction(data);
+
+          expect(messagesToSend).to.exist;
+          expect(Array.isArray(messagesToSend)).to.be.true;
+          expect(messagesToSend.length).to.equal(2);
+          expect(messagesToSend[0].message.text).to.equal(transitionText)
+          expect(messagesToSend[1].message.text).to.equal("More stuff");
         });
     });
 
