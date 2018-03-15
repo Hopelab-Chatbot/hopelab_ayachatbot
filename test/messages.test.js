@@ -130,28 +130,6 @@ describe('Messages Module', () => {
             { id: '3', text: 'message 3' }
         ];
 
-        // it('gets next message from block scope and history if message is last and there are more blocks', () => {
-        //     const message = testModule.getNextMessage(
-        //         { isEnd: true },
-        //         user,
-        //         messages,
-        //         []
-        //     );
-        //
-        //     expect(message).to.equal(messages[1]);
-        // });
-        //
-        // it('returns null if message is last and block scope is empty', () => {
-        //     const message = testModule.getNextMessage(
-        //         { isEnd: true },
-        //         Object.assign({}, user, { blockScope: [] }),
-        //         messages,
-        //         []
-        //     );
-        //
-        //     expect(message).toNotExist();
-        // });
-        //
         it('follows the block path if next message is pointing to a block', () => {
             const message = testModule.getNextMessage(
                 { next: { id: 'block-2', type: TYPE_BLOCK } },
