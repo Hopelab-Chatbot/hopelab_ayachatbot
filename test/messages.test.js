@@ -270,7 +270,7 @@ describe('Messages Module', () => {
 
       it('creates a payload for a video that HAS been uploaded to facebook', () => {
         const url = 'https://www.test.com/video.mp4';
-        let attachment_id = '4';
+        let attachment_id = 'attachment_id_comes_from_facebook';
         const media = {video: [{url, attachment_id}]};
         const payload = testModule.makePlatformMediaMessagePayload('video', url, media);
 
