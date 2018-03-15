@@ -21,7 +21,7 @@ const createModifiedMocksForTransition = (mocks) => {
     {},
     mocks,
     {messages: mocks.messages.slice()},
-    {conversations: mocks.conversations.slice()},
+    {conversations: mocks.conversations.slice()}
   );
 
   const conversationId = '54321abcdefg';
