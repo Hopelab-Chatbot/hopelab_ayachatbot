@@ -354,12 +354,21 @@ function isCrisisMessage(message, crisisKeywords) {
   if (!message || !message.text) {
     return false;
   }
-  const textArray = message.text.toLowerCase().match(/\S+/g) || [];
-  const text = textArray.join(' ');
 
-  return crisisKeywords.reduce((acc, word) => (
-    acc ? acc : text.includes(word)
-  ), false);
+  const textWithoutPunctuation = message.text
+    .toLowerCase()
+    .replace(/[.,\/#\?!$%\^&\*;:{}=\-_`~()]/g, "");
+
+  const textArray = textWithoutPunctuation.match(/\S+/g) || [];
+
+  return textArray.reduce((acc, wordInMessage) => {
+    crisisKeywords.forEach(crisisWord => {
+      if (crisisWord === wordInMessage) {
+        acc = true;
+      }
+    })
+    return acc;
+  }, false);
 }
 
 /**
@@ -1043,5 +1052,6 @@ module.exports = {
     getUpdateActionForUsers,
     updateHistory,
     getNextMessage,
-    getMediaUrlForMessage
+    getMediaUrlForMessage,
+    isCrisisMessage
 };

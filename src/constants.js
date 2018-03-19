@@ -78,6 +78,7 @@ const CRISIS_KEYWORDS = [
   'whats the point',
   'harm',
   'hurt',
+  'hurting',
   'gun'
 ];
 
