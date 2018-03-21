@@ -2,6 +2,8 @@ const expect = require('chai').expect;
 const testModule = require('../src/messages');
 const {
   TYPE_BLOCK,
+  TYPE_SERIES,
+  TYPE_COLLECTION,
   TYPE_ANSWER,
   TYPE_QUESTION,
   TYPE_QUESTION_WITH_REPLIES,
@@ -9,7 +11,8 @@ const {
   TYPE_CONVERSATION,
   MESSAGE_TYPE_TRANSITION,
   INTRO_CONVERSATION_ID,
-  CRISIS_KEYWORDS
+  CRISIS_KEYWORDS,
+  LOGIC_SEQUENTIAL
 } = require('../src/constants');
 
 const mocks = require('./mock');
@@ -26,6 +29,8 @@ const createModifiedMocksForTransition = (mocks) => {
   );
 
   const conversationId = '54321abcdefg';
+
+  modifiedMocks.newConversationId = conversationId;
 
   modifiedMocks.conversations.push({
     type: TYPE_CONVERSATION,
@@ -48,8 +53,107 @@ const createModifiedMocksForTransition = (mocks) => {
     id: transitionId,
     type: TYPE_MESSAGE,
     messageType: MESSAGE_TYPE_TRANSITION,
-    nextConversations: [{id: conversationId, text: 'hi'}]
+    nextConversations: [{id: conversationId}]
   });
+  const previousMessage = {
+    id: 'previous123456',
+    type: TYPE_MESSAGE,
+    messageType: TYPE_QUESTION,
+    text: "Stuff",
+    next: {id: transitionId, type: TYPE_MESSAGE},
+    parent: {type: TYPE_CONVERSATION, id: "intro-conversation"}
+  }
+  modifiedMocks.messages.push(previousMessage);
+
+  modifiedMocks.user = {
+    introConversationSeen: true,
+    assignedConversationTrack: 'intro-conversation',
+    history: [
+      previousMessage,
+      {
+        type: TYPE_ANSWER,
+        timestampe: Date.now(),
+        message: {text: "stuff"},
+        previous: previousMessage.id
+      }
+    ]
+  };
+
+  return modifiedMocks;
+}
+
+const createModifiedMocksForConversationStartingWithCollection = mocks => {
+  let modifiedMocks = Object.assign(
+    {},
+    mocks,
+    {collections: mocks.collections.slice()},
+    {messages: mocks.messages.slice()},
+    {conversations: mocks.conversations.slice()},
+    {series: mocks.series.slice()},
+    {blocks: mocks.blocks.slice()}
+  );
+
+  const conversationId = '54321abcdefg';
+
+  modifiedMocks.newConversationId = conversationId;
+
+  modifiedMocks.conversations.push({
+    type: TYPE_CONVERSATION,
+    id: conversationId,
+    isLive: true,
+    name: 'test1',
+  });
+
+  // new Collection
+  const collectionId = "SJoihxbLM"
+  modifiedMocks.collections.push({
+    id: collectionId,
+    name: "Collection Test",
+    next: {id: "HyLwQaxIG", type: "message"},
+    parent: {type: TYPE_CONVERSATION, id: conversationId},
+    rule: LOGIC_SEQUENTIAL,
+    start: true,
+    type: TYPE_COLLECTION
+  });
+
+  // new series
+  const seriesId = "H1U33g-8G";
+  modifiedMocks.series.push({
+    id: seriesId,
+    name: "Series ABC",
+    parent: {type: TYPE_COLLECTION, id: collectionId},
+    rule: LOGIC_SEQUENTIAL
+  });
+
+  //new block
+  const blockId = "H1th3gWIG";
+  modifiedMocks.blocks.push({
+    id: blockId,
+    name: "BLOCK-A",
+    parent: {type: TYPE_SERIES, id: seriesId},
+    type: TYPE_BLOCK
+  });
+
+  const messageId = "r1mgalZIM";
+  modifiedMocks.messages.push({
+    id: messageId,
+    messageType: TYPE_QUESTION,
+    name: "Message 46",
+    next: {id: "H1G7ukCwf", type: TYPE_MESSAGE},
+    parent: {type: TYPE_BLOCK, id: blockId},
+    start: true,
+    text: "hello?",
+    type: TYPE_MESSAGE
+  })
+
+  const transitionId = 'transition123';
+  modifiedMocks.messages.push({
+    id: transitionId,
+    type: TYPE_MESSAGE,
+    messageType: MESSAGE_TYPE_TRANSITION,
+    nextConversations: [{id: conversationId, text: "sigma"}]
+  });
+
   const previousMessage = {
     id: 'previous123456',
     type: TYPE_MESSAGE,
@@ -350,11 +454,16 @@ describe('Messages Module', () => {
 
         it('handles transitions with text', () => {
           let modifiedMocks = createModifiedMocksForTransition(mocks);
-          const transitionText = "message from transition";
+          const text = "message from transition";
+          const firstMessageInConversation = "More stuff";
+
           const messagesWithTransitionText = modifiedMocks.messages.map(m => (
             m.messageType === MESSAGE_TYPE_TRANSITION ?
-              Object.assign({}, m, {text: transitionText}) :
-              m
+              Object.assign(
+                {},
+                m,
+                {nextConversations: [{id: modifiedMocks.newConversationId, text}]}
+              ) : m
           ));
           const mocksWithTransitionText = Object.assign(
             {},
@@ -372,13 +481,13 @@ describe('Messages Module', () => {
           expect(messagesToSend).to.exist;
           expect(Array.isArray(messagesToSend)).to.be.true;
           expect(messagesToSend.length).to.equal(2);
-          expect(messagesToSend[0].message.text).to.equal(transitionText)
-          expect(messagesToSend[1].message.text).to.equal("More stuff");
+          expect(messagesToSend[0].message.text).to.equal(text)
+          expect(messagesToSend[1].message.text).to.equal(firstMessageInConversation);
 
           expect(userUpdates).to.exist;
           expect(userUpdates.history).to.exist;
           expect(userUpdates.history.length).to.equal(3);
-          expect(userUpdates.history[2].text).to.equal("More stuff");
+          expect(userUpdates.history[2].text).to.equal(firstMessageInConversation);
 
           const currentConversation =
             modifiedMocks.conversations[modifiedMocks.conversations.length - 1];
@@ -413,13 +522,43 @@ describe('Messages Module', () => {
           expect(messagesToSend).to.exist;
           expect(userUpdates).to.exist;
           expect(Array.isArray(messagesToSend)).to.be.true;
-          expect(messagesToSend.length).to.equal(3);
+          expect(messagesToSend.length).to.equal(4);
           const firstMessageOfIntro = newMessages.find(m => (
             m.parent && m.parent.id === 'intro-conversation' && m.start
           ));
 
-          expect(messagesToSend[0].message.text).to.equal(firstMessageOfIntro.text);
+          expect(messagesToSend[1].message.text).to.equal(firstMessageOfIntro.text);
+          expect(messagesToSend[0].message.text).to.equal("yolo");
 
+        });
+
+        it('can transition to a conversation that starts with a collection', () => {
+          const modifiedMocks =
+            createModifiedMocksForConversationStartingWithCollection(mocks);
+
+          const transitionMessage = modifiedMocks.messages.find(
+            m => m.messageType === MESSAGE_TYPE_TRANSITION
+          );
+          expect(modifiedMocks.user.introConversationSeen).to.be.true;
+          expect(transitionMessage).to.exist;
+
+          const data = Object.assign(
+            {},
+            modifiedMocks,
+            {action: {id: transitionMessage.id, type: TYPE_MESSAGE}}
+          );
+
+          const {messagesToSend, userUpdates} =
+            testModule.getMessagesForAction(data);
+
+          expect(Array.isArray(messagesToSend)).to.be.true;
+          expect(messagesToSend.length).to.eq(2);
+          expect(messagesToSend[0].message.text).to.eq("sigma");
+          expect(messagesToSend[1].message.text).to.eq("hello?");
+
+          expect(userUpdates).to.exist;
+          expect(userUpdates.history.length > 2).to.be.true;
+          expect(userUpdates.history[userUpdates.history.length - 1 ].text).to.eq("hello?");
         });
     });
 

@@ -916,13 +916,6 @@ function getMessagesForAction({
         } else if (
           curr.messageType === MESSAGE_TYPE_TRANSITION
         ) {
-          if (curr.text) {
-            messagesToSend.push({
-              type: TYPE_MESSAGE,
-              message: makePlatformMessagePayload(curr.id, messages)
-            });
-          }
-
           let conversationsForNewTrack = [];
           if (R.path(['nextConversations', 'length'], curr) > 0) {
             conversationsForNewTrack = curr.nextConversations.map(nC =>
@@ -937,9 +930,33 @@ function getMessagesForAction({
             userUpdates
           );
 
-          curr = messages.find(m => m.id === newTrack.action.id);
+          const transition = curr.nextConversations.find(nC => (
+            nC.id === newTrack.user.assignedConversationTrack
+          ));
+          if (R.path(['text'], transition)) {
+            messagesToSend.push({
+              type: TYPE_MESSAGE,
+              message: { text: transition.text }
+            });
+          }
 
-          userUpdates = Object.assign({}, userUpdates, newTrack.user);
+          if (newTrack.action.type === TYPE_COLLECTION) {
+            let nextMessage = getNextMessageForCollection(
+                newTrack.action.id,
+                collections,
+                series,
+                blocks,
+                messages,
+                newTrack.user
+            );
+
+            curr = nextMessage.message;
+            userUpdates = nextMessage.user;
+          } else {
+            curr = messages.find(m => m.id === newTrack.action.id);
+            userUpdates = Object.assign({}, userUpdates, newTrack.user);
+          }
+
           continue;
         } else {
             messagesToSend.push({

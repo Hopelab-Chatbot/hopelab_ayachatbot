@@ -36,6 +36,7 @@ const TYPE_MESSAGE = 'message';
 const TYPE_QUESTION = 'question';
 const TYPE_QUESTION_WITH_REPLIES = 'questionWithReplies';
 const TYPE_BLOCK = 'block';
+const TYPE_SERIES = "series";
 const TYPE_IMAGE = 'image';
 const TYPE_VIDEO = 'video';
 const TYPE_ANSWER = 'answer';
@@ -120,6 +121,7 @@ module.exports = {
     TYPE_QUESTION,
     TYPE_QUESTION_WITH_REPLIES,
     TYPE_BLOCK,
+    TYPE_SERIES,
     TYPE_IMAGE,
     TYPE_VIDEO,
     MESSAGE_TYPE_TEXT,
