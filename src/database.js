@@ -14,6 +14,7 @@ const {
     DB_MESSAGES,
     DB_BLOCKS,
     DB_MEDIA,
+    DB_STUDY,
     DB_USER_HISTORY,
     ONE_DAY_IN_MILLISECONDS
 } = require('./constants');
@@ -242,6 +243,47 @@ const getMedia = () =>
             });
     });
 
+const getStudyInfo = () =>
+  new Promise(resolve => {
+      cacheUtils
+          .getItem(DB_STUDY)
+          .then(JSON.parse)
+          .then(d => {
+            return d;
+          })
+          .then(resolve)
+          .catch(e => {
+              if (e === undefined) {
+                cacheUtils
+                  .setItem(DB_STUDY, ONE_DAY_IN_MILLISECONDS, [])
+                  .then(() => resolve([]))
+                  .catch(e => {
+                    console.error(
+                        `error: getStudyInfo - cacheUtils.getItem(${DB_STUDY})`,
+                        e
+                    );
+                  })
+              } else {
+                console.error(
+                    `error: getStudyInfo - cacheUtils.getItem(${DB_STUDY})`,
+                    e
+                );
+              }
+          });
+  });
+
+const setStudyInfo = (studyInfo) =>
+  cacheUtils.setItem(
+      DB_STUDY,
+      ONE_DAY_IN_MILLISECONDS,
+      studyInfo
+  ).catch(e => (
+    console.error(
+      `error: setStudyInfo - cacheUtils.setItem(${DB_STUDY})`,
+      e
+    )
+  ));
+
 
 module.exports = {
     getUserById,
@@ -252,5 +294,7 @@ module.exports = {
     getMessages,
     getBlocks,
     getMedia,
+    getStudyInfo,
+    setStudyInfo,
     updateUser
 };

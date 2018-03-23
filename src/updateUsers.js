@@ -19,7 +19,8 @@ module.exports = () => {
         getMessages(),
         getSeries(),
         getBlocks(),
-        getMedia()
+        getMedia(),
+        getStudyInfo()
     ];
 
     return Promise.all(promises)
@@ -31,6 +32,7 @@ module.exports = () => {
           const allSeries = res[4];
           const allBlocks = res[5];
           const media = res[6];
+          const studyInfo = res[7];
 
           return sendPushMessagesToUsers({
             users,
@@ -39,7 +41,8 @@ module.exports = () => {
             allMessages,
             allSeries,
             allBlocks,
-            media
+            media,
+            studyInfo
           });
       });
 }

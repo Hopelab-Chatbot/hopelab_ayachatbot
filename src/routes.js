@@ -9,7 +9,8 @@ const {
     getSeries,
     getBlocks,
     getMessages,
-    getMedia
+    getMedia,
+    getStudyInfo
 } = require('./database');
 
 const { FB_VERIFY_TOKEN } = require('./constants');
@@ -41,7 +42,8 @@ module.exports = app => {
                                 getMessages(),
                                 getSeries(),
                                 getBlocks(),
-                                getMedia()
+                                getMedia(),
+                                getStudyInfo(),
                             ];
 
                             Promise.all(promises)
@@ -53,6 +55,7 @@ module.exports = app => {
                                     const allSeries = res[4];
                                     const allBlocks = res[5];
                                     const media = res[6];
+                                    const studyInfo = res[7];
 
                                     receivedMessage({
                                         senderID,
@@ -63,7 +66,8 @@ module.exports = app => {
                                         allMessages,
                                         allSeries,
                                         allBlocks,
-                                        media
+                                        media,
+                                        studyInfo
                                     });
                                 })
                                 .catch(e =>

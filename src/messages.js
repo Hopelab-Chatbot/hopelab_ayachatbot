@@ -170,6 +170,22 @@ function assignedConversationTrackIsDeleted(conversation, conversations) {
     return conversations.indexOf(conversation) === -1;
 }
 
+function generateUniqueStudyId(studyInfo) {
+  let studyId;
+  let count = 0;
+  const NUMBER_OF_RETRIES = 9900;
+  const MIN = 10000;
+  const MAX = 100000; // not inclusive;
+
+  do {
+    studyId = String(Math.floor( MIN + Math.random() * (MAX - MIN)));
+    count++;
+  } while(studyInfo.indexOf(studyId) >= 0 && count < NUMBER_OF_RETRIES);
+
+  if (count >= NUMBER_OF_RETRIES) { return undefined; }
+  return studyId;
+}
+
 /**
  * Start a new Converation Track
  *
@@ -179,7 +195,7 @@ function assignedConversationTrackIsDeleted(conversation, conversations) {
  * @param {Object} user
  * @return {Object}
 */
-function newConversationTrack(conversations, messages, collections, user) {
+function newConversationTrack(conversations, messages, collections, studyInfo, user) {
     let conversationTrack;
 
     let userUpdates = Object.assign({}, user);
@@ -215,6 +231,17 @@ function newConversationTrack(conversations, messages, collections, user) {
       user.assignedConversationTrack !== userUpdates.assignedConversationTrack
     ) {
       userUpdates.conversationStartTimestamp = Date.now();
+      const newConversation = conversations.find(c => (
+        c.id === userUpdates.assignedConversationTrack
+      ));
+      if (
+        !Number.isFinite(Number(userUpdates.studyId)) &&
+        newConversation &&
+        newConversation.isStudy
+      ) {
+        userUpdates.studyId = generateUniqueStudyId(studyInfo);
+        userUpdates.studyStartTime = Date.now();
+      }
     }
     return {
         action: { type: next.type, id: next.id },
@@ -305,13 +332,16 @@ function getUserUpdateAction({
   conversations,
   messages,
   collections,
+  studyInfo
 }) {
   let userActionUpdates = Object.assign({}, user);
+
   if (shouldReceiveUpdate(user)) {
     const newTrack = newConversationTrack(
         conversations.filter(conversationIsLiveAndNotIntro),
         messages,
         collections,
+        studyInfo,
         user
     );
 
@@ -337,7 +367,8 @@ function getUpdateActionForUsers({
   allMessages,
   allSeries,
   allBlocks,
-  media
+  media,
+  studyInfo
 }) {
   return users.reduce((acc, user) => {
     let {action, userActionUpdates} = getUserUpdateAction({
@@ -345,6 +376,7 @@ function getUpdateActionForUsers({
       conversations: allConversations,
       messages: allMessages,
       collections: allCollections,
+      studyInfo
     });
     if (action.type !== ACTION_NO_UPDATE_NEEDED) {
       acc.push({action, userActionUpdates});
@@ -397,10 +429,10 @@ function getActionForMessage({
     series,
     messages,
     collections,
-    conversations
+    conversations,
+    studyInfo
 }) {
     let userActionUpdates = user;
-
     const lastMessage = getLastSentMessageInHistory(user);
 
     if (isCrisisMessage(message, CRISIS_KEYWORDS)) {
@@ -418,6 +450,7 @@ function getActionForMessage({
           conversations.filter(conversationIsLiveAndNotIntro),
           messages,
           collections,
+          studyInfo,
           user
       );
 
@@ -448,6 +481,7 @@ function getActionForMessage({
           conversations.filter(conversationIsLiveAndNotIntro),
           messages,
           collections,
+          studyInfo,
           user
       );
 
@@ -519,6 +553,7 @@ function getActionForMessage({
             conversations.filter(conversationIsLiveAndNotIntro),
             messages,
             collections,
+            studyInfo,
             user
         );
 
@@ -829,7 +864,8 @@ function getMessagesForAction({
     messages,
     blocks,
     user,
-    media
+    media,
+    studyInfo
 }) {
     let messagesToSend = [];
     let curr;
@@ -981,6 +1017,7 @@ function getMessagesForAction({
             conversationsForNewTrack,
             messages,
             collections,
+            studyInfo,
             userUpdates
           );
 
@@ -1124,5 +1161,6 @@ module.exports = {
     updateHistory,
     getNextMessage,
     getMediaUrlForMessage,
+    generateUniqueStudyId,
     isCrisisMessage
 };

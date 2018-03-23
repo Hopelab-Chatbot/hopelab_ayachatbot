@@ -4,7 +4,7 @@ const R = require('ramda');
 
 const { updateHistory, getPreviousMessageInHistory } = require('./users');
 
-const { updateUser } = require('./database');
+const { updateUser, setStudyInfo } = require('./database');
 
 const {
     FB_GRAPH_ROOT_URL,
@@ -165,16 +165,34 @@ function sendMessage(recipientId, content, fbMessagingType=FB_MESSAGING_TYPE_RES
  * @param {Object} user
  * @return {Promise}
 */
-function sendAllMessagesToMessenger(messages, senderID, user, fbMessagingType=FB_MESSAGING_TYPE_RESPONSE) {
+function sendAllMessagesToMessenger({
+  messages,
+  senderID,
+  user,
+  studyInfo,
+  fbMessagingType=FB_MESSAGING_TYPE_RESPONSE
+}) {
     return promiseSerial(messages.map(msg => sendMessage(senderID, msg, fbMessagingType)))
         .then(() => {
             updateUser(user)
                 .then(() => {
-                    console.log(`User ${user.id} updated successfully`);
+                  console.log(`User ${user.id} updated successfully`);
+                })
+                .then(() => {
+                  if (Array.isArray(studyInfo)) {
+                    return setStudyInfo(studyInfo).then(() => {
+                      console.log(`New study participant created with id: ${studyInfo[studyInfo.length - 1]}`);
+                    });
+                  }
                 })
                 .catch(e => console.error('Error: updateUser', e));
         })
         .catch(e => console.error('error: promiseSerial', e));
+}
+
+function userIsStartingStudy(oldUser, newUser) {
+  return !Number.isFinite(Number(R.path(['studyId'],oldUser))) &&
+         Number.isFinite(Number(R.path(['studyId'], newUser)));
 }
 
 /**
@@ -192,7 +210,8 @@ function receivedMessage({
     allMessages,
     allSeries,
     allBlocks,
-    media
+    media,
+    studyInfo
 }) {
     let userToUpdate = Object.assign({}, user);
 
@@ -210,14 +229,15 @@ function receivedMessage({
         )
     });
 
-    const { action, userActionUpdates } = getActionForMessage({
+    const { action, userActionUpdates } =  getActionForMessage({
         message,
         user: userToUpdate,
         blocks: allBlocks,
         series: allSeries,
         messages: allMessages,
         collections: allCollections,
-        conversations: allConversations
+        conversations: allConversations,
+        studyInfo
     });
 
     userToUpdate = Object.assign({}, userToUpdate, userActionUpdates);
@@ -230,7 +250,8 @@ function receivedMessage({
         series: allSeries,
         blocks: allBlocks,
         user: userToUpdate,
-        media
+        media,
+        studyInfo
     });
 
     userToUpdate = Object.assign({}, userToUpdate, userUpdates);
@@ -240,7 +261,21 @@ function receivedMessage({
         messagesToSend
     );
 
-    sendAllMessagesToMessenger(messagesWithTyping, senderID, userToUpdate);
+    let newStudyInfo;
+    if (userIsStartingStudy(user, userToUpdate)) {
+      newStudyInfo = studyInfo.slice();
+      newStudyInfo.push(userToUpdate.studyId);
+
+      // TODO: send study survey every 2 weeks for 6 weeks
+    }
+
+    sendAllMessagesToMessenger({
+      messages: messagesWithTyping,
+      senderID,
+      user: userToUpdate,
+      studyInfo: newStudyInfo,
+      fbMessagingType: FB_MESSAGING_TYPE_RESPONSE
+    });
 }
 
 function sendPushMessagesToUsers({
@@ -250,7 +285,8 @@ function sendPushMessagesToUsers({
   allMessages,
   allSeries,
   allBlocks,
-  media
+  media,
+  studyInfo
 }) {
   const actions = getUpdateActionForUsers({users,
       allConversations,
@@ -258,7 +294,8 @@ function sendPushMessagesToUsers({
       allMessages,
       allSeries,
       allBlocks,
-      media
+      media,
+      studyInfo
   });
 
   return actions.map(({action, userActionUpdates}) => {
@@ -276,7 +313,8 @@ function sendPushMessagesToUsers({
         series: allSeries,
         blocks: allBlocks,
         user: userToUpdate,
-        media
+        media,
+        studyInfo
     });
 
     userToUpdate = Object.assign({}, userToUpdate, userUpdates);
@@ -295,12 +333,13 @@ function sendPushMessagesToUsers({
         messagesToSend
     );
 
-    return sendAllMessagesToMessenger(
-      messagesWithTyping,
-      userToUpdate.id,
-      userToUpdate,
-      FB_MESSAGING_TYPE_UPDATE
-    );
+    return sendAllMessagesToMessenger({
+      messages: messagesWithTyping,
+      senderID: userToUpdate.id,
+      user: userToUpdate,
+      studyInfo,
+      fbMessagingType: FB_MESSAGING_TYPE_UPDATE
+    });
   })
 
 

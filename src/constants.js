@@ -20,6 +20,7 @@ const DB_MESSAGES = 'messages';
 const DB_USER_HISTORY = 'user-history';
 const DB_BLOCKS = 'blocks';
 const DB_MEDIA = 'media';
+const DB_STUDY = 'study';
 
 // Special actions
 const ACTION_RETRY_QUICK_REPLY = 'ACTION_RETRY_QUICK_REPLY';
@@ -104,6 +105,7 @@ module.exports = {
     DB_BLOCKS,
     DB_MEDIA,
     DB_USER_HISTORY,
+    DB_STUDY,
     ACTION_RETRY_QUICK_REPLY,
     ACTION_COME_BACK_LATER,
     ACTION_NO_UPDATE_NEEDED,

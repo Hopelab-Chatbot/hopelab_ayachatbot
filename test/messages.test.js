@@ -186,6 +186,27 @@ describe('Messages Module', () => {
         expect(typeof testModule.getActionForMessage).to.equal('function');
     });
 
+    describe('generateUniqueStudyId', () => {
+      it('should generate (almost) all unique studyIds', () => {
+        let studyIds = [];
+
+        for(let i = 0; i < 14000; i++) {
+          var id = testModule.generateUniqueStudyId(studyIds);
+          expect(id.length).to.eq(5);
+          expect(Number.isFinite(Number(id))).to.be.true;
+          expect(studyIds.indexOf(id) === -1).to.be.true;
+          studyIds.push(id);
+        }
+      });
+
+      it('should return undefined, if a storyId cannot be uniquely generated', () => {
+        let studyIds = Array.from(Array(100000).keys()).map(String);
+        let id = testModule.generateUniqueStudyId(studyIds);
+        expect(id).to.be.undefined;
+      })
+
+    });
+
     describe('isCrisisMessage', () => {
       it('should identify text that needs a crisis message', () => {
         const message = {text: "Going to KiLl myself"};
