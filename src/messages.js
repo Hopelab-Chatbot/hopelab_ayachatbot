@@ -182,22 +182,24 @@ function assignedConversationTrackIsDeleted(conversation, conversations) {
 function newConversationTrack(conversations, messages, collections, user) {
     let conversationTrack;
 
+    let userUpdates = Object.assign({}, user);
+
     if (!user.introConversationSeen) {
         conversationTrack = INTRO_CONVERSATION_ID;
-        user.introConversationSeen = true;
+        userUpdates.introConversationSeen = true;
     } else if (
-        !user.assignedConversationTrack ||
+        !userUpdates.assignedConversationTrack ||
         assignedConversationTrackIsDeleted(
-            user.assignedConversationTrack,
+            userUpdates.assignedConversationTrack,
             conversations
         )
     ) {
-        user.assignedConversationTrack = getRandomConversationTrack(
+        userUpdates.assignedConversationTrack = getRandomConversationTrack(
             conversations
         );
-        conversationTrack = user.assignedConversationTrack;
+        conversationTrack = userUpdates.assignedConversationTrack;
     } else {
-        conversationTrack = user.assignedConversationTrack;
+        conversationTrack = userUpdates.assignedConversationTrack;
     }
 
     const next = messages
@@ -209,10 +211,15 @@ function newConversationTrack(conversations, messages, collections, user) {
             )
         );
 
+    if (
+      user.assignedConversationTrack !== userUpdates.assignedConversationTrack
+    ) {
+      userUpdates.conversationStartTimestamp = Date.now();
+    }
     return {
         action: { type: next.type, id: next.id },
         block: INTRO_BLOCK_ID,
-        user
+        user: userUpdates
     };
 }
 
@@ -310,7 +317,7 @@ function getUserUpdateAction({
 
     let action = newTrack.action;
 
-    userActionUpdates = Object.assign({}, userActionUpdates);
+    userActionUpdates = Object.assign({}, userActionUpdates, newTrack.user);
 
     return {
       action,
@@ -394,7 +401,6 @@ function getActionForMessage({
 }) {
     let userActionUpdates = user;
 
-
     const lastMessage = getLastSentMessageInHistory(user);
 
     if (isCrisisMessage(message, CRISIS_KEYWORDS)) {
@@ -417,7 +423,7 @@ function getActionForMessage({
 
       let action = newTrack.action;
 
-      userActionUpdates = Object.assign({}, userActionUpdates);
+      userActionUpdates = Object.assign({}, userActionUpdates, newTrack.user);
 
       return {
         action,
@@ -447,7 +453,7 @@ function getActionForMessage({
 
       let action = newTrack.action;
 
-      userActionUpdates = Object.assign({}, userActionUpdates);
+      userActionUpdates = Object.assign({}, userActionUpdates, newTrack.user);
 
       return {
         action,
@@ -518,7 +524,7 @@ function getActionForMessage({
 
         action = newTrack.action;
 
-        userActionUpdates = Object.assign({}, userActionUpdates);
+        userActionUpdates = Object.assign({}, userActionUpdates, newTrack.user);
     }
 
     return { action, userActionUpdates };
@@ -788,6 +794,22 @@ function createCustomMessageForHistory({
   }
 }
 
+function transitionIsDelayed(message, conversationStartTimestampMs, timeNowMs) {
+  if (
+    message.type === TYPE_MESSAGE &&
+    message.messageType === MESSAGE_TYPE_TRANSITION &&
+    Number.isFinite(Number(message.delayInMinutes)) &&
+    Number.isFinite(conversationStartTimestampMs)
+  ) {
+    return (
+      ((timeNowMs - conversationStartTimestampMs) / 1000 / 60) <
+      Number(message.delayInMinutes)
+    );
+  }
+
+  return false;
+}
+
 /**
  * Construct Outgoing Messages
  *
@@ -913,6 +935,38 @@ function getMessagesForAction({
                     media
                 )
             });
+        } else if (
+          curr.messageType === MESSAGE_TYPE_TRANSITION &&
+          transitionIsDelayed(
+            curr,
+            userUpdates.conversationStartTimestamp,
+            moment().unix() * 1000
+          )
+        ) {
+          if (messagesToSend.length === 0) {
+            curr = {
+                type: TYPE_MESSAGE,
+                message: { text: END_OF_CONVERSATION_MESSAGE },
+            };
+            messagesToSend.push(curr);
+
+            curr = createCustomMessageForHistory({
+                id: END_OF_CONVERSATION_ID,
+                type: TYPE_MESSAGE,
+                messageType: MESSAGE_TYPE_TEXT,
+                text: curr.message.text,
+                next: {id: END_OF_CONVERSATION_ID }
+            });
+            userUpdates = R.merge(userUpdates, {
+                history: updateHistory(
+                    R.merge(curr, {
+                        timestamp: Date.now()
+                    }),
+                    userUpdates.history
+                )
+            });
+          }
+          break;
         } else if (
           curr.messageType === MESSAGE_TYPE_TRANSITION
         ) {
