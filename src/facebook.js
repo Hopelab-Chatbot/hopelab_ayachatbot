@@ -319,12 +319,13 @@ function sendPushMessagesToUsers({
 
     userToUpdate = Object.assign({}, userToUpdate, userUpdates);
 
-    const history = userToUpdate.history.map((h, index) => {
-      if (index >= originalHistoryLength && h.type !== TYPE_ANSWER) {
-        return Object.assign({}, h, {isUpdate: true});
+    let history = userToUpdate.history.slice();
+    for(let i = originalHistoryLength; i < history.length; i++) {
+      if (history[i].type !== TYPE_ANSWER) {
+        history[i] = Object.assign({}, history[i], {isUpdate: true});
+        break;
       }
-      return h;
-    });
+    }
 
     userToUpdate = Object.assign({}, userToUpdate, {history});
 

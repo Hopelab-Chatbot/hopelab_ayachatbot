@@ -5,7 +5,8 @@ const {
     getSeries,
     getBlocks,
     getMessages,
-    getMedia
+    getMedia,
+    getStudyInfo
 } = require('./database');
 
 const { sendPushMessagesToUsers } = require('./facebook');
