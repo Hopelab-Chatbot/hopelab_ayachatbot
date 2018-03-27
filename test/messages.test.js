@@ -18,6 +18,8 @@ const {
 const mocks = require('./mock');
 const usersModule = require('../src/users');
 
+const moment = require('moment');
+
 const media = require('../stubs/media.json');
 
 const createModifiedMocksForTransition = (mocks) => {
@@ -72,7 +74,7 @@ const createModifiedMocksForTransition = (mocks) => {
       previousMessage,
       {
         type: TYPE_ANSWER,
-        timestampe: Date.now(),
+        timestamp: Date.now(),
         message: {text: "stuff"},
         previous: previousMessage.id
       }
@@ -171,7 +173,7 @@ const createModifiedMocksForConversationStartingWithCollection = mocks => {
       previousMessage,
       {
         type: TYPE_ANSWER,
-        timestampe: Date.now(),
+        timestamp: Date.now(),
         message: {text: "stuff"},
         previous: previousMessage.id
       }
@@ -205,6 +207,199 @@ describe('Messages Module', () => {
         expect(id).to.be.undefined;
       })
 
+    });
+
+    describe('shouldReceiveUpdate', () => {
+      it('should not update if the user is not defined', () => {
+        expect(testModule.shouldReceiveUpdate()).to.be.false;
+      });
+
+      it('should update if the user\'s last answer was more than 24 hours ago', () => {
+        const user = {
+          introConversationSeen: true,
+          history: [
+            {
+              type: TYPE_ANSWER,
+              timestamp: moment().subtract(2, 'day').unix() * 1000,
+              message: {text: "hi"},
+              previous: undefined
+            }
+          ]
+        };
+
+        expect(testModule.shouldReceiveUpdate(user, Date.now())).to.be.true;
+      });
+
+      it('should not update if the user\'s last answer was recent', () => {
+        const user = {
+          introConversationSeen: true,
+          history: [
+            {
+              type: TYPE_ANSWER,
+              timestamp: moment().subtract(120, 'minute').unix() * 1000,
+              message: {text: "hi"},
+              previous: undefined
+            }
+          ]
+        };
+
+        expect(testModule.shouldReceiveUpdate(user, Date.now())).to.be.false;
+      });
+
+      it('should not update if recently updated', () => {
+        const user = {
+          introConversationSeen: true,
+          history: [
+            {
+              type: TYPE_ANSWER,
+              timestamp: moment().subtract(1, 'day').subtract(20, 'minute').unix() * 1000,
+              message: {text: "hi"},
+              previous: undefined
+            },
+            {
+              timestamp: moment().subtract(10, 'minute').unix() * 1000,
+              message: {text: "How are you"},
+              isUpdate: true
+            }
+          ]
+        };
+
+        expect(testModule.shouldReceiveUpdate(user, Date.now())).to.be.false;
+      });
+
+      it('should update if updated more than 24 hours ago', () => {
+        const user = {
+          introConversationSeen: true,
+          history: [
+            {
+              type: TYPE_ANSWER,
+              timestamp: moment().subtract(2, 'day').subtract(20, 'minute').unix() * 1000,
+              message: {text: "hi"},
+              previous: undefined
+            },
+            {
+              timestamp: moment().subtract(1, 'day').subtract(20, 'minute').unix() * 1000,
+              message: {text: "How are you"},
+              isUpdate: true
+            }
+          ]
+        };
+
+        expect(testModule.shouldReceiveUpdate(user, Date.now())).to.be.true;
+      });
+
+      it('should update after 3 tries', () => {
+        const user = {
+          introConversationSeen: true,
+          history: [
+            {
+              type: TYPE_ANSWER,
+              timestamp: moment().subtract(4, 'day').subtract(20, 'minute').unix() * 1000,
+              message: {text: "hi"},
+              previous: undefined
+            },
+            {
+              timestamp: moment().subtract(3, 'day').subtract(20, 'minute').unix() * 1000,
+              message: {text: "How are you"},
+              isUpdate: true
+            },
+            {
+              timestamp: moment().subtract(2, 'day').subtract(20, 'minute').unix() * 1000,
+              message: {text: "How are you"},
+              isUpdate: true
+            },
+            {
+              timestamp: moment().subtract(1, 'day').subtract(20, 'minute').unix() * 1000,
+              message: {text: "How are you"},
+              isUpdate: true
+            },
+          ]
+        };
+
+        expect(testModule.shouldReceiveUpdate(user, Date.now())).to.be.true;
+      });
+
+      it('should not update after 3 tries, if recently updated', () => {
+        const user = {
+          introConversationSeen: true,
+          history: [
+            {
+              type: TYPE_ANSWER,
+              timestamp: moment().subtract(4, 'day').subtract(20, 'minute').unix() * 1000,
+              message: {text: "hi"},
+              previous: undefined
+            },
+            {
+              timestamp: moment().subtract(3, 'day').subtract(20, 'minute').unix() * 1000,
+              message: {text: "How are you"},
+              isUpdate: true
+            },
+            {
+              timestamp: moment().subtract(2, 'day').subtract(20, 'minute').unix() * 1000,
+              message: {text: "How are you"},
+              isUpdate: true
+            },
+            {
+              timestamp: moment().subtract(120, 'minute').unix() * 1000,
+              message: {text: "How are you"},
+              isUpdate: true
+            },
+          ]
+        };
+
+        expect(testModule.shouldReceiveUpdate(user, Date.now())).to.be.false;
+      });
+
+      it('should not update after 7 tries', () => {
+        const user = {
+          introConversationSeen: true,
+          history: [
+            {
+              type: TYPE_ANSWER,
+              timestamp: moment().subtract(8, 'day').subtract(20, 'minute').unix() * 1000,
+              message: {text: "hi"},
+              previous: undefined
+            },
+            {
+              timestamp: moment().subtract(7, 'day').subtract(20, 'minute').unix() * 1000,
+              message: {text: "How are you"},
+              isUpdate: true
+            },
+            {
+              timestamp: moment().subtract(6, 'day').subtract(20, 'minute').unix() * 1000,
+              message: {text: "How are you"},
+              isUpdate: true
+            },
+            {
+              timestamp: moment().subtract(5, 'day').subtract(20, 'minute').unix() * 1000,
+              message: {text: "How are you"},
+              isUpdate: true
+            },
+            {
+              timestamp: moment().subtract(4, 'day').subtract(20, 'minute').unix() * 1000,
+              message: {text: "How are you"},
+              isUpdate: true
+            },
+            {
+              timestamp: moment().subtract(3, 'day').subtract(20, 'minute').unix() * 1000,
+              message: {text: "How are you"},
+              isUpdate: true
+            },
+            {
+              timestamp: moment().subtract(2, 'day').subtract(20, 'minute').unix() * 1000,
+              message: {text: "How are you"},
+              isUpdate: true
+            },
+            {
+              timestamp: moment().subtract(1, 'day').subtract(20, 'minute').unix() * 1000,
+              message: {text: "How are you"},
+              isUpdate: true
+            }
+          ]
+        };
+
+        expect(testModule.shouldReceiveUpdate(user, Date.now())).to.be.false;
+      });
     });
 
     describe('isCrisisMessage', () => {
@@ -310,7 +505,7 @@ describe('Messages Module', () => {
           history: [
             {
               type: TYPE_ANSWER,
-              timestampe: Date.now(),
+              timestamp: Date.now(),
               message: {text: "hi"},
               previous: undefined
             }
@@ -411,7 +606,7 @@ describe('Messages Module', () => {
             history: [
               {
                 type: TYPE_ANSWER,
-                timestampe: Date.now(),
+                timestamp: Date.now(),
                 message: {text: "hi"},
                 previous: undefined
               }
@@ -437,7 +632,7 @@ describe('Messages Module', () => {
             history: [
               {
                 type: TYPE_ANSWER,
-                timestampe: Date.now(),
+                timestamp: Date.now(),
                 message: {text: "hi"},
                 previous: undefined
               }

@@ -87,6 +87,8 @@ const CRISIS_KEYWORDS = [
 // hours from midnight (military time) eg 2 is 2am.
 const CUT_OFF_HOUR_FOR_NEW_MESSAGES = 2;
 
+const NUMBER_OF_UPDATE_MESSAGES_ALLOWED = 7;
+
 // minutes of inactivty before update is sent
 const MINUTES_OF_INACTIVITY_BEFORE_UPDATE_MESSAGE = (24 * 60) + 3;
 const CRONTAB_FOR_MESSAGE_UPDATE_CHECK = '*/20 * * * *';
@@ -145,6 +147,7 @@ module.exports = {
     BLOCKS_SEEN,
     COLLECTION_SCOPE,
     CUT_OFF_HOUR_FOR_NEW_MESSAGES,
+    NUMBER_OF_UPDATE_MESSAGES_ALLOWED,
     MINUTES_OF_INACTIVITY_BEFORE_UPDATE_MESSAGE,
     CRONTAB_FOR_MESSAGE_UPDATE_CHECK,
 };

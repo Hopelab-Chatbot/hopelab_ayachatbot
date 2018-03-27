@@ -35,6 +35,7 @@ const {
     BLOCKS_SEEN,
     COLLECTION_SCOPE,
     CUT_OFF_HOUR_FOR_NEW_MESSAGES,
+    NUMBER_OF_UPDATE_MESSAGES_ALLOWED,
     MINUTES_OF_INACTIVITY_BEFORE_UPDATE_MESSAGE,
 } = require('./constants');
 
@@ -277,13 +278,18 @@ function findLastNonConversationEndMessage(user) {
   return undefined;
 }
 
-function hasUpdateSinceLastAnswer(user, lastAnswer) {
+function hasUpdateSinceInactivity(user, lastAnswer, minutesOfInactivityBeforeUpdate) {
   if (!lastAnswer) { return false; }
   if (!user.history) { return false; }
 
+  const inactivityInterval = moment().subtract(minutesOfInactivityBeforeUpdate, 'minute').unix() * 1000;
+
   for(let i = user.history.length - 1; i >= 0; i--) {
     if (user.history[i].isUpdate) {
-      return user.history[i].timestamp > lastAnswer.timestamp;
+      return (
+        user.history[i].timestamp > lastAnswer.timestamp &&
+        user.history[i].timestamp > inactivityInterval
+      );
     }
   }
 
@@ -313,15 +319,33 @@ function atEndOfConversationAndShouldRestart(user, timeNow, cutOffHour, cutOffMi
 
 }
 
-function shouldReceiveUpdate(user) {
+function hasExceededMaxUpdates(user, maxUpdates) {
+  let updates = 0;
+  for (var i = user.history.length - 1; i >= 0; i--) {
+    if (user.history[i].type === TYPE_ANSWER) { break; }
+    if (user.history[i].isUpdate) { updates++; }
+  }
+
+  return updates >= maxUpdates;
+}
+
+function shouldReceiveUpdate(user, currentTimeMs) {
+    if (!Array.isArray(R.path(['history'], user))) {
+      return false;
+    }
+
     const lastAnswer = findLastUserAnswer(user);
 
-    if (hasUpdateSinceLastAnswer(user, lastAnswer)) {
+    if (hasUpdateSinceInactivity(user, lastAnswer, MINUTES_OF_INACTIVITY_BEFORE_UPDATE_MESSAGE)) {
+      return false;
+    }
+
+    if (hasExceededMaxUpdates(user, NUMBER_OF_UPDATE_MESSAGES_ALLOWED)) {
       return false;
     }
 
     let minutesSinceLastActivity = Math.floor(
-      (Date.now() - lastAnswer.timestamp) / 1000 / 60
+      (currentTimeMs - lastAnswer.timestamp) / 1000 / 60
     );
 
     return minutesSinceLastActivity > MINUTES_OF_INACTIVITY_BEFORE_UPDATE_MESSAGE;
@@ -336,7 +360,7 @@ function getUserUpdateAction({
 }) {
   let userActionUpdates = Object.assign({}, user);
 
-  if (shouldReceiveUpdate(user)) {
+  if (shouldReceiveUpdate(user, Date.now())) {
     const newTrack = newConversationTrack(
         conversations.filter(conversationIsLiveAndNotIntro),
         messages,
@@ -1162,5 +1186,6 @@ module.exports = {
     getNextMessage,
     getMediaUrlForMessage,
     generateUniqueStudyId,
+    shouldReceiveUpdate,
     isCrisisMessage
 };
