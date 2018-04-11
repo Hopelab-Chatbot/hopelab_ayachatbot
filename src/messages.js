@@ -19,9 +19,14 @@ const {
     ACTION_COME_BACK_LATER,
     ACTION_NO_UPDATE_NEEDED,
     ACTION_CRISIS_REPONSE,
+    ACTION_QUICK_REPLY_RETRY_NEXT_MESSAGE,
     CRISIS_KEYWORDS,
     END_OF_CONVERSATION_ID,
     QUICK_REPLY_RETRY_MESSAGE,
+    QUICK_REPLY_RETRY_BUTTONS,
+    QUICK_REPLY_RETRY_ID,
+    CRISIS_RESPONSE_MESSAGE_FOR_BUTTONS,
+    SUPPORT_MESSAGE,
     END_OF_CONVERSATION_MESSAGE,
     UPDATE_USER_MESSAGE,
     CRISIS_RESPONSE_MESSAGE,
@@ -129,7 +134,8 @@ function getLastSentMessageInHistory(user) {
     for (let i = user.history.length - 1; i >= 0; i--) {
         if (
           user.history[i].type !== TYPE_ANSWER &&
-          !user.history[i].isCrisisMessage
+          !user.history[i].isCrisisMessage &&
+          !user.history[i].isQuickReplyRetry
         ) {
           return user.history[i];
         }
@@ -437,6 +443,20 @@ function isCrisisMessage(message, crisisKeywords) {
   }, false);
 }
 
+function getButtonForQuickReplyRetry(message, quickReplyRetryOptions) {
+  if (!Array.isArray(quickReplyRetryOptions)) { return false; }
+  if (R.path(['quick_reply'], message)) {
+    try {
+      const payload = JSON.parse(
+        R.path(['quick_reply', 'payload'], message)
+      );
+      return quickReplyRetryOptions.find(opt => opt.id === payload.id);
+    } catch(e) { }
+  }
+
+  return false;
+}
+
 /**
  * Get the next Action for incoming message
  *
@@ -496,6 +516,21 @@ function getActionForMessage({
         action: { type: ACTION_COME_BACK_LATER },
         userActionUpdates
       };
+    }
+
+    let quickReplyRetryButton = getButtonForQuickReplyRetry(
+      message,
+      QUICK_REPLY_RETRY_BUTTONS
+    );
+
+    if (!!quickReplyRetryButton) {
+      return {
+        action: {
+          type: ACTION_QUICK_REPLY_RETRY_NEXT_MESSAGE,
+          quickReplyRetryId: quickReplyRetryButton.id
+        },
+        userActionUpdates
+      }
     }
 
     if (
@@ -872,6 +907,44 @@ function transitionIsDelayed(message, conversationStartTimestampMs, timeNowMs) {
   return false;
 }
 
+function createQuickReplyRetryMessage(message, messageOptions) {
+  let options = Array.isArray(messageOptions) ? messageOptions : [""];
+  const quick_replies = options.map(button => ({
+    content_type: "text",
+    title: button.title,
+    payload: JSON.stringify({id: button.id, type: TYPE_MESSAGE})
+  }));
+  const messageId = QUICK_REPLY_RETRY_ID
+  const messages = [{
+    id: messageId,
+    text: message,
+    messageType: TYPE_QUESTION_WITH_REPLIES,
+    quick_replies
+  }]
+
+  return {
+    type: TYPE_MESSAGE,
+    message: makePlatformMessagePayload(messageId, messages)
+  }
+}
+
+function createQuickReplyRetryNextMessageResponse(action, messageOptions) {
+  let messageReply = messageOptions.find(opt => action.quickReplyRetryId === opt.id);
+
+  const messages = [{
+    id: action.quickReplyRetryId,
+    text: messageReply.text,
+    messageType: TYPE_QUESTION
+  }];
+
+  if (!messages[0].text) { return undefined; }
+
+  return {
+    type: TYPE_MESSAGE,
+    message: makePlatformMessagePayload(action.quickReplyRetryId, messages)
+  };
+}
+
 /**
  * Construct Outgoing Messages
  *
@@ -924,19 +997,20 @@ function getMessagesForAction({
       });
       curr = null;
     } else if (action.type === ACTION_RETRY_QUICK_REPLY) {
-      const updateMessage = QUICK_REPLY_RETRY_MESSAGE;
-      curr = {
-          type: TYPE_MESSAGE,
-          message: { text: updateMessage }
-      };
+      curr = createQuickReplyRetryMessage(
+        QUICK_REPLY_RETRY_MESSAGE,
+        QUICK_REPLY_RETRY_BUTTONS
+      );
 
       messagesToSend.push(curr);
 
       curr = createCustomMessageForHistory({
           type: TYPE_MESSAGE,
-          messageType: MESSAGE_TYPE_TEXT,
+          messageType: TYPE_QUESTION_WITH_REPLIES,
           text: curr.message.text,
       });
+
+      curr.isQuickReplyRetry = true;
 
       userUpdates = R.merge(userUpdates, {
           history: updateHistory(
@@ -946,7 +1020,37 @@ function getMessagesForAction({
               userUpdates.history
           )
       });
-      curr = Object.assign({}, getLastSentMessageInHistory(user));
+      curr = null;
+    } else if (action.type === ACTION_QUICK_REPLY_RETRY_NEXT_MESSAGE) {
+      let message = createQuickReplyRetryNextMessageResponse(
+        action,
+        QUICK_REPLY_RETRY_BUTTONS
+      );
+
+      if (!message) {
+        curr = Object.assign({}, getLastSentMessageInHistory(user));
+      } else {
+        curr = message;
+
+        messagesToSend.push(curr);
+
+        curr = createCustomMessageForHistory({
+            type: TYPE_MESSAGE,
+            messageType: TYPE_QUESTION,
+            text: curr.message.text,
+        });
+        curr.isQuickReplyRetry = true;
+
+        userUpdates = R.merge(userUpdates, {
+            history: updateHistory(
+                R.merge(curr, {
+                    timestamp: Date.now()
+                }),
+                userUpdates.history
+            )
+        });
+        curr = null;
+      }
     } else if (action.type === ACTION_COME_BACK_LATER) {
       curr = {
           type: TYPE_MESSAGE,
