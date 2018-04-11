@@ -91,7 +91,7 @@ const NUMBER_OF_UPDATE_MESSAGES_ALLOWED = 7;
 
 // minutes of inactivty before update is sent
 const MINUTES_OF_INACTIVITY_BEFORE_UPDATE_MESSAGE = (24 * 60) + 3;
-const CRONTAB_FOR_MESSAGE_UPDATE_CHECK = '*/20 * * * *';
+const CRONTAB_FOR_MESSAGE_UPDATE_CHECK = '*/10 * * * *';
 
 module.exports = {
     REST_PORT,

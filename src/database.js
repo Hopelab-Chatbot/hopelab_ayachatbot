@@ -34,6 +34,20 @@ const setUserInCache = user => users =>
         users.map(u => (u.id === user.id ? user : u))
     );
 
+
+const setAllUsersInCache = usersToUpdate => users => {
+  let allUpdatedUsers = users.map(u => {
+    let found = usersToUpdate.find(updateMe => u.id === updateMe.id);
+    return !!found ? found : u;
+  });
+  return cacheUtils.setItem(
+      DB_USERS,
+      ONE_DAY_IN_MILLISECONDS,
+      allUpdatedUsers
+  );
+}
+
+
 /**
  * Update User By ID
  *
@@ -46,6 +60,22 @@ const updateUser = user =>
             .getItem(DB_USERS)
             .then(JSON.parse)
             .then(setUserInCache(user))
+            .then(resolve)
+            .catch(e => {
+                console.error(
+                    `error: updateUser - cacheUtils.getItem(${DB_USERS})`,
+                    e
+                );
+                reject();
+            });
+    });
+
+const updateAllUsers = usersToUpdate =>
+    new Promise(resolve => {
+        cacheUtils
+            .getItem(DB_USERS)
+            .then(JSON.parse)
+            .then(setAllUsersInCache(usersToUpdate))
             .then(resolve)
             .catch(e => {
                 console.error(
@@ -296,5 +326,6 @@ module.exports = {
     getMedia,
     getStudyInfo,
     setStudyInfo,
-    updateUser
+    updateUser,
+    updateAllUsers
 };

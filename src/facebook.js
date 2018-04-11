@@ -4,7 +4,7 @@ const R = require('ramda');
 
 const { updateHistory, getPreviousMessageInHistory } = require('./users');
 
-const { updateUser, setStudyInfo } = require('./database');
+const { updateUser, updateAllUsers, setStudyInfo } = require('./database');
 
 const {
     FB_GRAPH_ROOT_URL,
@@ -157,6 +157,14 @@ function sendMessage(recipientId, content, fbMessagingType=FB_MESSAGING_TYPE_RES
     };
 }
 
+function serializeSend({
+  messages,
+  senderID,
+  fbMessagingType=FB_MESSAGING_TYPE_RESPONSE
+}) {
+  return promiseSerial(messages.map(msg => sendMessage(senderID, msg, fbMessagingType)));
+}
+
 /**
  * Receive Message From Facebook Messenger
  *
@@ -172,7 +180,7 @@ function sendAllMessagesToMessenger({
   studyInfo,
   fbMessagingType=FB_MESSAGING_TYPE_RESPONSE
 }) {
-    return promiseSerial(messages.map(msg => sendMessage(senderID, msg, fbMessagingType)))
+    return serializeSend({messages, senderID, fbMessagingType})
         .then(() => {
             updateUser(user)
                 .then(() => {
@@ -288,7 +296,7 @@ function sendPushMessagesToUsers({
   media,
   studyInfo
 }) {
-  const actions = getUpdateActionForUsers({users,
+  const allActions = getUpdateActionForUsers({users,
       allConversations,
       allCollections,
       allMessages,
@@ -298,7 +306,11 @@ function sendPushMessagesToUsers({
       studyInfo
   });
 
-  return actions.map(({action, userActionUpdates}) => {
+  // Throttle the number of updates that happend at once.
+  const MAX_ACTIONS_ALLOWED = 60;
+  const actions = allActions.slice(0, MAX_ACTIONS_ALLOWED);
+
+  const promisesForSend = actions.map(({action, userActionUpdates}) => {
     let userToUpdate = Object.assign({}, userActionUpdates);
     const originalHistoryLength = R.path(['history', 'length'], userToUpdate);
 
@@ -334,16 +346,28 @@ function sendPushMessagesToUsers({
         messagesToSend
     );
 
-    return sendAllMessagesToMessenger({
-      messages: messagesWithTyping,
-      senderID: userToUpdate.id,
-      user: userToUpdate,
-      studyInfo,
-      fbMessagingType: FB_MESSAGING_TYPE_UPDATE
-    });
-  })
+    return () => serializeSend({
+        messages: messagesWithTyping,
+        senderID: userToUpdate.id,
+        fbMessagingType: FB_MESSAGING_TYPE_UPDATE
+      }).then(() => userToUpdate);
+  });
 
+  if (!Array.isArray(promisesForSend) || promisesForSend.length === 0) {
+    return Promise.resolve();
+  }
 
+  return promiseSerial(promisesForSend)
+            .then(users => updateAllUsers(users).then(() => users))
+            .then(users => {
+              if (Array.isArray(users)) {
+                users.forEach(u => (
+                  console.log(`User ${u.id} updated successfully`)
+                ));
+              }
+              return users;
+            })
+            .catch(e => console.error('Error: updateAllUsers', e));
 }
 
 module.exports = {
