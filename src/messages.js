@@ -127,7 +127,10 @@ function getLastSentMessageInHistory(user) {
     if (!(R.path(['history', 'length'], user))) { return undefined; }
 
     for (let i = user.history.length - 1; i >= 0; i--) {
-        if (user.history[i].type !== TYPE_ANSWER) {
+        if (
+          user.history[i].type !== TYPE_ANSWER &&
+          !user.history[i].isCrisisMessage
+        ) {
           return user.history[i];
         }
     }
@@ -909,6 +912,7 @@ function getMessagesForAction({
           messageType: MESSAGE_TYPE_TEXT,
           text: curr.message.text,
       });
+      curr.isCrisisMessage = true;
 
       userUpdates = R.merge(userUpdates, {
           history: updateHistory(
