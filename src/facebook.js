@@ -6,6 +6,8 @@ const { updateHistory, getPreviousMessageInHistory } = require('./users');
 
 const { updateUser, updateAllUsers, setStudyInfo } = require('./database');
 
+const { logger } = require('./logger');
+
 const {
     FB_GRAPH_ROOT_URL,
     FB_PAGE_ACCESS_TOKEN,
@@ -189,13 +191,19 @@ function sendAllMessagesToMessenger({
                 .then(() => {
                   if (Array.isArray(studyInfo)) {
                     return setStudyInfo(studyInfo).then(() => {
-                      console.log(`New study participant created with id: ${studyInfo[studyInfo.length - 1]}`);
+                      let logStr = `New study participant (user: ${user.id}) created with study id: ${studyInfo[studyInfo.length - 1]}`;
+                      console.log(logStr);
+                      logger.log('info', logStr);
                     });
                   }
                 })
-                .catch(e => console.error('Error: updateUser', e));
+                .catch(e => {
+                  logger.log('error', `Error: updateUser, ${JSON.stringify(e)}`);
+                })
         })
-        .catch(e => console.error('error: promiseSerial', e));
+        .catch(e => {
+          logger.log('error', `Promise serial, ${JSON.stringify(e)}`);
+        })
 }
 
 function userIsStartingStudy(oldUser, newUser) {
@@ -224,6 +232,8 @@ function receivedMessage({
     let userToUpdate = Object.assign({}, user);
 
     const prevMessage = getPreviousMessageInHistory(allMessages, user);
+
+    logger.log('debug', `receivedMessage: ${JSON.stringify(message)} prevMessage: ${JSON.stringify(prevMessage)}`);
 
     userToUpdate = Object.assign({}, userToUpdate, {
         history: updateHistory(
@@ -310,6 +320,7 @@ function sendPushMessagesToUsers({
   const MAX_ACTIONS_ALLOWED = 60;
   const actions = allActions.slice(0, MAX_ACTIONS_ALLOWED);
 
+  logger.log("debug", `Pushing messages to ${actions.length} users`);
   const promisesForSend = actions.map(({action, userActionUpdates}) => {
     let userToUpdate = Object.assign({}, userActionUpdates);
     const originalHistoryLength = R.path(['history', 'length'], userToUpdate);
@@ -354,6 +365,7 @@ function sendPushMessagesToUsers({
   });
 
   if (!Array.isArray(promisesForSend) || promisesForSend.length === 0) {
+    logger.log("debug", 'No push updates to send to users. Done');
     return Promise.resolve();
   }
 

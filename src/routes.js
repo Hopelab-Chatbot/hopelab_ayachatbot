@@ -76,11 +76,6 @@ module.exports = app => {
                                         e
                                     )
                                 );
-                        } else {
-                            console.error(
-                                'Webhook received unknown event: ',
-                                event
-                            );
                         }
                     });
                 });
