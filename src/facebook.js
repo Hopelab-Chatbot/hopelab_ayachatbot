@@ -318,7 +318,7 @@ function sendPushMessagesToUsers({
   });
 
   // Throttle the number of updates that happend at once.
-  const MAX_ACTIONS_ALLOWED = 60;
+  const MAX_ACTIONS_ALLOWED = 5;
   const actions = allActions.slice(0, MAX_ACTIONS_ALLOWED);
 
   logger.log("debug", `Begin of push messages to ${actions.length} users`);
