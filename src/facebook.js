@@ -320,7 +320,7 @@ function sendPushMessagesToUsers({
   const MAX_ACTIONS_ALLOWED = 60;
   const actions = allActions.slice(0, MAX_ACTIONS_ALLOWED);
 
-  logger.log("debug", `Pushing messages to ${actions.length} users`);
+  logger.log("debug", `Begin of push messages to ${actions.length} users`);
   const promisesForSend = actions.map(({action, userActionUpdates}) => {
     let userToUpdate = Object.assign({}, userActionUpdates);
     const originalHistoryLength = R.path(['history', 'length'], userToUpdate);
@@ -369,13 +369,19 @@ function sendPushMessagesToUsers({
     return Promise.resolve();
   }
 
+  logger.log("debug", `About to push to ${promisesForSend.length} users`);
   return promiseSerial(promisesForSend)
+            .then(users => {
+              logger.log('debug', `Messages sent, now saving updates for ${R.path(['length'],users)} users`)
+              return users;
+            })
             .then(users => updateAllUsers(users).then(() => users))
             .then(users => {
               if (Array.isArray(users)) {
-                users.forEach(u => (
+                users.forEach(u => {
                   console.log(`User ${u.id} updated successfully`)
-                ));
+                  logger.log('debug', `User,${u.id}, updated successfully`)
+                });
               }
               return users;
             })
