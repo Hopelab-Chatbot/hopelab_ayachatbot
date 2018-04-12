@@ -85,6 +85,7 @@ function callSendAPI(messageData) {
                     resolve(messageId);
                 } else {
                     console.error('Unable to send message.');
+                    logger.log('error', `Unable to send message to user, error: ${JSON.stringify(error)}, response: ${JSON.stringify(response)}, message: ${JSON.stringify(messageData)}`)
                     console.error(response);
                     console.error(error);
 
