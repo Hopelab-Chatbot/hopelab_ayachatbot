@@ -20,6 +20,7 @@ const {
     ACTION_NO_UPDATE_NEEDED,
     ACTION_CRISIS_REPONSE,
     ACTION_QUICK_REPLY_RETRY_NEXT_MESSAGE,
+    ACTION_REPLAY_PREVIOUS_MESSAGE,
     CRISIS_KEYWORDS,
     END_OF_CONVERSATION_ID,
     QUICK_REPLY_RETRY_MESSAGE,
@@ -128,14 +129,14 @@ function makePlatformMediaMessagePayload(type, url, media) {
  * @param {Object} user
  * @return {Object}
 */
-function getLastSentMessageInHistory(user) {
+function getLastSentMessageInHistory(user, ignoreQuickReplyRetryMessages=true) {
     if (!(R.path(['history', 'length'], user))) { return undefined; }
 
     for (let i = user.history.length - 1; i >= 0; i--) {
         if (
           user.history[i].type !== TYPE_ANSWER &&
           !user.history[i].isCrisisMessage &&
-          !user.history[i].isQuickReplyRetry
+          !(user.history[i].isQuickReplyRetry && ignoreQuickReplyRetryMessages)
         ) {
           return user.history[i];
         }
@@ -485,6 +486,21 @@ function getActionForMessage({
     if (isCrisisMessage(message, CRISIS_KEYWORDS)) {
       return {
         action: { type: ACTION_CRISIS_REPONSE },
+        userActionUpdates
+      };
+    }
+
+    let lastMessageWithQucikReply = getLastSentMessageInHistory(user, false);
+    const quickReplyButton = QUICK_REPLY_RETRY_BUTTONS.find(b => (
+      b.id === R.path(['id'], lastMessageWithQucikReply)
+    ));
+
+    if (
+      R.path(['isQuickReplyRetry'], lastMessageWithQucikReply) &&
+      R.path(['text'], quickReplyButton)
+    ) {
+      return {
+        action: { type: ACTION_REPLAY_PREVIOUS_MESSAGE },
         userActionUpdates
       };
     }
@@ -1005,6 +1021,7 @@ function getMessagesForAction({
       messagesToSend.push(curr);
 
       curr = createCustomMessageForHistory({
+          id: QUICK_REPLY_RETRY_ID,
           type: TYPE_MESSAGE,
           messageType: TYPE_QUESTION_WITH_REPLIES,
           text: curr.message.text,
@@ -1035,6 +1052,7 @@ function getMessagesForAction({
         messagesToSend.push(curr);
 
         curr = createCustomMessageForHistory({
+            id: action.quickReplyRetryId,
             type: TYPE_MESSAGE,
             messageType: TYPE_QUESTION,
             text: curr.message.text,
@@ -1051,6 +1069,8 @@ function getMessagesForAction({
         });
         curr = null;
       }
+    } else if (action.type === ACTION_REPLAY_PREVIOUS_MESSAGE) {
+      curr = Object.assign({}, getLastSentMessageInHistory(user));
     } else if (action.type === ACTION_COME_BACK_LATER) {
       curr = {
           type: TYPE_MESSAGE,
