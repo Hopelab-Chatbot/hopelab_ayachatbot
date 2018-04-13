@@ -4,6 +4,8 @@ const FB_PAGE_ACCESS_TOKEN = process.env.FB_PAGE_ACCESS_TOKEN;
 const FB_TEXT_LIMIT = 640;
 const FB_GRAPH_ROOT_URL = 'https://graph.facebook.com/v2.6/';
 
+const FB_ERROR_CODE_INVALID_USER = 100;
+
 // facebook messenger
 const TYPING_TIME_IN_MILLISECONDS = 1000;
 const FB_MESSAGE_TYPE = 'message';
@@ -114,7 +116,9 @@ const NUMBER_OF_UPDATE_MESSAGES_ALLOWED = 7;
 
 // minutes of inactivty before update is sent
 const MINUTES_OF_INACTIVITY_BEFORE_UPDATE_MESSAGE = (24 * 60) + 3;
-const CRONTAB_FOR_MESSAGE_UPDATE_CHECK = '*/15 * * * *';
+const CRONTAB_FOR_MESSAGE_UPDATE_CHECK = '*/10 * * * *';
+
+const MAX_UPDATE_ACTIONS_ALLOWED = 10;
 
 module.exports = {
     REST_PORT,
@@ -122,6 +126,7 @@ module.exports = {
     FB_PAGE_ACCESS_TOKEN,
     FB_TEXT_LIMIT,
     FB_GRAPH_ROOT_URL,
+    FB_ERROR_CODE_INVALID_USER,
     DB_USERS,
     DB_CONVERSATIONS,
     DB_COLLECTIONS,
@@ -179,4 +184,5 @@ module.exports = {
     NUMBER_OF_UPDATE_MESSAGES_ALLOWED,
     MINUTES_OF_INACTIVITY_BEFORE_UPDATE_MESSAGE,
     CRONTAB_FOR_MESSAGE_UPDATE_CHECK,
+    MAX_UPDATE_ACTIONS_ALLOWED
 };

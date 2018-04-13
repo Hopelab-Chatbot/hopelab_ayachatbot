@@ -13,11 +13,13 @@ const {
     FB_PAGE_ACCESS_TOKEN,
     TYPING_TIME_IN_MILLISECONDS,
     FB_MESSAGE_TYPE,
+    FB_ERROR_CODE_INVALID_USER,
     FB_TYPING_ON_TYPE,
     FB_MESSAGING_TYPE_RESPONSE,
     FB_MESSAGING_TYPE_UPDATE,
     TYPE_ANSWER,
     TYPE_MESSAGE,
+    MAX_UPDATE_ACTIONS_ALLOWED
 } = require('./constants');
 
 const {
@@ -26,7 +28,7 @@ const {
   getUpdateActionForUsers
 } = require('./messages');
 
-const { promiseSerial } = require('./utils');
+const { promiseSerial, promiseSerialKeepGoingOnError } = require('./utils');
 
 /**
  * Get User Details
@@ -84,10 +86,18 @@ function callSendAPI(messageData) {
 
                     resolve(messageId);
                 } else {
-                    console.error('Unable to send message.');
-                    logger.log('error', `Unable to send message to user, error: ${JSON.stringify(error)}, response: ${JSON.stringify(response)}, message: ${JSON.stringify(messageData)}`)
-                    console.error(response);
-                    console.error(error);
+                    if (!error) {
+                      error = {
+                        statusCode: R.path(['statusCode'], response),
+                        id: R.path(['recipient', 'id'], messageData),
+                        fbCode: R.path(['body', 'error', 'code'], response),
+                        fbErrorSubcode: R.path(['body', 'error', 'error_subcode'], response),
+                        fbMessage: R.path(['body', 'error', 'message'], response)
+                      };
+                    }
+
+                    console.error('ERROR: Unable to send message in callSendAPI');
+                    logger.log('error', `Unable to send message to user, error: ${JSON.stringify(error)}, message: ${JSON.stringify(messageData)}`)
 
                     reject(error);
                 }
@@ -318,8 +328,7 @@ function sendPushMessagesToUsers({
   });
 
   // Throttle the number of updates that happend at once.
-  const MAX_ACTIONS_ALLOWED = 5;
-  const actions = allActions.slice(0, MAX_ACTIONS_ALLOWED);
+  const actions = allActions.slice(0, MAX_UPDATE_ACTIONS_ALLOWED);
 
   logger.log("debug", `Begin of push messages to ${actions.length} users`);
   const promisesForSend = actions.map(({action, userActionUpdates}) => {
@@ -371,20 +380,42 @@ function sendPushMessagesToUsers({
   }
 
   logger.log("debug", `About to push to ${promisesForSend.length} users`);
-  return promiseSerial(promisesForSend)
-            .then(users => {
-              logger.log('debug', `Messages sent, now saving updates for ${R.path(['length'],users)} users`)
-              return users;
+  return promiseSerialKeepGoingOnError(promisesForSend)
+            .then(usersToUpdate => {
+              logger.log('debug', `Messages sent, now saving updates for ${R.path(['length'],usersToUpdate)} users`)
+              return usersToUpdate;
             })
-            .then(users => updateAllUsers(users).then(() => users))
-            .then(users => {
-              if (Array.isArray(users)) {
-                users.forEach(u => {
-                  console.log(`User ${u.id} updated successfully`)
-                  logger.log('debug', `User,${u.id}, updated successfully`)
+            .then(usersToUpdate => {
+              let updates = usersToUpdate.map(user => {
+                if (
+                  R.path(['isError'], user) &&
+                  R.path(['error', 'fbCode'], user) === FB_ERROR_CODE_INVALID_USER
+                ) {
+                  let actualUser = users.find(u => R.path(['error', 'id'], user) === u.id);
+                  if (!actualUser) { return undefined; }
+                  return Object.assign({}, actualUser, {invalidUser: true});
+                } else if (R.path(['isError'], user)) {
+                  // If there was a facebook error but it was not an invalid
+                  // user error, do not mark the user as invalid
+                  return undefined;
+                }
+                return user;
+              }).filter(u => !!u);
+              return updateAllUsers(updates).then(() => usersToUpdate)
+            })
+            .then(usersToUpdate => {
+              if (Array.isArray(usersToUpdate)) {
+                usersToUpdate.forEach(u => {
+                  if (!u || R.path(['isError'], u)) {
+                    logger.log('info', `User, ${R.path(['error','id'], u)}, was not updated successfully, Data: ${JSON.stringify(u)}`);
+                    console.log(`User, ${R.path(['error','id'], u)}, was not updated successfully`);
+                  } else {
+                    console.log(`User ${u.id} updated successfully`)
+                    logger.log('info', `User, ${u.id}, updated successfully`)
+                  }
                 });
               }
-              return users;
+              return usersToUpdate;
             })
             .catch(e => console.error('Error: updateAllUsers', e));
 }

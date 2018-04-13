@@ -1,17 +1,18 @@
 const winston = require('winston');
-const { combine, timestamp, prettyPrint } = winston.format;
+const { combine, timestamp, simple } = winston.format;
 
 let level = 'info';
 
 if (process.env.NODE_ENV !== 'production') {
-  level = 'debug';
+  level = 'info';
 }
 
 const logger = winston.createLogger({
   level,
   format: combine(
     timestamp(),
-    prettyPrint()
+    simple()
+
   ),
   transports: [
     //
@@ -31,7 +32,7 @@ const logger = winston.createLogger({
 // Un comment to see logs in the console
 // if (process.env.NODE_ENV !== 'production') {
 //   logger.add(new winston.transports.Console({
-//     format: winston.format.simple(),
+//     format: simple(),
 //     level
 //   }));
 // }

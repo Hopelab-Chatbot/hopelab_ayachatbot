@@ -354,6 +354,10 @@ function shouldReceiveUpdate(user, currentTimeMs) {
       return false;
     }
 
+    if (R.path(['invalidUser'], user) === true) {
+      return false;
+    }
+
     let minutesSinceLastActivity = Math.floor(
       (currentTimeMs - lastAnswer.timestamp) / 1000 / 60
     );

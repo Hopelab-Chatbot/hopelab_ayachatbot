@@ -231,6 +231,23 @@ describe('Messages Module', () => {
         expect(testModule.shouldReceiveUpdate(user, Date.now())).to.be.true;
       });
 
+      it('should not update if the user is marked as invalid', () => {
+        const user = {
+          introConversationSeen: true,
+          history: [
+            {
+              type: TYPE_ANSWER,
+              timestamp: moment().subtract(2, 'day').unix() * 1000,
+              message: {text: "hi"},
+              previous: undefined
+            }
+          ],
+          invalidUser: true
+        };
+
+        expect(testModule.shouldReceiveUpdate(user, Date.now())).to.be.false;
+      });
+
       it('should not update if the user\'s last answer was recent', () => {
         const user = {
           introConversationSeen: true,
