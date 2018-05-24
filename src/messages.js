@@ -511,6 +511,7 @@ function getActionForMessage({
 
     if (
       R.path(['next', 'id'], lastMessage) === END_OF_CONVERSATION_ID &&
+      R.path(['messageType'], lastMessage) !== TYPE_QUESTION_WITH_REPLIES &&
       atEndOfConversationAndShouldRestart(user, moment().unix(), CUT_OFF_HOUR_FOR_NEW_MESSAGES)
     ) {
       const newTrack = newConversationTrack(
@@ -531,7 +532,10 @@ function getActionForMessage({
       };
     }
 
-    if (R.path(['next', 'id'], lastMessage) === END_OF_CONVERSATION_ID) {
+    if (
+      R.path(['next', 'id'], lastMessage) === END_OF_CONVERSATION_ID &&
+      R.path(['messageType'], lastMessage) !== TYPE_QUESTION_WITH_REPLIES
+    ) {
       return {
         action: { type: ACTION_COME_BACK_LATER },
         userActionUpdates
