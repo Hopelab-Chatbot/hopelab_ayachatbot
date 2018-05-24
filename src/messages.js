@@ -514,8 +514,14 @@ function getActionForMessage({
       R.path(['messageType'], lastMessage) !== TYPE_QUESTION_WITH_REPLIES &&
       atEndOfConversationAndShouldRestart(user, moment().unix(), CUT_OFF_HOUR_FOR_NEW_MESSAGES)
     ) {
+      let convoOptions = conversations.filter(conversationIsLiveAndNotIntro);
+      if (R.path(['assignedConversationTrack'], user)) {
+        convoOptions = conversations.filter(
+          c => c.id === user.assignedConversationTrack
+        );
+      }
       const newTrack = newConversationTrack(
-          conversations.filter(conversationIsLiveAndNotIntro),
+          convoOptions,
           messages,
           collections,
           studyInfo,
