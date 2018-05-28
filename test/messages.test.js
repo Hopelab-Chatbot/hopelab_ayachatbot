@@ -12,7 +12,9 @@ const {
   MESSAGE_TYPE_TRANSITION,
   INTRO_CONVERSATION_ID,
   CRISIS_KEYWORDS,
-  LOGIC_SEQUENTIAL
+  LOGIC_SEQUENTIAL,
+  STUDY_ID_LIST,
+  STUDY_ID_NO_OP
 } = require('../src/constants');
 
 const mocks = require('./mock');
@@ -191,22 +193,26 @@ describe('Messages Module', () => {
     describe('generateUniqueStudyId', () => {
       it('should generate (almost) all unique studyIds', () => {
         let studyIds = [];
+        let id;
 
-        for(let i = 0; i < 4000; i++) {
-          var id = testModule.generateUniqueStudyId(studyIds);
+        for(let i = 0; i < STUDY_ID_LIST.length; i++) {
+          id = testModule.generateUniqueStudyId(studyIds, STUDY_ID_LIST);
           expect(id.length).to.eq(5);
           expect(Number.isFinite(Number(id))).to.be.true;
           expect(studyIds.indexOf(id) === -1).to.be.true;
           studyIds.push(id);
         }
+
+        id = testModule.generateUniqueStudyId(studyIds, STUDY_ID_LIST);
+        expect(id).to.eq(String(STUDY_ID_NO_OP));
       });
 
-      // This test takes too long for circleci.  Uncomment to run locally
-      // it('should return undefined, if a storyId cannot be uniquely generated', () => {
-      //   let studyIds = Array.from(Array(100000).keys()).map(String);
-      //   let id = testModule.generateUniqueStudyId(studyIds);
-      //   expect(id).to.be.undefined;
-      // })
+      it('should continue to return the no op value if all of the study ids are used', () => {
+        for (let i = 0; i < 10; i++) {
+          var id = testModule.generateUniqueStudyId(STUDY_ID_LIST.map(String), STUDY_ID_LIST);
+          expect(id).to.eq(String(STUDY_ID_NO_OP));
+        }
+      });
 
     });
 

@@ -43,6 +43,8 @@ const {
     CUT_OFF_HOUR_FOR_NEW_MESSAGES,
     NUMBER_OF_UPDATE_MESSAGES_ALLOWED,
     MINUTES_OF_INACTIVITY_BEFORE_UPDATE_MESSAGE,
+    STUDY_ID_LIST,
+    STUDY_ID_NO_OP
 } = require('./constants');
 
 const R = require('ramda');
@@ -181,20 +183,15 @@ function assignedConversationTrackIsDeleted(conversation, conversations) {
     return conversations.indexOf(conversation) === -1;
 }
 
-function generateUniqueStudyId(studyInfo) {
-  let studyId;
-  let count = 0;
-  const NUMBER_OF_RETRIES = 9900;
-  const MIN = 10000;
-  const MAX = 100000; // not inclusive;
+function generateUniqueStudyId(studyInfo, studyIdList) {
+  let studyInfoSet = new Set(studyInfo.map(String));
 
-  do {
-    studyId = String(Math.floor( MIN + Math.random() * (MAX - MIN)));
-    count++;
-  } while(studyInfo.indexOf(studyId) >= 0 && count < NUMBER_OF_RETRIES);
-
-  if (count >= NUMBER_OF_RETRIES) { return undefined; }
-  return studyId;
+  for(let i = 0; i < studyIdList.length; i++) {
+    if (!studyInfoSet.has(String(studyIdList[i]))) {
+      return String(studyIdList[i]);
+    }
+  }
+  return String(STUDY_ID_NO_OP);
 }
 
 /**
@@ -250,7 +247,7 @@ function newConversationTrack(conversations, messages, collections, studyInfo, u
         newConversation &&
         newConversation.isStudy
       ) {
-        userUpdates.studyId = generateUniqueStudyId(studyInfo);
+        userUpdates.studyId = generateUniqueStudyId(studyInfo, STUDY_ID_LIST);
         userUpdates.studyStartTime = Date.now();
       }
     }
