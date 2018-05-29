@@ -726,8 +726,8 @@ describe('Messages Module', () => {
 
           expect(userUpdates).to.exist;
           expect(userUpdates.history).to.exist;
-          expect(userUpdates.history.length).to.equal(3);
-          expect(userUpdates.history[2].text).to.equal(firstMessageInConversation);
+          expect(userUpdates.history.length).to.equal(4);
+          expect(userUpdates.history[3].text).to.equal(firstMessageInConversation);
 
           const currentConversation =
             modifiedMocks.conversations[modifiedMocks.conversations.length - 1];
