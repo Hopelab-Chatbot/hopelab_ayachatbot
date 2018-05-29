@@ -115,6 +115,25 @@ const STUDY_ID_LIST = [
 
 const STUDY_ID_NO_OP = 11111;
 
+const STUDY_MESSAGES = [
+  {
+    text: "Please click the link below to officially sign up for the research study and earn $20. Your participant code is: XXXXX https://hopelab.az1.qualtrics.com/jfe/form/SV_3k19jeWjxbOu7Rz",
+    delayInDays: 0
+  },
+  {
+    text: "Please click the link below to complete your next research survey and earn $20. Your participant code is: XXXXX https://hopelab.az1.qualtrics.com/jfe/form/SV_6lNzDKnxkq89srP",
+    delayInDays: 14
+  },
+  {
+    text: "Please click the link below to complete your next research survey and earn $20. Your participant code is: XXXXX https://hopelab.az1.qualtrics.com/jfe/form/SV_8qOGrd5K5XYfpd3",
+    delayInDays: 28
+  },
+  {
+    text: "Please click the link below to complete your next research survey and earn $20. Your participant code is: XXXXX https://hopelab.az1.qualtrics.com/jfe/form/SV_6rnd5H14Ua9y71r",
+    delayInDays: 56
+  }
+];
+
 // hours from midnight (military time) eg 2 is 2am.
 const CUT_OFF_HOUR_FOR_NEW_MESSAGES = 2;
 
@@ -192,5 +211,6 @@ module.exports = {
     CRONTAB_FOR_MESSAGE_UPDATE_CHECK,
     MAX_UPDATE_ACTIONS_ALLOWED,
     STUDY_ID_LIST,
-    STUDY_ID_NO_OP
+    STUDY_ID_NO_OP,
+    STUDY_MESSAGES
 };

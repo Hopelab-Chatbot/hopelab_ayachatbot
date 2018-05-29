@@ -44,7 +44,8 @@ const {
     NUMBER_OF_UPDATE_MESSAGES_ALLOWED,
     MINUTES_OF_INACTIVITY_BEFORE_UPDATE_MESSAGE,
     STUDY_ID_LIST,
-    STUDY_ID_NO_OP
+    STUDY_ID_NO_OP,
+    STUDY_MESSAGES
 } = require('./constants');
 
 const R = require('ramda');
@@ -72,6 +73,16 @@ function makePlatformMessagePayload(action, messages) {
     }
 
     return { text: message.text };
+}
+
+function userIsStartingStudy(oldUser, newUser) {
+  return !Number.isFinite(Number(R.path(['studyId'],oldUser))) &&
+         Number.isFinite(Number(R.path(['studyId'], newUser)));
+}
+
+function studyIdIsNotificationEligable(user) {
+  return Number.isFinite(Number(R.path(['studyId'], user))) &&
+        Number(R.path(['studyId'], user)) !== STUDY_ID_NO_OP;
 }
 
 function isYouTubeVideo(url) {
@@ -372,8 +383,14 @@ function getUserUpdateAction({
   let userActionUpdates = Object.assign({}, user);
 
   if (shouldReceiveUpdate(user, Date.now())) {
+    let convoOptions = conversations.filter(conversationIsLiveAndNotIntro);
+    if (R.path(['assignedConversationTrack'], user)) {
+      convoOptions = conversations.filter(
+        c => c.id === user.assignedConversationTrack
+      );
+    }
     const newTrack = newConversationTrack(
-        conversations.filter(conversationIsLiveAndNotIntro),
+        convoOptions,
         messages,
         collections,
         studyInfo,
@@ -1192,6 +1209,48 @@ function getMessagesForAction({
               type: TYPE_MESSAGE,
               message: { text: transition.text }
             });
+
+            let messageForHistory = createCustomMessageForHistory({
+                id: transition.id,
+                type: TYPE_MESSAGE,
+                messageType: MESSAGE_TYPE_TEXT,
+                text: transition.text
+            });
+            newTrack.user = R.merge(newTrack.user, {
+                history: updateHistory(
+                    R.merge(messageForHistory, {
+                        timestamp: Date.now()
+                    }),
+                    userUpdates.history
+                )
+              }
+            );
+          }
+
+          if (
+            userIsStartingStudy(userUpdates, R.path(['user'], newTrack)) &&
+            studyIdIsNotificationEligable(R.path(['user'], newTrack))
+          ) {
+            const text = STUDY_MESSAGES[0].text.replace(/XXXXX/, newTrack.user.studyId);
+            messagesToSend.push({
+              type: TYPE_MESSAGE,
+              message: { text }
+            });
+
+            let messageForHistory = createCustomMessageForHistory({
+                type: TYPE_MESSAGE,
+                messageType: MESSAGE_TYPE_TEXT,
+                text: text
+            });
+            newTrack.user = R.merge(newTrack.user, {
+                history: updateHistory(
+                    R.merge(messageForHistory, {
+                        timestamp: Date.now()
+                    }),
+                    userUpdates.history
+                )
+              }
+            );
           }
 
           if (newTrack.action.type === TYPE_COLLECTION) {
