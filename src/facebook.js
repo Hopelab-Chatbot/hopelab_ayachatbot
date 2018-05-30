@@ -463,6 +463,40 @@ function shouldSendStudyMessageUpdate(user, studyMessage, currentTimeMs) {
   return false;
 }
 
+function updateUserWithStudyMessage(user, studyMessage) {
+  let userUpdates = Object.assign({}, user);
+  if (Number.isFinite(Number(R.path(['studyMessageUpdateCount'], userUpdates)))) {
+    userUpdates.studyMessageUpdateCount++;
+  } else {
+    userUpdates.studyMessageUpdateCount = 1;
+  }
+
+  let text = studyMessage.text.replace(/XXXXX/, userUpdates.studyId);
+  let message = createCustomMessageForHistory({
+      type: TYPE_MESSAGE,
+      messageType: MESSAGE_TYPE_TEXT,
+      text,
+  });
+
+  userUpdates = R.merge(userUpdates, {
+      history: updateHistory(
+          R.merge(message, {
+              timestamp: Date.now()
+          }),
+          userUpdates.history
+      )
+  });
+  return {
+    userUpdates,
+    messagesToSend: [
+      {
+        type: TYPE_MESSAGE,
+        message: { text }
+      }
+    ]
+  }
+}
+
 function mapUserToUserAndMessagesToSend(user) {
   let userUpdates = Object.assign({}, user);
   if (!hasValidStudyId(userUpdates)) {
@@ -470,36 +504,19 @@ function mapUserToUserAndMessagesToSend(user) {
   }
 
   if (Number.isFinite(Number(R.path(['studyMessageUpdateCount'], userUpdates)))) {
-    return null;
+    if (Number(userUpdates.studyMessageUpdateCount) + 1 >= STUDY_MESSAGES.length) {
+      return null;
+    }
+
+    const studyMessageIndex = Number(userUpdates.studyMessageUpdateCount) + 1;
+    if (shouldSendStudyMessageUpdate(userUpdates, STUDY_MESSAGES[studyMessageIndex], Date.now())) {
+      return updateUserWithStudyMessage(userUpdates, STUDY_MESSAGES[studyMessageIndex]);
+    }
+
   } else {
     // this would be the first update
     if (shouldSendStudyMessageUpdate(userUpdates, STUDY_MESSAGES[1], Date.now())) {
-      userUpdates.studyMessageUpdateCount = 1;
-
-      let text = STUDY_MESSAGES[1].text.replace(/XXXXX/, userUpdates.studyId);
-      let message = createCustomMessageForHistory({
-          type: TYPE_MESSAGE,
-          messageType: MESSAGE_TYPE_TEXT,
-          text ,
-      });
-
-      userUpdates = R.merge(userUpdates, {
-          history: updateHistory(
-              R.merge(message, {
-                  timestamp: Date.now()
-              }),
-              userUpdates.history
-          )
-      });
-      return {
-        userUpdates,
-        messagesToSend: [
-          {
-            type: TYPE_MESSAGE,
-            message: { text }
-          }
-        ]
-      }
+      return updateUserWithStudyMessage(userUpdates, STUDY_MESSAGES[1]);
     }
   }
 
