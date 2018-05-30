@@ -118,19 +118,19 @@ const STUDY_ID_NO_OP = 11111;
 const STUDY_MESSAGES = [
   {
     text: "Please click the link below to officially sign up for the research study and earn $20. Your participant code is: XXXXX https://hopelab.az1.qualtrics.com/jfe/form/SV_3k19jeWjxbOu7Rz",
-    delayInDays: 0
+    delayInMinutes: 0
   },
   {
     text: "Please click the link below to complete your next research survey and earn $20. Your participant code is: XXXXX https://hopelab.az1.qualtrics.com/jfe/form/SV_6lNzDKnxkq89srP",
-    delayInDays: 14
+    delayInMinutes: 14 * 24 * 60
   },
   {
     text: "Please click the link below to complete your next research survey and earn $20. Your participant code is: XXXXX https://hopelab.az1.qualtrics.com/jfe/form/SV_8qOGrd5K5XYfpd3",
-    delayInDays: 28
+    delayInMinutes: 28 * 24 * 60
   },
   {
     text: "Please click the link below to complete your next research survey and earn $20. Your participant code is: XXXXX https://hopelab.az1.qualtrics.com/jfe/form/SV_6rnd5H14Ua9y71r",
-    delayInDays: 56
+    delayInMinutes: 56 * 24 * 60
   }
 ];
 
@@ -142,6 +142,8 @@ const NUMBER_OF_UPDATE_MESSAGES_ALLOWED = 7;
 // minutes of inactivty before update is sent
 const MINUTES_OF_INACTIVITY_BEFORE_UPDATE_MESSAGE = (24 * 60) + 3;
 const CRONTAB_FOR_MESSAGE_UPDATE_CHECK = '*/10 * * * *';
+
+const CRONTAB_FOR_STUDY_MESSAGE_UPDATE = '0 */4 * * *';
 
 const MAX_UPDATE_ACTIONS_ALLOWED = 10;
 
@@ -209,6 +211,7 @@ module.exports = {
     NUMBER_OF_UPDATE_MESSAGES_ALLOWED,
     MINUTES_OF_INACTIVITY_BEFORE_UPDATE_MESSAGE,
     CRONTAB_FOR_MESSAGE_UPDATE_CHECK,
+    CRONTAB_FOR_STUDY_MESSAGE_UPDATE,
     MAX_UPDATE_ACTIONS_ALLOWED,
     STUDY_ID_LIST,
     STUDY_ID_NO_OP,

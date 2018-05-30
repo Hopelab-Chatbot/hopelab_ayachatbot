@@ -1385,5 +1385,6 @@ module.exports = {
     getMediaUrlForMessage,
     generateUniqueStudyId,
     shouldReceiveUpdate,
-    isCrisisMessage
+    isCrisisMessage,
+    createCustomMessageForHistory,
 };

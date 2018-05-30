@@ -19,13 +19,17 @@ const {
     FB_MESSAGING_TYPE_UPDATE,
     TYPE_ANSWER,
     TYPE_MESSAGE,
-    MAX_UPDATE_ACTIONS_ALLOWED
+    MESSAGE_TYPE_TEXT,
+    MAX_UPDATE_ACTIONS_ALLOWED,
+    STUDY_ID_NO_OP,
+    STUDY_MESSAGES
 } = require('./constants');
 
 const {
   getMessagesForAction,
   getActionForMessage,
-  getUpdateActionForUsers
+  getUpdateActionForUsers,
+  createCustomMessageForHistory
 } = require('./messages');
 
 const { promiseSerial, promiseSerialKeepGoingOnError } = require('./utils');
@@ -385,7 +389,7 @@ function sendPushMessagesToUsers({
               logger.log('debug', `Messages sent, now saving updates for ${R.path(['length'],usersToUpdate)} users`)
               return usersToUpdate;
             })
-            .then(usersToUpdate => {
+            .then(usersToUpdate => { // TODO: replace this with function defined below
               let updates = usersToUpdate.map(user => {
                 if (
                   R.path(['isError'], user) &&
@@ -420,8 +424,121 @@ function sendPushMessagesToUsers({
             .catch(e => console.error('Error: updateAllUsers', e));
 }
 
+function updateUsersCheckForErrors(usersToUpdate) {
+  let updates = usersToUpdate.map(user => {
+    if (
+      R.path(['isError'], user) &&
+      R.path(['error', 'fbCode'], user) === FB_ERROR_CODE_INVALID_USER
+    ) {
+      let actualUser = users.find(u => R.path(['error', 'id'], user) === u.id);
+      if (!actualUser) { return undefined; }
+      return Object.assign({}, actualUser, {invalidUser: true});
+    } else if (R.path(['isError'], user)) {
+      // If there was a facebook error but it was not an invalid
+      // user error, do not mark the user as invalid
+      return undefined;
+    }
+    return user;
+  }).filter(u => !!u);
+  return updateAllUsers(updates).then(() => usersToUpdate)
+}
+
+function hasValidStudyId(user) {
+  let studyId = Number(R.path(['studyId'], user));
+  return Number.isFinite(studyId) && studyId !== STUDY_ID_NO_OP;
+}
+
+function shouldSendStudyMessageUpdate(user, studyMessage, currentTimeMs) {
+  const MS_IN_MINUTE = 60000;
+  const delayTimeMs = studyMessage.delayInMinutes * MS_IN_MINUTE;
+  const studyStartTime = Number(R.path(['studyStartTime'], user));
+
+  if (
+    Number.isFinite(studyStartTime) &&
+    studyStartTime + delayTimeMs < currentTimeMs
+  ) {
+    return true;
+  }
+
+  return false;
+}
+
+function mapUserToUserAndMessagesToSend(user) {
+  let userUpdates = Object.assign({}, user);
+  if (!hasValidStudyId(userUpdates)) {
+    return null;
+  }
+
+  if (Number.isFinite(Number(R.path(['studyMessageUpdateCount'], userUpdates)))) {
+    return null;
+  } else {
+    // this would be the first update
+    if (shouldSendStudyMessageUpdate(userUpdates, STUDY_MESSAGES[1], Date.now())) {
+      userUpdates.studyMessageUpdateCount = 1;
+
+      let text = STUDY_MESSAGES[1].text.replace(/XXXXX/, userUpdates.studyId);
+      let message = createCustomMessageForHistory({
+          type: TYPE_MESSAGE,
+          messageType: MESSAGE_TYPE_TEXT,
+          text ,
+      });
+
+      userUpdates = R.merge(userUpdates, {
+          history: updateHistory(
+              R.merge(message, {
+                  timestamp: Date.now()
+              }),
+              userUpdates.history
+          )
+      });
+      return {
+        userUpdates,
+        messagesToSend: [
+          {
+            type: TYPE_MESSAGE,
+            message: { text }
+          }
+        ]
+      }
+    }
+  }
+
+  // Making this explicit.  If the user isn't going to get an update, return
+  // null
+  return null;
+}
+
+
+function sendStudyMessageToUsers(users) {
+  const usersWithStudyId = users.filter(hasValidStudyId);
+
+  let userUpdatesAndMessages = usersWithStudyId.map(mapUserToUserAndMessagesToSend).filter(u => !!u);
+
+  let promisesForSend = userUpdatesAndMessages.map(userAndMessages => {
+    const {userUpdates, messagesToSend} = userAndMessages;
+    const messagesWithTyping = R.intersperse(
+        { type: FB_TYPING_ON_TYPE },
+        messagesToSend
+    );
+    return () => serializeSend({
+        messages: messagesWithTyping,
+        senderID: userUpdates.id,
+        fbMessagingType: FB_MESSAGING_TYPE_UPDATE
+     }).then(() => userUpdates);
+  });
+
+  if (!Array.isArray(promisesForSend) || promisesForSend.length === 0) {
+    logger.log("debug", 'No study updates to send to users. Done');
+    return Promise.resolve();
+  }
+
+  logger.log("debug", `About to push study updates to ${promisesForSend.length} users`);
+  return promiseSerialKeepGoingOnError(promisesForSend).then(updateUsersCheckForErrors);
+}
+
 module.exports = {
     getUserDetails,
     receivedMessage,
     sendPushMessagesToUsers,
+    sendStudyMessageToUsers,
 };
