@@ -145,7 +145,7 @@ const CRONTAB_FOR_MESSAGE_UPDATE_CHECK = '*/10 * * * *';
 
 const CRONTAB_FOR_STUDY_MESSAGE_UPDATE = '0 */4 * * *';
 
-const MAX_UPDATE_ACTIONS_ALLOWED = 10;
+const MAX_UPDATE_ACTIONS_ALLOWED = 20;
 
 module.exports = {
     REST_PORT,
