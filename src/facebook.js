@@ -14,6 +14,7 @@ const {
     TYPING_TIME_IN_MILLISECONDS,
     FB_MESSAGE_TYPE,
     FB_ERROR_CODE_INVALID_USER,
+    FB_ERROR_CODE_UNAVAILABLE_USER,
     FB_TYPING_ON_TYPE,
     FB_MESSAGING_TYPE_RESPONSE,
     FB_MESSAGING_TYPE_UPDATE,
@@ -393,7 +394,10 @@ function sendPushMessagesToUsers({
               let updates = usersToUpdate.map(user => {
                 if (
                   R.path(['isError'], user) &&
-                  R.path(['error', 'fbCode'], user) === FB_ERROR_CODE_INVALID_USER
+                  (
+                    R.path(['error', 'fbCode'], user) === FB_ERROR_CODE_INVALID_USER ||
+                    R.path(['error', 'fbCode'], user) === FB_ERROR_CODE_UNAVAILABLE_USER
+                  )
                 ) {
                   let actualUser = users.find(u => R.path(['error', 'id'], user) === u.id);
                   if (!actualUser) { return undefined; }
@@ -428,7 +432,10 @@ function updateUsersCheckForErrors(usersToUpdate) {
   let updates = usersToUpdate.map(user => {
     if (
       R.path(['isError'], user) &&
-      R.path(['error', 'fbCode'], user) === FB_ERROR_CODE_INVALID_USER
+      (
+        R.path(['error', 'fbCode'], user) === FB_ERROR_CODE_INVALID_USER ||
+        R.path(['error', 'fbCode'], user) === FB_ERROR_CODE_UNAVAILABLE_USER
+      )
     ) {
       let actualUser = users.find(u => R.path(['error', 'id'], user) === u.id);
       if (!actualUser) { return undefined; }

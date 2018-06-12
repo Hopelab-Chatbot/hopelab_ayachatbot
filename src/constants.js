@@ -5,6 +5,7 @@ const FB_TEXT_LIMIT = 640;
 const FB_GRAPH_ROOT_URL = 'https://graph.facebook.com/v2.6/';
 
 const FB_ERROR_CODE_INVALID_USER = 100;
+const FB_ERROR_CODE_UNAVAILABLE_USER = 551;
 
 // facebook messenger
 const TYPING_TIME_IN_MILLISECONDS = 1000;
@@ -154,6 +155,7 @@ module.exports = {
     FB_TEXT_LIMIT,
     FB_GRAPH_ROOT_URL,
     FB_ERROR_CODE_INVALID_USER,
+    FB_ERROR_CODE_UNAVAILABLE_USER,
     DB_USERS,
     DB_CONVERSATIONS,
     DB_COLLECTIONS,
