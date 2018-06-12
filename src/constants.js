@@ -135,8 +135,8 @@ const STUDY_MESSAGES = [
   }
 ];
 
-// hours from midnight (military time) eg 2 is 2am.
-const CUT_OFF_HOUR_FOR_NEW_MESSAGES = 2;
+// hours from midnight (military time) eg 2 is 9am UTC (2am Pacific).
+const CUT_OFF_HOUR_FOR_NEW_MESSAGES = 9;
 
 const NUMBER_OF_UPDATE_MESSAGES_ALLOWED = 7;
 
