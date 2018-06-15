@@ -96,7 +96,7 @@ const QUICK_REPLY_RETRY_BUTTONS = [
   },
   {
     title: "Stop Chatting",
-    id: `${QUICK_REPLY_RETRY_ID}-stop-chatting`,
+    id: `${QUICK_REPLY_RETRY_ID}-continue`,
     text: STOP_MESSAGE
   }
 ];
