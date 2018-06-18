@@ -77,8 +77,8 @@ const END_OF_CONVERSATION_MESSAGE = "Sorry! I’m hanging out with my bot friend
 const UPDATE_USER_MESSAGE = "Hi! Don't forget about me!";
 const CRISIS_RESPONSE_MESSAGE = "hey, I hope everything is ok. Your response included a few words that indicate you may be struggling. If you want to talk to a real person text Crisis Text Line at 741741 or call this hotline: 1-800-273-8255";
 const CRISIS_RESPONSE_MESSAGE_FOR_BUTTONS = "I can't connect you directly to a human but if you text Crisis Text Line at m.me/crisistextline there is always someone there to help when you are struggling."
-const SUPPORT_MESSAGE = "I love feedback! Please type anything you'd like to send my human makers here in one message. Or you can e-mail my team at vivibot@hopelab.org"
-const STOP_MESSAGE = "I can’t stop automatically but you can change your settings to turn me off like this:\n\nOn a phone: Click the settings gear in the top right corner. Then click “Manage Messages”. You can either turn off just notifications or all messages from me there.\n\nOn the computer: look for the “Options” panel to the right of our chat. Click either “Manage Messages” or “Notifications” from here to change your settings."
+// const SUPPORT_MESSAGE = "I love feedback! Please type anything you'd like to send my human makers here in one message. Or you can e-mail my team at vivibot@hopelab.org"
+const SUPPORT_MESSAGE = "I can’t stop automatically but you can change your settings to turn me off like this:\n\nOn a phone: Click the settings gear in the top right corner. Then click “Manage Messages”. You can either turn off just notifications or all messages from me there.\n\nOn the computer: look for the “Options” panel to the right of our chat. Click either “Manage Messages” or “Notifications” from here to change your settings."
 
 const QUICK_REPLY_RETRY_BUTTONS = [
   {
@@ -91,14 +91,9 @@ const QUICK_REPLY_RETRY_BUTTONS = [
     text: CRISIS_RESPONSE_MESSAGE_FOR_BUTTONS
   },
   {
-    title: "Send Feedback",
-    id: `${QUICK_REPLY_RETRY_ID}-send-feedback`,
-    text: SUPPORT_MESSAGE
-  },
-  {
     title: "Stop Messages",
     id: `${QUICK_REPLY_RETRY_ID}-send-feedback`,
-    text: STOP_MESSAGE
+    text: SUPPORT_MESSAGE
   }
 ];
 
