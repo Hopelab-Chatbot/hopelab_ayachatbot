@@ -396,7 +396,8 @@ function sendPushMessagesToUsers({
                   R.path(['isError'], user) &&
                   (
                     R.path(['error', 'fbCode'], user) === FB_ERROR_CODE_INVALID_USER ||
-                    R.path(['error', 'fbCode'], user) === FB_ERROR_CODE_UNAVAILABLE_USER
+                    R.path(['error', 'fbCode'], user) === FB_ERROR_CODE_UNAVAILABLE_USER ||
+                    R.path(['error', 'fbCode'], user) === FB_ERROR_CODE_UNAVAILABLE_USER_10
                   )
                 ) {
                   let actualUser = users.find(u => R.path(['error', 'id'], user) === u.id);
@@ -434,7 +435,8 @@ function updateUsersCheckForErrors(usersToUpdate) {
       R.path(['isError'], user) &&
       (
         R.path(['error', 'fbCode'], user) === FB_ERROR_CODE_INVALID_USER ||
-        R.path(['error', 'fbCode'], user) === FB_ERROR_CODE_UNAVAILABLE_USER
+        R.path(['error', 'fbCode'], user) === FB_ERROR_CODE_UNAVAILABLE_USER ||
+        R.path(['error', 'fbCode'], user) === FB_ERROR_CODE_UNAVAILABLE_USER_10
       )
     ) {
       let actualUser = users.find(u => R.path(['error', 'id'], user) === u.id);
