@@ -6,6 +6,7 @@ const FB_GRAPH_ROOT_URL = 'https://graph.facebook.com/v2.6/';
 
 const FB_ERROR_CODE_INVALID_USER = 100;
 const FB_ERROR_CODE_UNAVAILABLE_USER = 551;
+const FB_ERROR_CODE_UNAVAILABLE_USER_10 = 10;
 
 // facebook messenger
 const TYPING_TIME_IN_MILLISECONDS = 1000;
