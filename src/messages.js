@@ -50,6 +50,8 @@ const {
 
 const R = require('ramda');
 
+const { logger } = require('./logger');
+
 const moment = require('moment');
 
 /**
@@ -382,6 +384,7 @@ function getUserUpdateAction({
 }) {
   let userActionUpdates = Object.assign({}, user);
 
+  logger.log('debug', `Getting user update action for user: ${JSON.stringify(user)}`);
   if (shouldReceiveUpdate(user, Date.now())) {
     let convoOptions = conversations.filter(conversationIsLiveAndNotIntro);
     if (R.path(['assignedConversationTrack'], user)) {
