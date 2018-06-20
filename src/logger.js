@@ -1,7 +1,7 @@
 const winston = require('winston');
 const { combine, timestamp, simple } = winston.format;
 
-let level = 'info';
+let level = 'debug';
 
 if (process.env.NODE_ENV !== 'production') {
   level = 'info';
