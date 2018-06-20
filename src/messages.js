@@ -404,11 +404,13 @@ function getUserUpdateAction({
 
     userActionUpdates = Object.assign({}, userActionUpdates, newTrack.user);
 
+    logger.log('debug', `About to return an action for update ${JSON.stringify(action)}`);
     return {
       action,
       userActionUpdates
     };
   } else {
+    logger.log('debug', `About to return a no op for an action`);
     return {
       action: {type: ACTION_NO_UPDATE_NEEDED }
     };
