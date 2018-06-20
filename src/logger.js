@@ -4,7 +4,7 @@ const { combine, timestamp, simple } = winston.format;
 let level = 'debug';
 
 if (process.env.NODE_ENV !== 'production') {
-  level = 'info';
+  level = 'debug';
 }
 
 const logger = winston.createLogger({
