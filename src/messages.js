@@ -356,6 +356,10 @@ function shouldReceiveUpdate(user, currentTimeMs) {
 
     const lastAnswer = findLastUserAnswer(user);
 
+    if (!lastAnswer) {
+      return false;
+    }
+
     if (hasUpdateSinceInactivity(user, lastAnswer, MINUTES_OF_INACTIVITY_BEFORE_UPDATE_MESSAGE)) {
       return false;
     }
@@ -384,13 +388,6 @@ function getUserUpdateAction({
 }) {
   let userActionUpdates = Object.assign({}, user);
 
-
-  if (String(user.id) === "1970287886335911") {
-    logger.log('debug', `Getting user update action for user: ${user.id}`);
-    logger.log('debug', `History length for user, ${user.id}, ${R.path(['history', 'length'], user)}`);
-    logger.log('debug', R.path(['assignedConversationTrack'], user));
-
-  }
   if (shouldReceiveUpdate(user, Date.now())) {
     let convoOptions = conversations.filter(conversationIsLiveAndNotIntro);
     if (R.path(['assignedConversationTrack'], user)) {
@@ -398,6 +395,7 @@ function getUserUpdateAction({
         c => c.id === user.assignedConversationTrack
       );
     }
+
     const newTrack = newConversationTrack(
         convoOptions,
         messages,
@@ -405,6 +403,7 @@ function getUserUpdateAction({
         studyInfo,
         user
     );
+
 
     let action = newTrack.action;
 
@@ -415,6 +414,7 @@ function getUserUpdateAction({
       action,
       userActionUpdates
     };
+
   } else {
     logger.log('debug', `About to return a no op for an action`);
     return {
