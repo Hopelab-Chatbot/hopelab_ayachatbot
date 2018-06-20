@@ -384,7 +384,13 @@ function getUserUpdateAction({
 }) {
   let userActionUpdates = Object.assign({}, user);
 
-  logger.log('debug', `Getting user update action for user: ${user.id}`);
+
+  if (String(user.id) === "1970287886335911") {
+    logger.log('debug', `Getting user update action for user: ${user.id}`);
+    logger.log('debug', `History length for user, ${user.id}, ${R.path(['history', 'length'], user)}`);
+    logger.log('debug', R.path(['assignedConversationTrack'], user));
+
+  }
   if (shouldReceiveUpdate(user, Date.now())) {
     let convoOptions = conversations.filter(conversationIsLiveAndNotIntro);
     if (R.path(['assignedConversationTrack'], user)) {
