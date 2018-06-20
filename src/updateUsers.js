@@ -11,6 +11,7 @@ const {
 
 const { sendPushMessagesToUsers } = require('./facebook');
 
+const { logger } = require('./logger');
 
 module.exports = () => {
     const promises = [
@@ -24,6 +25,7 @@ module.exports = () => {
         getStudyInfo()
     ];
 
+    logger.log('debug', 'About to execute promise for all redis data, push messages');
     return Promise.all(promises)
       .then(res => {
           const users = res[0];
@@ -35,6 +37,7 @@ module.exports = () => {
           const media = res[6];
           const studyInfo = res[7];
 
+          logger.log('debug', 'got all info from redis for sending push messages');
           return sendPushMessagesToUsers({
             users,
             allConversations,
