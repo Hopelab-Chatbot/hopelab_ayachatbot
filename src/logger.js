@@ -1,10 +1,10 @@
 const winston = require('winston');
 const { combine, timestamp, simple } = winston.format;
 
-let level = 'debug';
+let level = 'info';
 
 if (process.env.NODE_ENV !== 'production') {
-  level = 'debug';
+  level = 'info';
 }
 
 const logger = winston.createLogger({
