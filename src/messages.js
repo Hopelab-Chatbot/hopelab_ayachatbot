@@ -384,7 +384,7 @@ function getUserUpdateAction({
 }) {
   let userActionUpdates = Object.assign({}, user);
 
-  logger.log('debug', `Getting user update action for user`);
+  logger.log('debug', `Getting user update action for user: ${user.id}`);
   if (shouldReceiveUpdate(user, Date.now())) {
     let convoOptions = conversations.filter(conversationIsLiveAndNotIntro);
     if (R.path(['assignedConversationTrack'], user)) {
