@@ -440,7 +440,7 @@ function updateUsersCheckForErrors(usersToUpdate) {
         R.path(['error', 'fbCode'], user) === FB_ERROR_CODE_UNAVAILABLE_USER_10
       )
     ) {
-      let actualUser = users.find(u => R.path(['error', 'id'], user) === u.id);
+      let actualUser = usersToUpdate.find(u => R.path(['error', 'id'], user) === u.id);
       if (!actualUser) { return undefined; }
       return Object.assign({}, actualUser, {invalidUser: true});
     } else if (R.path(['isError'], user)) {
@@ -462,6 +462,12 @@ function shouldSendStudyMessageUpdate(user, studyMessage, currentTimeMs) {
   const MS_IN_MINUTE = 60000;
   const delayTimeMs = studyMessage.delayInMinutes * MS_IN_MINUTE;
   const studyStartTime = Number(R.path(['studyStartTime'], user));
+
+  if (
+    !!(R.path(['invalidUser'], user))
+  ) {
+    return false;
+  }
 
   if (
     Number.isFinite(studyStartTime) &&

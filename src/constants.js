@@ -146,7 +146,7 @@ const NUMBER_OF_UPDATE_MESSAGES_ALLOWED = 7;
 const MINUTES_OF_INACTIVITY_BEFORE_UPDATE_MESSAGE = (24 * 60) + 3;
 const CRONTAB_FOR_MESSAGE_UPDATE_CHECK = '*/10 * * * *';
 
-const CRONTAB_FOR_STUDY_MESSAGE_UPDATE = '0 */4 * * *';
+const CRONTAB_FOR_STUDY_MESSAGE_UPDATE = '*/4 * * * *';   //'0 */4 * * *';  TODO: remove short update time
 
 const MAX_UPDATE_ACTIONS_ALLOWED = 20;
 
