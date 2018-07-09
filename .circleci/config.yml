@@ -7,6 +7,7 @@ jobs:
       - checkout
       - run: yarn install
       - run: yarn test
+      - run: sudo apt apt-get update
       - run: sudo apt install -y rsync
       - run: if [ "${CIRCLE_BRANCH}" == "circleci" ] || [ "${CIRCLE_BRANCH}" == "master" ]; then rsync -avz -e "ssh -o StrictHostKeyChecking=no" --exclude '.git*' ./ ubuntu@35.162.65.198:/var/www/chatbot/hopelab_ayachatbot/; fi
       - run: ssh -o StrictHostKeyChecking=no ubuntu@35.162.65.198 'cd /var/www/chatbot/hopelab_ayachatbot/ && yarn install && pm2 restart index'
