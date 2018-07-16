@@ -2,7 +2,7 @@ const request = require('request');
 
 const R = require('ramda');
 
-const { updateHistory, getPreviousMessageInHistory } = require('./users');
+const { updateHistory, getPreviousMessageInHistory, hasStoppedNotifications } = require('./users');
 
 const { updateUser, updateAllUsers, setStudyInfo } = require('./database');
 
@@ -24,7 +24,8 @@ const {
     MESSAGE_TYPE_TEXT,
     MAX_UPDATE_ACTIONS_ALLOWED,
     STUDY_ID_NO_OP,
-    STUDY_MESSAGES
+    STUDY_MESSAGES,
+    STOP_MESSAGE
 } = require('./constants');
 
 const {
@@ -247,10 +248,17 @@ function receivedMessage({
     studyInfo
 }) {
     let userToUpdate = Object.assign({}, user);
-
     const prevMessage = getPreviousMessageInHistory(allMessages, user);
 
     logger.log('debug', `receivedMessage: ${JSON.stringify(message)} prevMessage: ${JSON.stringify(prevMessage)}`);
+    // HERE if we get a Specific 'STOP' message.text, we stop the service
+    if (R.equals(message.text.toUpperCase(),STOP_MESSAGE)) {
+      userToUpdate = Object.assign({}, userToUpdate, {
+        stopNotifications: true,
+      });
+      return updateUser(userToUpdate).then(() =>
+        logger.log('debug', `user stopped notifications: ${userToUpdate.id}`))
+    }
 
     userToUpdate = Object.assign({}, userToUpdate, {
         history: updateHistory(
@@ -344,6 +352,11 @@ function sendPushMessagesToUsers({
     if (!originalHistoryLength) {
       return Promise.resolve();
     }
+    // don't send messages to user with stopNotifications
+    if (hasStoppedNotifications(user)) {
+      return Promise.resolve();
+    }
+
     const { messagesToSend, userUpdates } = getMessagesForAction({
         action,
         conversations: allConversations,
@@ -543,7 +556,7 @@ function mapUserToUserAndMessagesToSend(user) {
 
 
 function sendStudyMessageToUsers(users) {
-  const usersWithStudyId = users.filter(hasValidStudyId);
+  const usersWithStudyId = users.filter(hasValidStudyId).filter(!hasStoppedNotifications);
 
   let userUpdatesAndMessages = usersWithStudyId.map(mapUserToUserAndMessagesToSend).filter(u => !!u);
 

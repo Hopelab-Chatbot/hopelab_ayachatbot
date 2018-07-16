@@ -2,7 +2,8 @@ const {
     updateHistory,
     getChildEntitiesSeenByUserForParent,
     updateProgressForEntity,
-    popScope
+    popScope,
+    hasStoppedNotifications
 } = require('./users');
 const {
     TYPE_COLLECTION,
@@ -351,6 +352,10 @@ function hasExceededMaxUpdates(user, maxUpdates) {
 
 function shouldReceiveUpdate(user, currentTimeMs) {
     if (!Array.isArray(R.path(['history'], user))) {
+      return false;
+    }
+
+    if (hasStoppedNotifications(user)){
       return false;
     }
 
@@ -1026,6 +1031,10 @@ function getMessagesForAction({
     let curr;
 
     let userUpdates = Object.assign({}, user);
+    // don't send messages if the user has stopped notifications
+    if (hasStoppedNotifications(userUpdates)) {
+      return {userUpdates, messagesToSend: []}
+    }
 
     if (action.type === ACTION_CRISIS_REPONSE) {
       curr = {

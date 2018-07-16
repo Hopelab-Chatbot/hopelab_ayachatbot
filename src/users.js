@@ -21,6 +21,11 @@ function createNewUser(id) {
     };
 }
 
+const hasStoppedNotifications = (user) => {
+  let stoppedNotifications = R.path(['stopNotifications'], user);
+  return stoppedNotifications || false;
+}
+
 /**
  * Update History with Message
  *
@@ -120,5 +125,6 @@ module.exports = {
     getChildEntitiesSeenByUserForParent,
     isNextMessageBlock,
     updateProgressForEntity,
-    popScope
+    popScope,
+    hasStoppedNotifications,
 };

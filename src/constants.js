@@ -49,6 +49,9 @@ const TYPE_VIDEO = 'video';
 const TYPE_ANSWER = 'answer';
 const MESSAGE_TYPE_TRANSITION = 'transition';
 const MESSAGE_TYPE_TEXT = 'text';
+const TYPE_STOP_NOTIFICATIONS = 'stopNotifications';
+
+const STOP_MESSAGE = 'STOP';
 
 // entity keys
 const INTRO_CONVERSATION_ID = 'intro-conversation';
@@ -79,6 +82,7 @@ const CRISIS_RESPONSE_MESSAGE = "hey, I hope everything is ok. Your response inc
 const CRISIS_RESPONSE_MESSAGE_FOR_BUTTONS = "I can't connect you directly to a human but if you text Crisis Text Line at m.me/crisistextline there is always someone there to help when you are struggling."
 const SUPPORT_MESSAGE = "I love feedback! Please type anything you'd like to send my human makers here in one message. Or you can e-mail my team at vivibot@hopelab.org"
 // const SUPPORT_MESSAGE = "I can’t stop automatically but you can change your settings to turn me off like this:\n\nOn a phone: Click the settings gear in the top right corner. Then click “Manage Messages”. You can either turn off just notifications or all messages from me there.\n\nOn the computer: look for the “Options” panel to the right of our chat. Click either “Manage Messages” or “Notifications” from here to change your settings."
+const STOP_NOTIFICATIONS = `Type ${STOP_MESSAGE} and I'll stop sending you notifications until you contact me again`
 
 const QUICK_REPLY_RETRY_BUTTONS = [
   {
@@ -94,6 +98,12 @@ const QUICK_REPLY_RETRY_BUTTONS = [
     title: "Send Feedback",
     id: `${QUICK_REPLY_RETRY_ID}-send-feedback`,
     text: SUPPORT_MESSAGE
+  },
+  {
+    title: "Stop Notifications",
+    id: `${QUICK_REPLY_RETRY_ID}-stop-notifications`,
+    text: STOP_NOTIFICATIONS,
+    type: TYPE_STOP_NOTIFICATIONS,
   }
 ];
 
@@ -220,5 +230,7 @@ module.exports = {
     MAX_UPDATE_ACTIONS_ALLOWED,
     STUDY_ID_LIST,
     STUDY_ID_NO_OP,
-    STUDY_MESSAGES
+    STUDY_MESSAGES,
+    TYPE_STOP_NOTIFICATIONS,
+    STOP_MESSAGE
 };
