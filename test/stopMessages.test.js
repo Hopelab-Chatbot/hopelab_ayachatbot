@@ -1,9 +1,12 @@
 const expect = require('chai').expect;
 const moment = require('moment');
+const rewire = require('rewire');
+const sinon = require('sinon');
 
 const testModule = require('../src/messages');
-const facebookTestModule = require('../src/facebook');
+const facebookTestModule = rewire('../src/facebook');
 
+let stub;
 const {
   TYPE_ANSWER,
   TYPE_MESSAGE,
@@ -36,11 +39,17 @@ describe('should not Receive Update', () => {
 });
 
 describe('should set User to stopNotifications with a STOP message', () => {
+  beforeEach(() => {
+    stub = sinon.stub();
+    stub.returns(true);
+    facebookTestModule.__set__("callSendAPI", stub);
+  })
 
   it('does not retur a promise if the user does not send \'stop\'', () => {
     let message = {message: {id: "ryEn5QyZf", type: TYPE_MESSAGE, text: 'stops'}};
     let allMessages = {allMessages: mocks.messages};
     let user = { user: {
+      id: '1234',
       introConversationSeen: true,
       history: [
         {
@@ -55,6 +64,8 @@ describe('should set User to stopNotifications with a STOP message', () => {
     data.allConversations = data.conversations
     delete data.conversations
     let response = facebookTestModule.receivedMessage(data)
+    expect(response).equals(undefined)
+    // response.then()
     expect(Promise.resolve(response)).not.equals(response)
   });
 
