@@ -556,7 +556,7 @@ function mapUserToUserAndMessagesToSend(user) {
 
 
 function sendStudyMessageToUsers(users) {
-  const usersWithStudyId = users.filter(hasValidStudyId).filter(!hasStoppedNotifications);
+  const usersWithStudyId = users.filter(hasValidStudyId).filter(u => !hasStoppedNotifications(u));
 
   let userUpdatesAndMessages = usersWithStudyId.map(mapUserToUserAndMessagesToSend).filter(u => !!u);
 

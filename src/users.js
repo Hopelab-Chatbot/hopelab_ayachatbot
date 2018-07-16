@@ -21,10 +21,9 @@ function createNewUser(id) {
     };
 }
 
-const hasStoppedNotifications = (user) => {
-  let stoppedNotifications = R.path(['stopNotifications'], user);
-  return stoppedNotifications || false;
-}
+const hasStoppedNotifications = (user) => (
+  R.pathOr(false, ['stopNotifications'], user)
+)
 
 /**
  * Update History with Message
