@@ -25,7 +25,8 @@ const {
     MAX_UPDATE_ACTIONS_ALLOWED,
     STUDY_ID_NO_OP,
     STUDY_MESSAGES,
-    STOP_MESSAGE
+    STOP_MESSAGE,
+    RESUME_MESSAGE
 } = require('./constants');
 
 const {
@@ -258,6 +259,12 @@ function receivedMessage({
       });
       return updateUser(userToUpdate).then(() =>
         logger.log('debug', `user stopped notifications: ${userToUpdate.id}`))
+    }
+
+    if (R.equals(message.text.toUpperCase(), RESUME_MESSAGE)) {
+      userToUpdate = Object.assign({}, userToUpdate, {
+        stopNotifications: false,
+      });
     }
 
     userToUpdate = Object.assign({}, userToUpdate, {
