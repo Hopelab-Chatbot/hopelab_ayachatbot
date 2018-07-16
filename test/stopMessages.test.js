@@ -5,8 +5,10 @@ const sinon = require('sinon');
 
 const testModule = require('../src/messages');
 const facebookTestModule = rewire('../src/facebook');
+const databaseModule = require('../src/database');
+const stub = sinon.stub(databaseModule, 'updateUser');
+stub.returns(true);
 
-let stub;
 const {
   TYPE_ANSWER,
   TYPE_MESSAGE,
@@ -40,8 +42,6 @@ describe('should not Receive Update', () => {
 
 describe('should set User to stopNotifications with a STOP message', () => {
   beforeEach(() => {
-    stub = sinon.stub();
-    stub.returns(true);
     facebookTestModule.__set__("callSendAPI", stub);
   })
 
@@ -65,7 +65,6 @@ describe('should set User to stopNotifications with a STOP message', () => {
     delete data.conversations
     let response = facebookTestModule.receivedMessage(data)
     expect(response).equals(undefined)
-    // response.then()
     expect(Promise.resolve(response)).not.equals(response)
   });
 
