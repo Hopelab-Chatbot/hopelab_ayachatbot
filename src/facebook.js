@@ -26,7 +26,8 @@ const {
     STUDY_ID_NO_OP,
     STUDY_MESSAGES,
     STOP_MESSAGE,
-    RESUME_MESSAGE
+    RESUME_MESSAGE,
+    STOPPED_MESSAGE
 } = require('./constants');
 
 const {
@@ -253,15 +254,24 @@ function receivedMessage({
 
     logger.log('debug', `receivedMessage: ${JSON.stringify(message)} prevMessage: ${JSON.stringify(prevMessage)}`);
     // HERE if we get a Specific 'STOP' message.text, we stop the service
-    if (R.equals(message.text.toUpperCase(),STOP_MESSAGE)) {
+    if (message.text && R.equals(message.text.toUpperCase(),STOP_MESSAGE)) {
       userToUpdate = Object.assign({}, userToUpdate, {
         stopNotifications: true,
       });
-      return updateUser(userToUpdate).then(() =>
-        logger.log('debug', `user stopped notifications: ${userToUpdate.id}`))
+      serializeSend({
+        messages: [STOPPED_MESSAGE],
+        senderID,
+      }).then(() =>{
+        updateUser(userToUpdate).then(() =>
+         logger.log('debug', `user stopped notifications: ${userToUpdate.id}`))
+      }).catch((err) => {
+          logger.log(err)
+          logger.log('debug', `something went wrong sending stop message to ${userToUpdate.id}`)
+      })
+      return;
     }
 
-    if (R.equals(message.text.toUpperCase(), RESUME_MESSAGE)) {
+    if (message.text && R.equals(message.text.toUpperCase(), RESUME_MESSAGE)) {
       userToUpdate = Object.assign({}, userToUpdate, {
         stopNotifications: false,
       });

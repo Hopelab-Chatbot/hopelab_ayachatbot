@@ -107,6 +107,13 @@ const QUICK_REPLY_RETRY_BUTTONS = [
   }
 ];
 
+const STOPPED_MESSAGE = {
+  type: FB_MESSAGE_TYPE,
+  message: {
+    text: `Ok, I will stop all messages. If you ever want to chat again just type ${RESUME_MESSAGE}`
+  }
+}
+
 // Crisis Keywords
 const CRISIS_KEYWORDS = [
   'suicide',
@@ -233,5 +240,6 @@ module.exports = {
     STUDY_MESSAGES,
     TYPE_STOP_NOTIFICATIONS,
     STOP_MESSAGE,
-    RESUME_MESSAGE
+    RESUME_MESSAGE,
+    STOPPED_MESSAGE
 };
