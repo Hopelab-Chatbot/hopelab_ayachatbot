@@ -21,6 +21,10 @@ function createNewUser(id) {
     };
 }
 
+const hasStoppedNotifications = (user) => (
+  R.pathOr(false, ['stopNotifications'], user)
+)
+
 /**
  * Update History with Message
  *
@@ -120,5 +124,6 @@ module.exports = {
     getChildEntitiesSeenByUserForParent,
     isNextMessageBlock,
     updateProgressForEntity,
-    popScope
+    popScope,
+    hasStoppedNotifications,
 };
