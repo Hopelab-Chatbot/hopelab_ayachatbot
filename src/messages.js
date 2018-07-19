@@ -1031,10 +1031,6 @@ function getMessagesForAction({
     let curr;
 
     let userUpdates = Object.assign({}, user);
-    // don't send messages if the user has stopped notifications
-    if (hasStoppedNotifications(userUpdates)) {
-      return {userUpdates, messagesToSend: []}
-    }
 
     if (action.type === ACTION_CRISIS_REPONSE) {
       curr = {
