@@ -369,10 +369,6 @@ function sendPushMessagesToUsers({
     if (!originalHistoryLength) {
       return Promise.resolve();
     }
-    // don't send messages to user with stopNotifications
-    if (hasStoppedNotifications(user)) {
-      return Promise.resolve();
-    }
 
     const { messagesToSend, userUpdates } = getMessagesForAction({
         action,
