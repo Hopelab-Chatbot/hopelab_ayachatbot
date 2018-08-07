@@ -6,7 +6,7 @@ const redisClient = redis.createClient({
 });
 
 redisClient.on("error", function (err) {
-  console.log("Error " + err);
+  console.log("Error " + err); //eslint-disable-line no-console
 });
 
 const cacheUtils = require('alien-node-redis-utils')(redisClient);
@@ -25,7 +25,7 @@ const {
   DB_MEDIA,
   DB_STUDY,
   ONE_DAY_IN_MILLISECONDS,
-  ONE_WEEK_IN_MILLISECONDS
+  ONE_MONTH_IN_SECONDS
 } = require('./constants');
 
 const { createNewUser } = require('./users');
@@ -46,7 +46,8 @@ const keyFormatUserId = id => `user:${id}`;
 const setUserInCache = user => {
   cacheUtils.setItem(
     keyFormatUserId(user.id),
-    ONE_WEEK_IN_MILLISECONDS,
+    // expires user in ONE month if no more updates are made to it
+    ONE_MONTH_IN_SECONDS,
     user
   ).catch(e => (
     console.error(
@@ -56,11 +57,9 @@ const setUserInCache = user => {
   ));
 }
 
-
 const setAllUsersInCache = usersToUpdate => {
   return usersToUpdate.forEach(user => setUserInCache(user))
 }
-
 
 /**
  * Update User By ID
@@ -78,16 +77,15 @@ const updateAllUsers = (usersToUpdate = []) =>
     resolve(setAllUsersInCache(usersToUpdate))
   });
 
-
 /**
  * Create a User in Database
  *
- * @param {Object} { id, user, users }
- * @return {Promise<Object>}
+ * @param {Object} { id, user }
 */
-function createUserIfNotExisting({ id, user }) {
+function returnNewOrOldUser({ id, user }) {
   if (!user && id) {
     const newUser = createNewUser(id);
+    redisClient.lrem(DB_USER_LIST, 1, id);
     redisClient.lpush(DB_USER_LIST, id);
     setUserInCache(newUser)
     return Promise.resolve(newUser)
@@ -105,7 +103,7 @@ function createUserIfNotExisting({ id, user }) {
 const getUserById = id =>
   new Promise(resolve => {
     getJSONItemFromCache(keyFormatUserId(id))
-      .then(user => resolve(createUserIfNotExisting({ id, user})))
+      .then(user => resolve(returnNewOrOldUser({ id, user})))
       .catch(e => {
         // no item found matching cacheKey
         console.error(
