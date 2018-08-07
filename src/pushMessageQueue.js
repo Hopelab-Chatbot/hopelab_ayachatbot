@@ -16,17 +16,17 @@ function start() {
   );
 
   pushMessageQueue.process(function(job, done) {
-    console.log("processing the push message queue", Date.now());
+    logger.log("processing the push message queue", Date.now());
     logger.log('debug', `processing the push message queue!!`);
     updateUsers().then(() => {
-      console.log("Done processing queue", Date.now());
+      logger.log("Done processing queue", Date.now());
       logger.log('debug', 'Done processing push message queue');
       done();
     })
-    .catch(e => {
-      logger.log('error', `Push message update failed, ${JSON.stringify(e)}`);
-      done();
-    });
+      .catch(e => {
+        logger.log('error', `Push message update failed, ${JSON.stringify(e)}`);
+        done();
+      });
   });
 
   pushMessageQueue.add({}, {

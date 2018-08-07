@@ -41,6 +41,7 @@ describe('should not Receive Update', () => {
 });
 
 xdescribe('should set User to stopNotifications with a STOP message', () => {
+  let facebookTestModule;
   beforeEach(() => {
     facebookTestModule.__set__("callSendAPI", () => true);
   })

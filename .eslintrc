@@ -1,6 +1,6 @@
 {
   "parserOptions": {
-    "ecmaVersion": 9,
+    "ecmaVersion": 2016,
     "ecmaFeatures": {
       "jsx": true
     },
@@ -13,7 +13,8 @@
   "env": {
     "browser": true,
     "jest/globals": true,
-    "node": true
+    "node": true,
+    "es6": true
   },
   "rules": {
     "arrow-parens": ["error", "as-needed"],
@@ -28,17 +29,12 @@
       "code": 120,
       "tabWidth": 4
     }],
-    "jsx-a11y/label-has-for": 0,
+    "no-console": ["error",
+    { "allow": ["warn", "error"] }
+    ],
     "space-before-function-paren": 0,
     "object-curly-newline": ["error", {
       "consistent": true
-    }],
-    "settings": {
-      "import/resolver": {
-        "babel-module": {
-          "extensions": [".js"]
-        }
-      }
-    }
+    }]
   }
 }
