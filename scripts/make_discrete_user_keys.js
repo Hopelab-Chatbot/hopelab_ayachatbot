@@ -1,3 +1,7 @@
+const constants = require('../src/constants');
+
+const { DB_USER_LIST } = constants;
+
 const {promisify} = require('util');
 
 let redis = require('redis');
@@ -21,7 +25,7 @@ getAsync("users").then(res => {
   const length = json_users.length;
   json_users.forEach(user => {
     const { id } = user;
-    redisClient.lpush('userlist', id);
+    redisClient.lpush(DB_USER_LIST, id);
     redisClient.set(`user:${id}`, JSON.stringify(user));
   });
   console.log('rewrote ' + length + ' users')// eslint-disable-line no-console

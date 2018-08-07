@@ -17,11 +17,14 @@ const FB_MESSAGING_TYPE_RESPONSE = 'RESPONSE';
 const FB_MESSAGING_TYPE_UPDATE = 'UPDATE';
 
 // database keys
+// deprecated
 const DB_USERS = 'users';
+const DB_USER_LIST = 'userlist';
 const DB_CONVERSATIONS = 'conversations';
 const DB_COLLECTIONS = 'collections';
 const DB_SERIES = 'series';
 const DB_MESSAGES = 'messages';
+const DB_MESSAGE_LIST = 'msglist';
 const DB_USER_HISTORY = 'user-history';
 const DB_BLOCKS = 'blocks';
 const DB_MEDIA = 'media';
@@ -242,5 +245,7 @@ module.exports = {
   TYPE_STOP_NOTIFICATIONS,
   STOP_MESSAGE,
   RESUME_MESSAGE,
-  STOPPED_MESSAGE
+  STOPPED_MESSAGE,
+  DB_USER_LIST,
+  DB_MESSAGE_LIST,
 };
