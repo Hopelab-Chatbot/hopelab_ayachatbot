@@ -1,3 +1,7 @@
+const constants = require('../src/constants');
+
+const { DB_USER_LIST } = constants;
+
 const {promisify} = require('util');
 
 const redis = require('redis')
@@ -16,10 +20,10 @@ const redisClient = redis.createClient({
 
 const getLAsync = promisify(redisClient.lrange).bind(redisClient);
 
-getLAsync("userlist", 0, 1000).then(userIds => {
+getLAsync(DB_USER_LIST, 0, 1000).then(userIds => {
   userIds.forEach(id => {
     redisClient.del(`user:${id}`);
   });
-  redisClient.del('userlist');
+  redisClient.del(DB_USER_LIST);
   redisClient.quit()
 }).catch(err => {console.log(err);process.exit(1)})// eslint-disable-line no-console
