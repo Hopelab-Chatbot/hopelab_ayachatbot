@@ -16,7 +16,7 @@ const getAsync = promisify(redisClient.get).bind(redisClient);
 
 const {
   DB_USERS,
-  DB_USERS_LIST,
+  DB_USER_LIST,
   DB_CONVERSATIONS,
   DB_COLLECTIONS,
   DB_SERIES,
@@ -73,30 +73,11 @@ const updateUser = user =>
     resolve(setUserInCache(user))
   );
 
-const updateAllUsers = usersToUpdate =>
-  new Promise((resolve, reject) => {
-    setAllUsersInCache(usersToUpdate)
-      .then(resolve)
-      .catch(e => {
-        console.error(
-          `error: updateUser - cacheUtils.getItem(${DB_USERS})`,
-          e
-        );
-        reject();
-      });
+const updateAllUsers = (usersToUpdate = []) =>
+  new Promise(resolve => {
+    resolve(setAllUsersInCache(usersToUpdate))
   });
 
-/**
- * Find User By Id
- *
- * @param {String} id
- * @return {Object}
-*/
-const findUserById = id => users => ({
-  id,
-  user: users.find(u => u.id === id),
-  users
-});
 
 /**
  * Create a User in Database
@@ -107,7 +88,7 @@ const findUserById = id => users => ({
 function createUserIfNotExisting({ id, user }) {
   if (!user && id) {
     const newUser = createNewUser(id);
-    redisClient.lpush('userlist', id);
+    redisClient.lpush(DB_USER_LIST, id);
     setUserInCache(newUser)
     return Promise.resolve(newUser)
   } else {
