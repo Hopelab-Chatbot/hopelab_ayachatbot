@@ -11,7 +11,7 @@ const promiseSerialKeepGoingOnError = funcs => {
       .then(() => {
         return func()
           .then(r => {
-            results.push(r)
+            results.push(r);
             return results;
           })
           .catch(error => {
@@ -21,11 +21,11 @@ const promiseSerialKeepGoingOnError = funcs => {
             });
             return results;
           });
-      })
+      });
   },
   Promise.resolve([])
   );
-}
+};
 
 const promiseSerial = funcs =>
   funcs.reduce(

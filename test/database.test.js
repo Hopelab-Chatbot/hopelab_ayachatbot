@@ -4,12 +4,12 @@ const rewire = require('rewire');
 const testModule = rewire('../src/database');
 const usersModule = rewire('../src/users');
 
-testModule.returnNewOrOldUser = testModule.__get__('returnNewOrOldUser')
-testModule.setUserInCache = testModule.__get__('setUserInCache')
-testModule.removeUserFromCache = testModule.__get__('removeUserFromCache')
-testModule.getJSONItemFromCache = testModule.__get__('getJSONItemFromCache')
+testModule.returnNewOrOldUser = testModule.__get__('returnNewOrOldUser');
+testModule.setUserInCache = testModule.__get__('setUserInCache');
+testModule.removeUserFromCache = testModule.__get__('removeUserFromCache');
+testModule.getJSONItemFromCache = testModule.__get__('getJSONItemFromCache');
 
-usersModule.createNewUser = usersModule.__get__('createNewUser')
+usersModule.createNewUser = usersModule.__get__('createNewUser');
 
 
 describe('database module functions', () => {
@@ -28,8 +28,8 @@ describe('database module functions', () => {
   it('setUserInCache should update the user', done => {
     testModule.getUserById('123').then(user => {
       expect(testUser).to.deep.equal(user);
-      const userToUpdate = Object.assign(user, {foo: 'bar'})
-      testModule.setUserInCache(userToUpdate)
+      const userToUpdate = Object.assign(user, {foo: 'bar'});
+      testModule.setUserInCache(userToUpdate);
       testModule.getUserById(testUser.id).then(result => {
         expect(result.id).to.equal(testUser.id);
         expect(result.history).to.deep.equal(testUser.history);
@@ -44,11 +44,11 @@ describe('database module functions', () => {
 
   // clean up the user
   it('removeUserFromCache should delete the user', done => {
-    testModule.removeUserFromCache(testUser)
+    testModule.removeUserFromCache(testUser);
     testModule.getJSONItemFromCache(testUser.id).then(result => {
-      expect(result).to.equal(null)
+      expect(result).to.equal(null);
       done();
     })
       .catch(done);
   });
-})
+});

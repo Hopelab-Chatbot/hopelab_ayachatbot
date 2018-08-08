@@ -107,7 +107,7 @@ function callSendAPI(messageData) {
 
           console.error('ERROR: Unable to send message in callSendAPI');
           logger.log('error',
-            `Unable to send message to user, error: ${JSON.stringify(error)}, message: ${JSON.stringify(messageData)}`)
+            `Unable to send message to user, error: ${JSON.stringify(error)}, message: ${JSON.stringify(messageData)}`);
 
           reject(error);
         }
@@ -218,11 +218,11 @@ function sendAllMessagesToMessenger({
         })
         .catch(e => {
           logger.log('error', `Error: updateUser, ${JSON.stringify(e)}`);
-        })
+        });
     })
     .catch(e => {
       logger.log('error', `Promise serial, ${JSON.stringify(e)}`);
-    })
+    });
 }
 
 function userIsStartingStudy(oldUser, newUser) {
@@ -252,6 +252,8 @@ function receivedMessage({
   const prevMessage = getPreviousMessageInHistory(allMessages, user);
 
   logger.log('debug', `receivedMessage: ${JSON.stringify(message)} prevMessage: ${JSON.stringify(prevMessage)}`);
+
+  //FIXME: should move this into the normal flow
   // HERE if we get a Specific 'STOP' message.text, we stop the service
   if (message.text && R.equals(message.text.toUpperCase(),STOP_MESSAGE)) {
     userToUpdate = Object.assign({}, userToUpdate, {
@@ -262,14 +264,14 @@ function receivedMessage({
       senderID,
     }).then(() =>{
       updateUser(userToUpdate).then(() =>
-        logger.log('debug', `user stopped notifications: ${userToUpdate.id}`))
+        logger.log('debug', `user stopped notifications: ${userToUpdate.id}`));
     }).catch(err => {
-      logger.log(err)
-      logger.log('debug', `something went wrong sending stop message to ${userToUpdate.id}`)
-    })
+      logger.log(err);
+      logger.log('debug', `something went wrong sending stop message to ${userToUpdate.id}`);
+    });
     return;
   }
-
+  // If message is 'resume' message, we resume the communication with the bot
   if (message.text && R.equals(message.text.toUpperCase(), RESUME_MESSAGE)) {
     userToUpdate = Object.assign({}, userToUpdate, {
       stopNotifications: false,
@@ -288,6 +290,8 @@ function receivedMessage({
     )
   });
 
+  // here we decide what to do next based on this message
+
   const { action, userActionUpdates } =  getActionForMessage({
     message,
     user: userToUpdate,
@@ -299,8 +303,10 @@ function receivedMessage({
     studyInfo
   });
 
+  // update the user to include that action in it's history
   userToUpdate = Object.assign({}, userToUpdate, userActionUpdates);
 
+  // attach a message/messages related to action
   const { messagesToSend, userUpdates } = getMessagesForAction({
     action,
     conversations: allConversations,
@@ -327,6 +333,8 @@ function receivedMessage({
 
     // TODO: send study survey every 2 weeks for 6 weeks
   }
+
+  // send it
 
   sendAllMessagesToMessenger({
     messages: messagesWithTyping,
@@ -357,6 +365,7 @@ function sendPushMessagesToUsers({
     studyInfo});
 
   // Throttle the number of updates that happend at once.
+  // FIXME: this seems like a bad place to do this. Why not decrease actions created earlier
   const actions = allActions.slice(0, MAX_UPDATE_ACTIONS_ALLOWED);
 
   logger.log("debug", `Begin of push messages to ${actions.length} users`);
@@ -412,7 +421,7 @@ function sendPushMessagesToUsers({
   logger.log("debug", `About to push to ${promisesForSend.length} users`);
   return promiseSerialKeepGoingOnError(promisesForSend)
     .then(usersToUpdate => {
-      logger.log('debug', `Messages sent, now saving updates for ${R.path(['length'],usersToUpdate)} users`)
+      logger.log('debug', `Messages sent, now saving updates for ${R.path(['length'],usersToUpdate)} users`);
       return usersToUpdate;
     })
     .then(usersToUpdate => { // TODO: replace this with function defined below
@@ -435,7 +444,7 @@ function sendPushMessagesToUsers({
         }
         return user;
       }).filter(u => !!u);
-      return updateAllUsers(updates).then(() => usersToUpdate)
+      return updateAllUsers(updates).then(() => usersToUpdate);
     })
     .then(usersToUpdate => {
       if (Array.isArray(usersToUpdate)) {
@@ -444,7 +453,7 @@ function sendPushMessagesToUsers({
             logger.log('info', `User, ${R.path(['error','id'], u)},` +
             ` was not updated successfully, Data: ${JSON.stringify(u)}`);
           } else {
-            logger.log('info', `User, ${u.id}, updated successfully`)
+            logger.log('info', `User, ${u.id}, updated successfully`);
           }
         });
       }
@@ -473,7 +482,7 @@ function updateUsersCheckForErrors(usersToUpdate) {
     }
     return user;
   }).filter(u => !!u);
-  return updateAllUsers(updates).then(() => usersToUpdate)
+  return updateAllUsers(updates).then(() => usersToUpdate);
 }
 
 function hasValidStudyId(user) {
@@ -533,7 +542,7 @@ function updateUserWithStudyMessage(user, studyMessage) {
         message: { text }
       }
     ]
-  }
+  };
 }
 
 function mapUserToUserAndMessagesToSend(user) {

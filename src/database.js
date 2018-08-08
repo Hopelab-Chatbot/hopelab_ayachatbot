@@ -13,6 +13,7 @@ const cacheUtils = require('alien-node-redis-utils')(redisClient);
 
 const {promisify} = require('util');
 const getAsync = promisify(redisClient.get).bind(redisClient);
+const getLAsync = promisify(redisClient.lrange).bind(redisClient);
 
 const {
   DB_USERS,
@@ -33,7 +34,7 @@ const { createNewUser } = require('./users');
 const getJSONItemFromCache = key =>
   getAsync(key)
     .then(item => item ? JSON.parse(item) : null)
-    .catch(null)
+    .catch(null);
 
 const keyFormatUserId = id => `user:${id}`;
 
@@ -55,7 +56,7 @@ const setUserInCache = user => {
       e
     )
   ));
-}
+};
 // NOTE: this is used in testing. DO NOT DELETE
 const removeUserFromCache = user => { // eslint-disable-line no-unused-vars
   cacheUtils.deleteItem(
@@ -66,11 +67,11 @@ const removeUserFromCache = user => { // eslint-disable-line no-unused-vars
       e
     )
   ));
-}
+};
 
-const setAllUsersInCache = usersToUpdate => {
-  return usersToUpdate.forEach(user => setUserInCache(user))
-}
+// const setAllUsersInCache = usersToUpdate => {
+//   return usersToUpdate.forEach(user => setUserInCache(user))
+// }
 
 /**
  * Update User By ID
@@ -85,7 +86,7 @@ const updateUser = user =>
 
 const updateAllUsers = (usersToUpdate = []) =>
   new Promise(resolve => {
-    resolve(setAllUsersInCache(usersToUpdate))
+    resolve(usersToUpdate.forEach(user => setUserInCache(user)));
   });
 
 /**
@@ -98,8 +99,8 @@ function returnNewOrOldUser({ id, user }) {
     const newUser = createNewUser(id);
     redisClient.lrem(DB_USER_LIST, 1, id);
     redisClient.lpush(DB_USER_LIST, id);
-    setUserInCache(newUser)
-    return Promise.resolve(newUser)
+    setUserInCache(newUser);
+    return Promise.resolve(newUser);
   } else {
     return Promise.resolve(user);
   }
@@ -127,10 +128,12 @@ const getUserById = id =>
 
 const getUsers = () =>
   new Promise(resolve => {
-    cacheUtils
-      .getItem(DB_USERS)
-      .then(JSON.parse)
-      .then(resolve)
+    getLAsync(DB_USER_LIST, 0, -1)
+      .then(userIds =>
+        resolve(Promise.all(
+          userIds.map(id => getUserById(id)))
+        )
+      )
       .catch(e => {
         // no item found matching cacheKey
         console.error(
@@ -139,6 +142,7 @@ const getUsers = () =>
         );
       });
   });
+
 
 /**
  * Get Conversations
@@ -270,7 +274,7 @@ const getStudyInfo = () =>
                 `error: getStudyInfo - cacheUtils.getItem(${DB_STUDY})`,
                 e
               );
-            })
+            });
         } else {
           console.error(
             `error: getStudyInfo - cacheUtils.getItem(${DB_STUDY})`,
