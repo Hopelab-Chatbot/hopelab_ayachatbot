@@ -4,14 +4,14 @@ const { DB_MESSAGE_LIST } = constants;
 
 const {promisify} = require('util');
 
-const redis = require('redis')
+const redis = require('redis');
 
 const config = {
   redis: {
     host: '127.0.0.1',
     port: 6379
   }
-}
+};
 
 const redisClient = redis.createClient({
   host: config.redis.host,
@@ -25,5 +25,5 @@ getLAsync(DB_MESSAGE_LIST, 0, 10000).then(msgIds => {
     redisClient.del(`msg:${id}`);
   });
   redisClient.del(DB_MESSAGE_LIST);
-  redisClient.quit()
-}).catch(err => {console.log(err);process.exit(1)})// eslint-disable-line no-console
+  redisClient.quit();
+}).catch(err => {console.log(err);process.exit(1);});// eslint-disable-line no-console

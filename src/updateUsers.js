@@ -9,7 +9,7 @@ const {
   getStudyInfo
 } = require('./database');
 
-const { hasStoppedNotifications } = require('./users')
+const { hasStoppedNotifications } = require('./users');
 
 const { sendPushMessagesToUsers } = require('./facebook');
 
@@ -26,7 +26,6 @@ module.exports = () => {
     getMedia(),
     getStudyInfo()
   ];
-
   logger.log('debug', 'About to execute promise for all redis data, push messages');
   return Promise.all(promises)
     .then(res => {
@@ -51,4 +50,4 @@ module.exports = () => {
         studyInfo
       });
     });
-}
+};

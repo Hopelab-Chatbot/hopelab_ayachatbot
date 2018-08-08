@@ -23,7 +23,7 @@ function createNewUser(id) {
 
 const hasStoppedNotifications = user => (
   R.pathOr(false, ['stopNotifications'], user)
-)
+);
 
 /**
  * Update History with Message
