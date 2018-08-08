@@ -2,6 +2,18 @@ const expect = require('chai').expect;
 const moment = require('moment');
 const rewire = require('rewire');
 const sinon = require('sinon');
+// const config = require('config');
+
+// const redis = require('redis');
+//
+// const redisClient = redis.createClient({
+//   host: config.redis.host,
+//   port: config.redis.port
+// });
+// const {promisify} = require('util');
+//
+// const getAsync = promisify(redisClient.get).bind(redisClient);
+
 
 // const testModule = require('../src/messages');
 const testModule = rewire('../src/database');
@@ -12,6 +24,8 @@ const displayErr =  err => {
   console.log("Error " + err);
 };
 testModule.returnNewOrOldUser = testModule.__get__('returnNewOrOldUser')
+testModule.setUserInCache = testModule.__get__('setUserInCache')
+
 usersModule.createNewUser = usersModule.__get__('createNewUser')
 
 
@@ -23,14 +37,31 @@ const {
 
 const mocks = require('./mock');
 
-describe('should not Receive Update', () => {
-  it('create a new user if that user doesnt already exist', done => {
+describe('database module functions', () => {
+  const testUser = usersModule.createNewUser('123');
+  it('returnNewOrOldUser should create a new user if that user doesnt already exist', done => {
     testModule.returnNewOrOldUser({id: '123', user: null}).then(result => {
-      const newUser = usersModule.createNewUser('123');
-      expect(result.id).to.equal(newUser.id);
-      expect(result.history).to.deep.equal(newUser.history);
-      expect(result.progress).to.deep.equal(newUser.progress);
+      expect(result.id).to.equal(testUser.id);
+      expect(result.history).to.deep.equal(testUser.history);
+      expect(result.progress).to.deep.equal(testUser.progress);
       done();
+    })
+      .catch(done);
+  });
+
+  it('setUserInCache should update the user', done => {
+    testModule.getUserById('123').then(user => {
+      expect(testUser).to.deep.equal(user);
+      const userToUpdate = Object.assign(user, {foo: 'bar'})
+      testModule.setUserInCache(userToUpdate)
+      testModule.getUserById('123').then(result => {
+        expect(result.id).to.equal(testUser.id);
+        expect(result.history).to.deep.equal(testUser.history);
+        expect(result.progress).to.deep.equal(testUser.progress);
+        expect(result.foo).to.deep.equal('bar');
+        done();
+      })
+        .catch(done);
     })
       .catch(done);
   });
