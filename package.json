@@ -34,7 +34,7 @@
   },
   "scripts": {
     "coverage": "istanbul cover _mocha -- test/ -R spec",
-    "lint": "eslint **/*.js",
+    "lint": "eslint .",
     "mock-db": "node ./src/mockDatabaseSetup.js",
     "prettify": "prettier --write './**/*.js'",
     "start": "node index.js",

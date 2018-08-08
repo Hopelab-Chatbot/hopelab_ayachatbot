@@ -7,7 +7,7 @@ jobs:
     steps:
       - checkout
       - run: yarn install
-      - run: eslint .
+      - run: yarn lint
       - run: yarn test
       - run: sudo apt-get update
       - run: sudo apt install -y rsync
