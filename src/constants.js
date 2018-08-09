@@ -76,8 +76,11 @@ const BLOCKS_SEEN = 'blocks-seen';
 const ONE_DAY_IN_MILLISECONDS = 1000 * 60 * 60 * 24;
 const ONE_WEEK_IN_MILLISECONDS = 1000 * 60 * 60 * 24 * 7 * 4;
 const ONE_WEEK_IN_SECONDS =  60 * 60 * 24 * 7;
-const ONE_MONTH_IN_SECONDS =  60 * 60 * 24 * 7 * 4;
 
+const SECONDS_EXPIRE_ARG = 'EX'; // redis argument for setting expiry time. don't modify
+
+const ONE_MONTH_IN_SECONDS =  60 * 60 * 24 * 7 * 4;
+const EXPIRE_USER_AFTER = ONE_MONTH_IN_SECONDS;
 // Special Messages
 const QUICK_REPLY_RETRY_MESSAGE = "Sorry can’t compute! 🤖 Buttons plz. What would you like to do next?";
 const QUICK_REPLY_RETRY_ID = 'quick-reply-retry-id';
@@ -251,5 +254,7 @@ module.exports = {
   DB_USER_LIST,
   DB_MESSAGE_LIST,
   ONE_WEEK_IN_SECONDS,
-  ONE_MONTH_IN_SECONDS
+  ONE_MONTH_IN_SECONDS,
+  EXPIRE_USER_AFTER,
+  SECONDS_EXPIRE_ARG
 };

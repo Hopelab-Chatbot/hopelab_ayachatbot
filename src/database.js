@@ -26,7 +26,7 @@ const {
   DB_MEDIA,
   DB_STUDY,
   ONE_DAY_IN_MILLISECONDS,
-  ONE_MONTH_IN_SECONDS
+  EXPIRE_USER_AFTER
 } = require('./constants');
 
 const { createNewUser } = require('./users');
@@ -42,13 +42,12 @@ const keyFormatUserId = id => `user:${id}`;
  * Set User in Cache
  *
  * @param {Object} user
- * @return {Promise}
 */
 const setUserInCache = user => {
   cacheUtils.setItem(
     keyFormatUserId(user.id),
-    // expires user in ONE month if no more updates are made to it
-    ONE_MONTH_IN_SECONDS,
+    // expires user in ONE month (default) if no changes are made to it
+    EXPIRE_USER_AFTER,
     user
   ).catch(e => (
     console.error(
@@ -309,5 +308,7 @@ module.exports = {
   getStudyInfo,
   setStudyInfo,
   updateUser,
-  updateAllUsers
+  updateAllUsers,
+  keyFormatUserId,
+  setUserInCache
 };

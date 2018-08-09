@@ -1,4 +1,5 @@
 const constants = require('../src/constants');
+const { keyFormatUserId } = require('../src/users');
 
 const { DB_USER_LIST } = constants;
 
@@ -22,7 +23,7 @@ const getLAsync = promisify(redisClient.lrange).bind(redisClient);
 
 getLAsync(DB_USER_LIST, 0, 1000).then(userIds => {
   userIds.forEach(id => {
-    redisClient.del(`user:${id}`);
+    redisClient.del(keyFormatUserId(id));
   });
   redisClient.del(DB_USER_LIST);
   redisClient.quit();
