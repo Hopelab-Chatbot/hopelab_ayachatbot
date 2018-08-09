@@ -1,4 +1,7 @@
-const { logger } = require('./logger');
+const { logger } = require('../logger');
+
+const { setUserAsInvalid } = require('./db_utils');
+const { isReturningBadFBCode } = require('./fb_utils.js');
 
 /**
  * Resolve An Array of Promises Sequentially
@@ -36,7 +39,13 @@ const promiseSerial = funcs =>
       promise.then(result =>
         func().then(
           Array.prototype.concat.bind(result))
-          .catch(err => logger.log('error', `error occurred sending serializing msg: ${JSON.stringify(err)}`))
+          .catch(err => {
+            logger.log('error', `error occurred sending serializing msg: ${JSON.stringify(err)}`);
+            if (err.id && isReturningBadFBCode(err)) {
+              logger.log('debug', `setting user as invalid ${JSON.stringify(err.id)}`);
+              setUserAsInvalid(err.id);
+            }
+          })
       )
         .catch(err => logger.log('error', `error occurred sending serializing msg: ${JSON.stringify(err)}`)),
     Promise.resolve([])
