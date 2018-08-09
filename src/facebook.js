@@ -4,6 +4,8 @@ const R = require('ramda');
 
 const { updateHistory, getPreviousMessageInHistory, hasStoppedNotifications } = require('./users');
 
+const { isReturningBadFBCode } = require('./utils/fb_utils');
+
 const { updateUser, updateAllUsers, setStudyInfo } = require('./database');
 
 const { logger } = require('./logger');
@@ -37,7 +39,7 @@ const {
   createCustomMessageForHistory
 } = require('./messages');
 
-const { promiseSerial, promiseSerialKeepGoingOnError } = require('./utils');
+const { promiseSerial, promiseSerialKeepGoingOnError } = require('./utils/gen_utils');
 
 /**
  * Get User Details
@@ -278,6 +280,9 @@ function receivedMessage({
     });
   }
 
+  // if user is an 'invalidUser' lets stop here as well
+  if (R.path(['invalidUser'], user)) return;
+
   userToUpdate = Object.assign({}, userToUpdate, {
     history: updateHistory(
       {
@@ -426,14 +431,7 @@ function sendPushMessagesToUsers({
     })
     .then(usersToUpdate => { // TODO: replace this with function defined below
       let updates = usersToUpdate.map(user => {
-        if (
-          R.path(['isError'], user) &&
-                  (
-                    R.path(['error', 'fbCode'], user) === FB_ERROR_CODE_INVALID_USER ||
-                    R.path(['error', 'fbCode'], user) === FB_ERROR_CODE_UNAVAILABLE_USER ||
-                    R.path(['error', 'fbCode'], user) === FB_ERROR_CODE_UNAVAILABLE_USER_10
-                  )
-        ) {
+        if (R.path(['isError'], user) && isReturningBadFBCode(user)) {
           let actualUser = users.find(u => R.path(['error', 'id'], user) === u.id);
           if (!actualUser) { return undefined; }
           return Object.assign({}, actualUser, {invalidUser: true});
