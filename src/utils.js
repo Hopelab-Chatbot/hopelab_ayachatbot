@@ -1,3 +1,5 @@
+const { logger } = require('./logger');
+
 /**
  * Resolve An Array of Promises Sequentially
  *
@@ -27,12 +29,16 @@ const promiseSerialKeepGoingOnError = funcs => {
   );
 };
 
+
 const promiseSerial = funcs =>
   funcs.reduce(
     (promise, func) =>
       promise.then(result =>
-        func().then(Array.prototype.concat.bind(result))
-      ),
+        func().then(
+          Array.prototype.concat.bind(result))
+          .catch(err => logger.log('error', `error occurred sending serializing msg: ${JSON.stringify(err)}`))
+      )
+        .catch(err => logger.log('error', `error occurred sending serializing msg: ${JSON.stringify(err)}`)),
     Promise.resolve([])
   );
 
