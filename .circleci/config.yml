@@ -3,6 +3,7 @@ jobs:
   build:
     docker:
       - image: circleci/node:9.5
+      - image: redis
     steps:
       - checkout
       - run: yarn install

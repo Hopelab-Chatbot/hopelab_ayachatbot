@@ -56,6 +56,17 @@ const setUserInCache = user => {
     )
   ));
 }
+// NOTE: this is used in testing. DO NOT DELETE
+const removeUserFromCache = user => { // eslint-disable-line no-unused-vars
+  cacheUtils.deleteItem(
+    keyFormatUserId(user.id)
+  ).catch(e => (
+    console.error(
+      `error: setStudyInfo - cacheUtils.deleteIrem(user:${user.id})`,
+      e
+    )
+  ));
+}
 
 const setAllUsersInCache = usersToUpdate => {
   return usersToUpdate.forEach(user => setUserInCache(user))
