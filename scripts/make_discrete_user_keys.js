@@ -1,6 +1,7 @@
 const constants = require('../src/constants');
+const { keyFormatUserId } = require('../src/users');
 
-const { DB_USER_LIST } = constants;
+const { DB_USER_LIST, EXPIRE_USER_AFTER, SECONDS_EXPIRE_ARG } = constants;
 
 const {promisify} = require('util');
 
@@ -26,7 +27,7 @@ getAsync("users").then(res => {
   json_users.forEach(user => {
     const { id } = user;
     redisClient.lpush(DB_USER_LIST, id);
-    redisClient.set(`user:${id}`, JSON.stringify(user));
+    redisClient.set(keyFormatUserId(id), JSON.stringify(user), SECONDS_EXPIRE_ARG, EXPIRE_USER_AFTER);
   });
   console.log('rewrote ' + length + ' users');// eslint-disable-line no-console
 
