@@ -1,7 +1,7 @@
 const expect = require('chai').expect;
-const moment = require('moment');
+// const moment = require('moment');
 const rewire = require('rewire');
-const sinon = require('sinon');
+// const sinon = require('sinon');
 // const config = require('config');
 
 // const redis = require('redis');
@@ -20,22 +20,22 @@ const testModule = rewire('../src/database');
 const usersModule = rewire('../src/users');
 // const stub = sinon.stub(databaseModule, 'updateUser');
 // stub.returns(true);
-const displayErr =  err => {
-  console.log("Error " + err);
-};
+// const displayErr =  err => {
+//   console.log("Error " + err);
+// };
 testModule.returnNewOrOldUser = testModule.__get__('returnNewOrOldUser')
 testModule.setUserInCache = testModule.__get__('setUserInCache')
 
 usersModule.createNewUser = usersModule.__get__('createNewUser')
 
 
-const {
-  TYPE_ANSWER,
-  TYPE_MESSAGE,
-  STOP_MESSAGE,
-} = require('../src/constants');
+// const {
+//   TYPE_ANSWER,
+//   TYPE_MESSAGE,
+//   STOP_MESSAGE,
+// } = require('../src/constants');
 
-const mocks = require('./mock');
+// const mocks = require('./mock');
 
 describe('database module functions', () => {
   const testUser = usersModule.createNewUser('123');
