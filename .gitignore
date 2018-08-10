@@ -3,3 +3,4 @@ combined.log
 error.log
 environment.sh
 .env
+coverage
