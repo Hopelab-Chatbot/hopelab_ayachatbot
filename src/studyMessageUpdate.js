@@ -1,5 +1,5 @@
 const {
-    getUsers
+  getUsers
 } = require('./database');
 
 const { sendStudyMessageToUsers } = require('./facebook');

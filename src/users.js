@@ -11,17 +11,17 @@ const R = require('ramda');
  * @return {Object}
 */
 function createNewUser(id) {
-    return {
-        id,
-        history: [],
-        progress: {
-            prevMessage: '',
-            nextMessage: ''
-        }
-    };
+  return {
+    id,
+    history: [],
+    progress: {
+      prevMessage: '',
+      nextMessage: ''
+    }
+  };
 }
 
-const hasStoppedNotifications = (user) => (
+const hasStoppedNotifications = user => (
   R.pathOr(false, ['stopNotifications'], user)
 )
 
@@ -33,11 +33,11 @@ const hasStoppedNotifications = (user) => (
  * @return {Array}
 */
 function updateHistory(currentMessage, history) {
-    const historyToUpdate = history.slice();
+  const historyToUpdate = history.slice();
 
-    historyToUpdate.push(Object.assign({}, currentMessage));
+  historyToUpdate.push(Object.assign({}, currentMessage));
 
-    return historyToUpdate;
+  return historyToUpdate;
 }
 
 /**
@@ -48,11 +48,11 @@ function updateHistory(currentMessage, history) {
  * @return {Object}
 */
 function getPreviousMessageInHistory(messages, user) {
-    return (
-        messages.find(
-            m => m.id === (user.history[user.history.length - 1] || {}).id
-        ) || {}
-    );
+  return (
+    messages.find(
+      m => m.id === (user.history[user.history.length - 1] || {}).id
+    ) || {}
+  );
 }
 
 /**
@@ -65,11 +65,11 @@ function getPreviousMessageInHistory(messages, user) {
  * @return {Array}
 */
 function getChildEntitiesSeenByUserForParent(id, user, progressKey, seenKey) {
-    return R.pathOr(
-        [],
-        [seenKey],
-        R.find(R.propEq('id', id))(user[progressKey] || [])
-    );
+  return R.pathOr(
+    [],
+    [seenKey],
+    R.find(R.propEq('id', id))(user[progressKey] || [])
+  );
 }
 
 /**
@@ -83,17 +83,17 @@ function getChildEntitiesSeenByUserForParent(id, user, progressKey, seenKey) {
  * @return {Array}
 */
 function updateProgressForEntity(user, id, seen, progressKey, seenKey) {
-    const progress = user[progressKey] || [];
-    const index = progress.findIndex(cp => cp.id === id);
-    const isUnknownEntity = R.equals(-1);
+  const progress = user[progressKey] || [];
+  const index = progress.findIndex(cp => cp.id === id);
+  const isUnknownEntity = R.equals(-1);
 
-    if (isUnknownEntity(index)) {
-        return progress.concat({ id: id, [seenKey]: seen });
-    }
+  if (isUnknownEntity(index)) {
+    return progress.concat({ id: id, [seenKey]: seen });
+  }
 
-    return progress.map((cp, i) => {
-        return i === index ? Object.assign({}, cp, { [seenKey]: seen }) : cp;
-    });
+  return progress.map((cp, i) => {
+    return i === index ? Object.assign({}, cp, { [seenKey]: seen }) : cp;
+  });
 }
 
 /**
@@ -103,7 +103,7 @@ function updateProgressForEntity(user, id, seen, progressKey, seenKey) {
  * @return {Boolean}
 */
 function isNextMessageBlock(message) {
-    return !!message.next && message.next.type === TYPE_BLOCK;
+  return !!message.next && message.next.type === TYPE_BLOCK;
 }
 
 /**
@@ -114,16 +114,16 @@ function isNextMessageBlock(message) {
  * @return {Object}
 */
 function popScope(user, scopeId) {
-    return R.over(R.lensProp(scopeId), R.init, user);
+  return R.over(R.lensProp(scopeId), R.init, user);
 }
 
 module.exports = {
-    createNewUser,
-    updateHistory,
-    getPreviousMessageInHistory,
-    getChildEntitiesSeenByUserForParent,
-    isNextMessageBlock,
-    updateProgressForEntity,
-    popScope,
-    hasStoppedNotifications,
+  createNewUser,
+  updateHistory,
+  getPreviousMessageInHistory,
+  getChildEntitiesSeenByUserForParent,
+  isNextMessageBlock,
+  updateProgressForEntity,
+  popScope,
+  hasStoppedNotifications,
 };
