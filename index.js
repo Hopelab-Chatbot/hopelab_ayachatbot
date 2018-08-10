@@ -11,5 +11,5 @@ require('./src/pushMessageQueue').start();
 require('./src/studyMessageQueue').start();
 
 app.listen(REST_PORT, () => {
-    console.log(`Rest service ready on port ${REST_PORT}`);
+  console.log(`Rest service ready on port ${REST_PORT}`); // eslint-disable-line no-console
 });

@@ -16,16 +16,16 @@ function start() {
   );
 
   studyMessageQueue.process(function(job, done) {
-    console.log("processing the study message queue", Date.now());
+    logger.log("processing the study message queue", Date.now());
     studyMessageUpdate().then(() => {
-      console.log("Done processing study message queue", Date.now());
+      logger.log("Done processing study message queue", Date.now());
       done();
     })
-    .catch(e => {
-      console.log(`Study message update failed, ${JSON.stringify(e)}`, Date.now());
-      logger.log('error', `Study message update failed, ${JSON.stringify(e)}`);
-      done();
-    });
+      .catch(e => {
+        logger.log(`Study message update failed, ${JSON.stringify(e)}`, Date.now());
+        logger.log('error', `Study message update failed, ${JSON.stringify(e)}`);
+        done();
+      });
   });
 
   studyMessageQueue.add({}, {

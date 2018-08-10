@@ -1,27 +1,27 @@
 const expect = require('chai').expect;
 const testModule = require('../src/users');
-const { TYPE_BLOCK, TYPE_MESSAGE } = require('../src/constants');
+// const { TYPE_BLOCK, TYPE_MESSAGE } = require('../src/constants');
 
 describe('Users Module', () => {
-    describe('createNewUser', () => {
-        it('returns a default user object for given id', () => {
-            const newUser = testModule.createNewUser('12345');
+  describe('createNewUser', () => {
+    it('returns a default user object for given id', () => {
+      const newUser = testModule.createNewUser('12345');
 
-            expect(newUser.id).to.equal('12345');
-        });
+      expect(newUser.id).to.equal('12345');
     });
+  });
 
-    describe('updateBlockScope', () => {
-        it('removes last element if it is marked isEnd', () => {
-            // const blocks = [{}, {}, {}];
-            // let blockScope;
-            //
-            // blockScope = testModule.updateBlockScope({ isEnd: true }, blocks);
-            // expect(blockScope.length).to.equal(2);
-            //
-            // blockScope = testModule.updateBlockScope({ isEnd: false }, blocks);
-            // expect(blockScope.length).to.equal(3);
-        });
+  describe('updateBlockScope', () => {
+    it('removes last element if it is marked isEnd', () => {
+      // const blocks = [{}, {}, {}];
+      // let blockScope;
+      //
+      // blockScope = testModule.updateBlockScope({ isEnd: true }, blocks);
+      // expect(blockScope.length).to.equal(2);
+      //
+      // blockScope = testModule.updateBlockScope({ isEnd: false }, blocks);
+      // expect(blockScope.length).to.equal(3);
+    });
 
     //     it('pushes a new block scope in if current message points to a next block', () => {
     //         const blocks = [{}, {}, {}];
@@ -82,5 +82,5 @@ describe('Users Module', () => {
     //
     //         expect(testModule.isNextMessageBlock({ next: {} })).to.be.false;
     //     });
-    });
+  });
 });

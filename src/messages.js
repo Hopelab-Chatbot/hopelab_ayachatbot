@@ -1,52 +1,49 @@
 const {
-    updateHistory,
-    getChildEntitiesSeenByUserForParent,
-    updateProgressForEntity,
-    popScope,
-    hasStoppedNotifications
+  updateHistory,
+  getChildEntitiesSeenByUserForParent,
+  updateProgressForEntity,
+  popScope,
+  hasStoppedNotifications
 } = require('./users');
 const {
-    TYPE_COLLECTION,
-    TYPE_BLOCK,
-    TYPE_MESSAGE,
-    TYPE_IMAGE,
-    TYPE_VIDEO,
-    TYPE_QUESTION,
-    TYPE_ANSWER,
-    TYPE_QUESTION_WITH_REPLIES,
-    MESSAGE_TYPE_TEXT,
-    MESSAGE_TYPE_TRANSITION,
-    ACTION_RETRY_QUICK_REPLY,
-    ACTION_COME_BACK_LATER,
-    ACTION_NO_UPDATE_NEEDED,
-    ACTION_CRISIS_REPONSE,
-    ACTION_QUICK_REPLY_RETRY_NEXT_MESSAGE,
-    ACTION_REPLAY_PREVIOUS_MESSAGE,
-    CRISIS_KEYWORDS,
-    END_OF_CONVERSATION_ID,
-    QUICK_REPLY_RETRY_MESSAGE,
-    QUICK_REPLY_RETRY_BUTTONS,
-    QUICK_REPLY_RETRY_ID,
-    CRISIS_RESPONSE_MESSAGE_FOR_BUTTONS,
-    SUPPORT_MESSAGE,
-    END_OF_CONVERSATION_MESSAGE,
-    UPDATE_USER_MESSAGE,
-    CRISIS_RESPONSE_MESSAGE,
-    LOGIC_SEQUENTIAL,
-    LOGIC_RANDOM,
-    INTRO_CONVERSATION_ID,
-    INTRO_BLOCK_ID,
-    COLLECTION_PROGRESS,
-    SERIES_PROGRESS,
-    SERIES_SEEN,
-    BLOCKS_SEEN,
-    COLLECTION_SCOPE,
-    CUT_OFF_HOUR_FOR_NEW_MESSAGES,
-    NUMBER_OF_UPDATE_MESSAGES_ALLOWED,
-    MINUTES_OF_INACTIVITY_BEFORE_UPDATE_MESSAGE,
-    STUDY_ID_LIST,
-    STUDY_ID_NO_OP,
-    STUDY_MESSAGES
+  TYPE_COLLECTION,
+  TYPE_BLOCK,
+  TYPE_MESSAGE,
+  TYPE_IMAGE,
+  TYPE_VIDEO,
+  TYPE_QUESTION,
+  TYPE_ANSWER,
+  TYPE_QUESTION_WITH_REPLIES,
+  MESSAGE_TYPE_TEXT,
+  MESSAGE_TYPE_TRANSITION,
+  ACTION_RETRY_QUICK_REPLY,
+  ACTION_COME_BACK_LATER,
+  ACTION_NO_UPDATE_NEEDED,
+  ACTION_CRISIS_REPONSE,
+  ACTION_QUICK_REPLY_RETRY_NEXT_MESSAGE,
+  ACTION_REPLAY_PREVIOUS_MESSAGE,
+  CRISIS_KEYWORDS,
+  END_OF_CONVERSATION_ID,
+  QUICK_REPLY_RETRY_MESSAGE,
+  QUICK_REPLY_RETRY_BUTTONS,
+  QUICK_REPLY_RETRY_ID,
+  END_OF_CONVERSATION_MESSAGE,
+  CRISIS_RESPONSE_MESSAGE,
+  LOGIC_SEQUENTIAL,
+  LOGIC_RANDOM,
+  INTRO_CONVERSATION_ID,
+  INTRO_BLOCK_ID,
+  COLLECTION_PROGRESS,
+  SERIES_PROGRESS,
+  SERIES_SEEN,
+  BLOCKS_SEEN,
+  COLLECTION_SCOPE,
+  CUT_OFF_HOUR_FOR_NEW_MESSAGES,
+  NUMBER_OF_UPDATE_MESSAGES_ALLOWED,
+  MINUTES_OF_INACTIVITY_BEFORE_UPDATE_MESSAGE,
+  STUDY_ID_LIST,
+  STUDY_ID_NO_OP,
+  STUDY_MESSAGES
 } = require('./constants');
 
 const R = require('ramda');
@@ -63,19 +60,19 @@ const moment = require('moment');
  * @return {Object}
 */
 function makePlatformMessagePayload(action, messages) {
-    const message = messages.find(m => m.id === action);
+  const message = messages.find(m => m.id === action);
 
-    if (message && message.messageType === TYPE_QUESTION_WITH_REPLIES &&
+  if (message && message.messageType === TYPE_QUESTION_WITH_REPLIES &&
         message.quick_replies) {
-        let quick_replies = message.quick_replies.map(qr => (
-          qr.payload === undefined ?
-            Object.assign({}, qr, {payload: "{}"}) :
-            qr
-        ));
-        return { text: message.text, quick_replies };
-    }
+    let quick_replies = message.quick_replies.map(qr => (
+      qr.payload === undefined ?
+        Object.assign({}, qr, {payload: "{}"}) :
+        qr
+    ));
+    return { text: message.text, quick_replies };
+  }
 
-    return { text: message.text };
+  return { text: message.text };
 }
 
 function userIsStartingStudy(oldUser, newUser) {
@@ -107,35 +104,35 @@ function getMediaAttachmentId(type, url, media) {
  * @return {Object}
 */
 function makePlatformMediaMessagePayload(type, url, media) {
-    const attachment_id = getMediaAttachmentId(type, url, media);
+  const attachment_id = getMediaAttachmentId(type, url, media);
 
-    if (attachment_id) {
-      return {
-        attachment: {
-          type,
-          payload: {
-            attachment_id
-          }
+  if (attachment_id) {
+    return {
+      attachment: {
+        type,
+        payload: {
+          attachment_id
         }
       }
-    } else if (type === 'image' || !isYouTubeVideo(url)) {
-      return  {
-        attachment: {
-          type,
-          payload: { url }
-        }
-      };
-    } else {
-      return {
-        attachment: {
-          type: 'template',
-          payload: {
-              template_type: 'open_graph',
-              elements: [{ url }]
-          }
-        }
-      };
     }
+  } else if (type === 'image' || !isYouTubeVideo(url)) {
+    return  {
+      attachment: {
+        type,
+        payload: { url }
+      }
+    };
+  } else {
+    return {
+      attachment: {
+        type: 'template',
+        payload: {
+          template_type: 'open_graph',
+          elements: [{ url }]
+        }
+      }
+    };
+  }
 }
 
 
@@ -146,19 +143,19 @@ function makePlatformMediaMessagePayload(type, url, media) {
  * @return {Object}
 */
 function getLastSentMessageInHistory(user, ignoreQuickReplyRetryMessages=true) {
-    if (!(R.path(['history', 'length'], user))) { return undefined; }
+  if (!(R.path(['history', 'length'], user))) { return undefined; }
 
-    for (let i = user.history.length - 1; i >= 0; i--) {
-        if (
-          user.history[i].type !== TYPE_ANSWER &&
+  for (let i = user.history.length - 1; i >= 0; i--) {
+    if (
+      user.history[i].type !== TYPE_ANSWER &&
           !user.history[i].isCrisisMessage &&
           !(user.history[i].isQuickReplyRetry && ignoreQuickReplyRetryMessages)
-        ) {
-          return user.history[i];
-        }
+    ) {
+      return user.history[i];
     }
+  }
 
-    return undefined;
+  return undefined;
 }
 
 
@@ -169,7 +166,7 @@ function getLastSentMessageInHistory(user, ignoreQuickReplyRetryMessages=true) {
  * @return {Boolean}
 */
 function conversationIsLiveAndNotIntro(conversation) {
-    return conversation.isLive && conversation.id !== INTRO_CONVERSATION_ID;
+  return conversation.isLive && conversation.id !== INTRO_CONVERSATION_ID;
 }
 
 
@@ -194,7 +191,7 @@ function getRandomConversationTrack(conversations) {
  * @return {Boolean}
 */
 function assignedConversationTrackIsDeleted(conversation, conversations) {
-    return conversations.indexOf(conversation) === -1;
+  return conversations.indexOf(conversation) === -1;
 }
 
 function generateUniqueStudyId(studyInfo, studyIdList) {
@@ -218,58 +215,58 @@ function generateUniqueStudyId(studyInfo, studyIdList) {
  * @return {Object}
 */
 function newConversationTrack(conversations, messages, collections, studyInfo, user) {
-    let conversationTrack;
+  let conversationTrack;
 
-    let userUpdates = Object.assign({}, user);
+  let userUpdates = Object.assign({}, user);
 
-    if (!user.introConversationSeen) {
-        conversationTrack = INTRO_CONVERSATION_ID;
-        userUpdates.introConversationSeen = true;
-    } else if (
-        !userUpdates.assignedConversationTrack ||
+  if (!user.introConversationSeen) {
+    conversationTrack = INTRO_CONVERSATION_ID;
+    userUpdates.introConversationSeen = true;
+  } else if (
+    !userUpdates.assignedConversationTrack ||
         assignedConversationTrackIsDeleted(
-            userUpdates.assignedConversationTrack,
-            conversations
+          userUpdates.assignedConversationTrack,
+          conversations
         )
-    ) {
-        userUpdates.assignedConversationTrack = getRandomConversationTrack(
-            conversations
-        );
-        conversationTrack = userUpdates.assignedConversationTrack;
-    } else {
-        conversationTrack = userUpdates.assignedConversationTrack;
-    }
+  ) {
+    userUpdates.assignedConversationTrack = getRandomConversationTrack(
+      conversations
+    );
+    conversationTrack = userUpdates.assignedConversationTrack;
+  } else {
+    conversationTrack = userUpdates.assignedConversationTrack;
+  }
 
-    const next = messages
-        .concat(collections)
-        .find(
-            R.both(
-                R.pathEq(['parent', 'id'], conversationTrack),
-                R.propEq('start', true)
-            )
-        );
+  const next = messages
+    .concat(collections)
+    .find(
+      R.both(
+        R.pathEq(['parent', 'id'], conversationTrack),
+        R.propEq('start', true)
+      )
+    );
 
+  if (
+    user.assignedConversationTrack !== userUpdates.assignedConversationTrack
+  ) {
+    userUpdates.conversationStartTimestamp = Date.now();
+    const newConversation = conversations.find(c => (
+      c.id === userUpdates.assignedConversationTrack
+    ));
     if (
-      user.assignedConversationTrack !== userUpdates.assignedConversationTrack
-    ) {
-      userUpdates.conversationStartTimestamp = Date.now();
-      const newConversation = conversations.find(c => (
-        c.id === userUpdates.assignedConversationTrack
-      ));
-      if (
-        !Number.isFinite(Number(userUpdates.studyId)) &&
+      !Number.isFinite(Number(userUpdates.studyId)) &&
         newConversation &&
         newConversation.isStudy
-      ) {
-        userUpdates.studyId = generateUniqueStudyId(studyInfo, STUDY_ID_LIST);
-        userUpdates.studyStartTime = Date.now();
-      }
+    ) {
+      userUpdates.studyId = generateUniqueStudyId(studyInfo, STUDY_ID_LIST);
+      userUpdates.studyStartTime = Date.now();
     }
-    return {
-        action: { type: next.type, id: next.id },
-        block: INTRO_BLOCK_ID,
-        user: userUpdates
-    };
+  }
+  return {
+    action: { type: next.type, id: next.id },
+    block: INTRO_BLOCK_ID,
+    user: userUpdates
+  };
 }
 
 function findLastUserAnswer(user) {
@@ -318,25 +315,25 @@ function hasUpdateSinceInactivity(user, lastAnswer, minutesOfInactivityBeforeUpd
 }
 
 function atEndOfConversationAndShouldRestart(user, timeNow, cutOffHour, cutOffMinute=0) {
-    const lastMessage = getLastSentMessageInHistory(user);
+  const lastMessage = getLastSentMessageInHistory(user);
 
-    if (R.path(['next', 'id'], lastMessage) !== END_OF_CONVERSATION_ID) {
-        return false;
-    }
-    const lastRealMessage = findLastNonConversationEndMessage(user);
-    if (lastRealMessage) {
-        let cutOffTime = moment().startOf('day').hour(cutOffHour).minute(cutOffMinute).unix();
-        if (timeNow < cutOffTime) {
-            cutOffTime = moment().subtract(1, 'day').startOf('day').hour(cutOffHour).minute(cutOffMinute).unix();
-        }
-
-        return (
-          (timeNow > cutOffTime) &&
-          (cutOffTime * 1000 > lastRealMessage.timestamp)
-        );
-    }
-
+  if (R.path(['next', 'id'], lastMessage) !== END_OF_CONVERSATION_ID) {
     return false;
+  }
+  const lastRealMessage = findLastNonConversationEndMessage(user);
+  if (lastRealMessage) {
+    let cutOffTime = moment().startOf('day').hour(cutOffHour).minute(cutOffMinute).unix();
+    if (timeNow < cutOffTime) {
+      cutOffTime = moment().subtract(1, 'day').startOf('day').hour(cutOffHour).minute(cutOffMinute).unix();
+    }
+
+    return (
+      (timeNow > cutOffTime) &&
+          (cutOffTime * 1000 > lastRealMessage.timestamp)
+    );
+  }
+
+  return false;
 
 }
 
@@ -351,37 +348,37 @@ function hasExceededMaxUpdates(user, maxUpdates) {
 }
 
 function shouldReceiveUpdate(user, currentTimeMs) {
-    if (!Array.isArray(R.path(['history'], user))) {
-      return false;
-    }
+  if (!Array.isArray(R.path(['history'], user))) {
+    return false;
+  }
 
-    if (hasStoppedNotifications(user)){
-      return false;
-    }
+  if (hasStoppedNotifications(user)){
+    return false;
+  }
 
-    const lastAnswer = findLastUserAnswer(user);
+  const lastAnswer = findLastUserAnswer(user);
 
-    if (!lastAnswer) {
-      return false;
-    }
+  if (!lastAnswer) {
+    return false;
+  }
 
-    if (hasUpdateSinceInactivity(user, lastAnswer, MINUTES_OF_INACTIVITY_BEFORE_UPDATE_MESSAGE)) {
-      return false;
-    }
+  if (hasUpdateSinceInactivity(user, lastAnswer, MINUTES_OF_INACTIVITY_BEFORE_UPDATE_MESSAGE)) {
+    return false;
+  }
 
-    if (hasExceededMaxUpdates(user, NUMBER_OF_UPDATE_MESSAGES_ALLOWED)) {
-      return false;
-    }
+  if (hasExceededMaxUpdates(user, NUMBER_OF_UPDATE_MESSAGES_ALLOWED)) {
+    return false;
+  }
 
-    if (R.path(['invalidUser'], user) === true) {
-      return false;
-    }
+  if (R.path(['invalidUser'], user) === true) {
+    return false;
+  }
 
-    let minutesSinceLastActivity = Math.floor(
-      (currentTimeMs - lastAnswer.timestamp) / 1000 / 60
-    );
+  let minutesSinceLastActivity = Math.floor(
+    (currentTimeMs - lastAnswer.timestamp) / 1000 / 60
+  );
 
-    return minutesSinceLastActivity > MINUTES_OF_INACTIVITY_BEFORE_UPDATE_MESSAGE;
+  return minutesSinceLastActivity > MINUTES_OF_INACTIVITY_BEFORE_UPDATE_MESSAGE;
 }
 
 function getUserUpdateAction({
@@ -402,11 +399,11 @@ function getUserUpdateAction({
     }
 
     const newTrack = newConversationTrack(
-        convoOptions,
-        messages,
-        collections,
-        studyInfo,
-        user
+      convoOptions,
+      messages,
+      collections,
+      studyInfo,
+      user
     );
 
 
@@ -433,9 +430,6 @@ function getUpdateActionForUsers({
   allConversations,
   allCollections,
   allMessages,
-  allSeries,
-  allBlocks,
-  media,
   studyInfo
 }) {
   return users.reduce((acc, user) => {
@@ -448,7 +442,7 @@ function getUpdateActionForUsers({
     });
     if (action.type !== ACTION_NO_UPDATE_NEEDED) {
       acc.push({action, userActionUpdates});
-    };
+    }
     return acc;
   }, []);
 }
@@ -464,7 +458,7 @@ function isCrisisMessage(message, crisisKeywords) {
 
   const textWithoutPunctuation = message.text
     .toLowerCase()
-    .replace(/[.,\/#\?!$%\^&\*;:{}=\-_`~()]/g, "");
+    .replace(/[.,\/#\?!$%\^&\*;:{}=\-_`~()]/g, ""); //eslint-disable-line no-useless-escape
 
   const textArray = textWithoutPunctuation.match(/\S+/g) || [];
 
@@ -486,7 +480,7 @@ function getButtonForQuickReplyRetry(message, quickReplyRetryOptions) {
         R.path(['quick_reply', 'payload'], message)
       );
       return quickReplyRetryOptions.find(opt => opt.id === payload.id);
-    } catch(e) { }
+    } catch(e) { /*empty*/ }
   }
 
   return false;
@@ -505,186 +499,186 @@ function getButtonForQuickReplyRetry(message, quickReplyRetryOptions) {
  * @return {Object}
 */
 function getActionForMessage({
-    message,
-    user,
-    blocks,
-    series,
-    messages,
-    collections,
-    conversations,
-    studyInfo
+  message,
+  user,
+  blocks,
+  series,
+  messages,
+  collections,
+  conversations,
+  studyInfo
 }) {
-    let userActionUpdates = user;
-    const lastMessage = getLastSentMessageInHistory(user);
+  let userActionUpdates = user;
+  const lastMessage = getLastSentMessageInHistory(user);
 
-    if (isCrisisMessage(message, CRISIS_KEYWORDS)) {
-      return {
-        action: { type: ACTION_CRISIS_REPONSE },
-        userActionUpdates
-      };
-    }
+  if (isCrisisMessage(message, CRISIS_KEYWORDS)) {
+    return {
+      action: { type: ACTION_CRISIS_REPONSE },
+      userActionUpdates
+    };
+  }
 
-    let lastMessageWithQucikReply = getLastSentMessageInHistory(user, false);
-    const quickReplyButton = QUICK_REPLY_RETRY_BUTTONS.find(b => (
-      b.id === R.path(['id'], lastMessageWithQucikReply)
-    ));
+  let lastMessageWithQucikReply = getLastSentMessageInHistory(user, false);
+  const quickReplyButton = QUICK_REPLY_RETRY_BUTTONS.find(b => (
+    b.id === R.path(['id'], lastMessageWithQucikReply)
+  ));
 
-    if (
-      R.path(['isQuickReplyRetry'], lastMessageWithQucikReply) &&
+  if (
+    R.path(['isQuickReplyRetry'], lastMessageWithQucikReply) &&
       R.path(['text'], quickReplyButton)
-    ) {
-      return {
-        action: { type: ACTION_REPLAY_PREVIOUS_MESSAGE },
-        userActionUpdates
-      };
-    }
+  ) {
+    return {
+      action: { type: ACTION_REPLAY_PREVIOUS_MESSAGE },
+      userActionUpdates
+    };
+  }
 
-    if (
-      R.path(['next', 'id'], lastMessage) === END_OF_CONVERSATION_ID &&
+  if (
+    R.path(['next', 'id'], lastMessage) === END_OF_CONVERSATION_ID &&
       R.path(['messageType'], lastMessage) !== TYPE_QUESTION_WITH_REPLIES &&
       atEndOfConversationAndShouldRestart(user, moment().unix(), CUT_OFF_HOUR_FOR_NEW_MESSAGES)
-    ) {
-      let convoOptions = conversations.filter(conversationIsLiveAndNotIntro);
-      if (R.path(['assignedConversationTrack'], user)) {
-        convoOptions = conversations.filter(
-          c => c.id === user.assignedConversationTrack
-        );
-      }
-      const newTrack = newConversationTrack(
-          convoOptions,
-          messages,
-          collections,
-          studyInfo,
-          user
+  ) {
+    let convoOptions = conversations.filter(conversationIsLiveAndNotIntro);
+    if (R.path(['assignedConversationTrack'], user)) {
+      convoOptions = conversations.filter(
+        c => c.id === user.assignedConversationTrack
       );
-
-      let action = newTrack.action;
-
-      userActionUpdates = Object.assign({}, userActionUpdates, newTrack.user);
-
-      return {
-        action,
-        userActionUpdates
-      };
     }
-
-    if (
-      R.path(['next', 'id'], lastMessage) === END_OF_CONVERSATION_ID &&
-      R.path(['messageType'], lastMessage) !== TYPE_QUESTION_WITH_REPLIES
-    ) {
-      return {
-        action: { type: ACTION_COME_BACK_LATER },
-        userActionUpdates
-      };
-    }
-
-    let quickReplyRetryButton = getButtonForQuickReplyRetry(
-      message,
-      QUICK_REPLY_RETRY_BUTTONS
+    const newTrack = newConversationTrack(
+      convoOptions,
+      messages,
+      collections,
+      studyInfo,
+      user
     );
 
-    if (!!quickReplyRetryButton) {
-      return {
-        action: {
-          type: ACTION_QUICK_REPLY_RETRY_NEXT_MESSAGE,
-          quickReplyRetryId: quickReplyRetryButton.id
-        },
-        userActionUpdates
-      }
-    }
+    let action = newTrack.action;
 
-    if (
-      R.path(['next', 'id'], lastMessage) &&
+    userActionUpdates = Object.assign({}, userActionUpdates, newTrack.user);
+
+    return {
+      action,
+      userActionUpdates
+    };
+  }
+
+  if (
+    R.path(['next', 'id'], lastMessage) === END_OF_CONVERSATION_ID &&
+      R.path(['messageType'], lastMessage) !== TYPE_QUESTION_WITH_REPLIES
+  ) {
+    return {
+      action: { type: ACTION_COME_BACK_LATER },
+      userActionUpdates
+    };
+  }
+
+  let quickReplyRetryButton = getButtonForQuickReplyRetry(
+    message,
+    QUICK_REPLY_RETRY_BUTTONS
+  );
+
+  if (quickReplyRetryButton) {
+    return {
+      action: {
+        type: ACTION_QUICK_REPLY_RETRY_NEXT_MESSAGE,
+        quickReplyRetryId: quickReplyRetryButton.id
+      },
+      userActionUpdates
+    }
+  }
+
+  if (
+    R.path(['next', 'id'], lastMessage) &&
       lastMessage.messageType !== TYPE_QUESTION_WITH_REPLIES &&
       (!doesMessageStillExit(lastMessage, messages) ||
        !doesMessageStillExit(lastMessage.next, messages))
-    ) {
-      const newTrack = newConversationTrack(
-          conversations.filter(conversationIsLiveAndNotIntro),
-          messages,
-          collections,
-          studyInfo,
-          user
-      );
+  ) {
+    const newTrack = newConversationTrack(
+      conversations.filter(conversationIsLiveAndNotIntro),
+      messages,
+      collections,
+      studyInfo,
+      user
+    );
 
-      let action = newTrack.action;
+    let action = newTrack.action;
 
-      userActionUpdates = Object.assign({}, userActionUpdates, newTrack.user);
+    userActionUpdates = Object.assign({}, userActionUpdates, newTrack.user);
 
+    return {
+      action,
+      userActionUpdates
+    };
+  }
+
+  if (
+    R.path(['messageType'], lastMessage) === TYPE_QUESTION_WITH_REPLIES &&
+      !!message.quick_reply
+  ) {
+    let action = JSON.parse(message.quick_reply.payload);
+    if (action.id === END_OF_CONVERSATION_ID) {
+      return {
+        action: {type: ACTION_COME_BACK_LATER},
+        userActionUpdates
+      };
+    }
+
+    if (action.id) {
       return {
         action,
         userActionUpdates
       };
     }
+  }
 
-    if (
-      R.path(['messageType'], lastMessage) === TYPE_QUESTION_WITH_REPLIES &&
-      !!message.quick_reply
-    ) {
-      let action = JSON.parse(message.quick_reply.payload);
-      if (action.id === END_OF_CONVERSATION_ID) {
-        return {
-          action: {type: ACTION_COME_BACK_LATER},
-          userActionUpdates
-        };
-      }
-
-      if (!!action.id) {
-        return {
-            action,
-            userActionUpdates
-        };
-      }
-    }
-
-    if (
-      R.path(['messageType'], lastMessage) === TYPE_QUESTION_WITH_REPLIES &&
+  if (
+    R.path(['messageType'], lastMessage) === TYPE_QUESTION_WITH_REPLIES &&
       !message.quick_reply
-    ) {
-        return {
-          action: {type: ACTION_RETRY_QUICK_REPLY},
-          userActionUpdates
-        };
-    }
+  ) {
+    return {
+      action: {type: ACTION_RETRY_QUICK_REPLY},
+      userActionUpdates
+    };
+  }
 
-    let action;
+  let action;
 
 
-    if (
-        lastMessage &&
+  if (
+    lastMessage &&
         R.path(['next'], lastMessage)
-    ) {
-        action = { type: lastMessage.next.type, id: lastMessage.next.id };
-    } else if (user[COLLECTION_SCOPE] && user[COLLECTION_SCOPE].length) {
-        let nextMessage = getNextMessageForCollection(
-            R.last(user[COLLECTION_SCOPE]),
-            collections,
-            series,
-            blocks,
-            messages,
-            userActionUpdates
-        );
+  ) {
+    action = { type: lastMessage.next.type, id: lastMessage.next.id };
+  } else if (user[COLLECTION_SCOPE] && user[COLLECTION_SCOPE].length) {
+    let nextMessage = getNextMessageForCollection(
+      R.last(user[COLLECTION_SCOPE]),
+      collections,
+      series,
+      blocks,
+      messages,
+      userActionUpdates
+    );
 
-        action = {
-            type: nextMessage.message.type,
-            id: nextMessage.message.id
-        };
-        userActionUpdates = nextMessage.user;
-    } else {
-        const newTrack = newConversationTrack(
-            conversations.filter(conversationIsLiveAndNotIntro),
-            messages,
-            collections,
-            studyInfo,
-            user
-        );
+    action = {
+      type: nextMessage.message.type,
+      id: nextMessage.message.id
+    };
+    userActionUpdates = nextMessage.user;
+  } else {
+    const newTrack = newConversationTrack(
+      conversations.filter(conversationIsLiveAndNotIntro),
+      messages,
+      collections,
+      studyInfo,
+      user
+    );
 
-        action = newTrack.action;
+    action = newTrack.action;
 
-        userActionUpdates = Object.assign({}, userActionUpdates, newTrack.user);
-    }
+    userActionUpdates = Object.assign({}, userActionUpdates, newTrack.user);
+  }
 
-    return { action, userActionUpdates };
+  return { action, userActionUpdates };
 }
 
 /**
@@ -695,7 +689,7 @@ function getActionForMessage({
  * @return {Array}
 */
 function getAllPublicChildren(id, children) {
-    return children.filter(s => !s.private && s.parent.id === id);
+  return children.filter(s => !s.private && s.parent.id === id);
 }
 
 /**
@@ -706,20 +700,20 @@ function getAllPublicChildren(id, children) {
  * @return {Object}
 */
 function getNextRandomEntityFor(totalEntities, seenEntities) {
-    if (!totalEntities.length) {
-        return { next: {}, seenEntities: [] };
-    }
+  if (!totalEntities.length) {
+    return { next: {}, seenEntities: [] };
+  }
 
-    if ((totalEntities.length === seenEntities.length) || (seenEntities.length > totalEntities.length)) {
-        const next =
+  if ((totalEntities.length === seenEntities.length) || (seenEntities.length > totalEntities.length)) {
+    const next =
             totalEntities[Math.floor(totalEntities.length * Math.random())];
-        return { next, seenEntities: [next.id] };
-    }
+    return { next, seenEntities: [next.id] };
+  }
 
-    const left = totalEntities.filter(t => seenEntities.indexOf(t.id) === -1);
-    const next = left[Math.floor(left.length * Math.random())];
+  const left = totalEntities.filter(t => seenEntities.indexOf(t.id) === -1);
+  const next = left[Math.floor(left.length * Math.random())];
 
-    return { next, seenEntities: seenEntities.concat(next.id) };
+  return { next, seenEntities: seenEntities.concat(next.id) };
 }
 
 /**
@@ -730,27 +724,27 @@ function getNextRandomEntityFor(totalEntities, seenEntities) {
  * @return {Object}
 */
 function getNextSequentialEntityFor(totalEntities, seenEntities) {
-    if (!totalEntities.length) {
-        return { next: {}, seenEntities: [] };
-    }
+  if (!totalEntities.length) {
+    return { next: {}, seenEntities: [] };
+  }
 
-    const first = totalEntities[0] || {};
+  const first = totalEntities[0] || {};
 
-    if ((totalEntities.length === seenEntities.length) || (seenEntities.length > totalEntities.length)) {
-        return { next: first, seenEntities: [first.id] };
-    }
+  if ((totalEntities.length === seenEntities.length) || (seenEntities.length > totalEntities.length)) {
+    return { next: first, seenEntities: [first.id] };
+  }
 
-    const lastSeen = totalEntities.findIndex(
-        entity => entity.id === R.nth(0, R.takeLast(1, seenEntities))
-    );
+  const lastSeen = totalEntities.findIndex(
+    entity => entity.id === R.nth(0, R.takeLast(1, seenEntities))
+  );
 
-    if (lastSeen === totalEntities.length - 1) {
-        return { next: first, seenEntities: [first.id] };
-    }
+  if (lastSeen === totalEntities.length - 1) {
+    return { next: first, seenEntities: [first.id] };
+  }
 
-    const next = totalEntities[lastSeen + 1];
+  const next = totalEntities[lastSeen + 1];
 
-    return { next, seenEntities: seenEntities.concat(next.id) };
+  return { next, seenEntities: seenEntities.concat(next.id) };
 }
 
 /**
@@ -762,24 +756,24 @@ function getNextSequentialEntityFor(totalEntities, seenEntities) {
  * @return {Object}
 */
 function getNextSeriesForCollection(collection, series, user) {
-    const collectionSeries = getAllPublicChildren(collection.id, series);
+  const collectionSeries = getAllPublicChildren(collection.id, series);
 
-    const seriesSeen = getChildEntitiesSeenByUserForParent(
-        collection.id,
-        user,
-        COLLECTION_PROGRESS,
-        SERIES_SEEN
-    );
+  const seriesSeen = getChildEntitiesSeenByUserForParent(
+    collection.id,
+    user,
+    COLLECTION_PROGRESS,
+    SERIES_SEEN
+  );
 
-    if (collection.rule === LOGIC_RANDOM) {
-        return getNextRandomEntityFor(collectionSeries, seriesSeen);
-    }
+  if (collection.rule === LOGIC_RANDOM) {
+    return getNextRandomEntityFor(collectionSeries, seriesSeen);
+  }
 
-    if (collection.rule === LOGIC_SEQUENTIAL) {
-        return getNextSequentialEntityFor(collectionSeries, seriesSeen);
-    }
+  if (collection.rule === LOGIC_SEQUENTIAL) {
+    return getNextSequentialEntityFor(collectionSeries, seriesSeen);
+  }
 
-    return {};
+  return {};
 }
 
 /**
@@ -791,24 +785,24 @@ function getNextSeriesForCollection(collection, series, user) {
  * @return {Object}
 */
 function getNextBlockForSeries(series, blocks, user) {
-    const seriesBlocks = getAllPublicChildren(series.id, blocks);
+  const seriesBlocks = getAllPublicChildren(series.id, blocks);
 
-    const blocksSeen = getChildEntitiesSeenByUserForParent(
-        series.id,
-        user,
-        SERIES_PROGRESS,
-        BLOCKS_SEEN
-    );
+  const blocksSeen = getChildEntitiesSeenByUserForParent(
+    series.id,
+    user,
+    SERIES_PROGRESS,
+    BLOCKS_SEEN
+  );
 
-    if (series.rule === LOGIC_RANDOM) {
-        return getNextRandomEntityFor(seriesBlocks, blocksSeen);
-    }
+  if (series.rule === LOGIC_RANDOM) {
+    return getNextRandomEntityFor(seriesBlocks, blocksSeen);
+  }
 
-    if (series.rule === LOGIC_SEQUENTIAL) {
-        return getNextSequentialEntityFor(seriesBlocks, blocksSeen);
-    }
+  if (series.rule === LOGIC_SEQUENTIAL) {
+    return getNextSequentialEntityFor(seriesBlocks, blocksSeen);
+  }
 
-    return {};
+  return {};
 }
 
 /**
@@ -821,21 +815,16 @@ function getNextBlockForSeries(series, blocks, user) {
  * @return {Object}
 */
 function getNextMessage(curr, user, messages, blocks) {
-    let next;
+  let next;
 
-    const {
-        [COLLECTION_SCOPE]: collectionScope,
-        history
-    } = user;
+  if (curr.next && curr.next.type === TYPE_BLOCK) {
+    const nextBlock = blocks.find(b => b.id === curr.next.id);
+    next = messages.find(m => m.id === nextBlock.startMessage);
+  } else {
+    next = messages.find(m => m.id === curr.next.id);
+  }
 
-    if (curr.next && curr.next.type === TYPE_BLOCK) {
-        const nextBlock = blocks.find(b => b.id === curr.next.id);
-        next = messages.find(m => m.id === nextBlock.startMessage);
-    } else {
-        next = messages.find(m => m.id === curr.next.id);
-    }
-
-    return next;
+  return next;
 }
 
 /**
@@ -846,16 +835,16 @@ function getNextMessage(curr, user, messages, blocks) {
  * @return {Object}
 */
 function getFirstMessageForBlock(blockId, messages) {
-    const parentIdMatchesBlockId = R.pathEq(['parent', 'id'], blockId);
-    const isNotPrivate = R.compose(R.not, R.prop('private'));
-    const isStart = R.propEq('start', true);
-    const isValidMessage = R.allPass([
-        parentIdMatchesBlockId,
-        isNotPrivate,
-        isStart
-    ]);
+  const parentIdMatchesBlockId = R.pathEq(['parent', 'id'], blockId);
+  const isNotPrivate = R.compose(R.not, R.prop('private'));
+  const isStart = R.propEq('start', true);
+  const isValidMessage = R.allPass([
+    parentIdMatchesBlockId,
+    isNotPrivate,
+    isStart
+  ]);
 
-    return R.compose(R.head, R.filter(isValidMessage))(messages);
+  return R.compose(R.head, R.filter(isValidMessage))(messages);
 }
 
 /**
@@ -867,8 +856,8 @@ function getFirstMessageForBlock(blockId, messages) {
  * @return {String}
 */
 function getMediaUrlForMessage(type, user, media) {
-    // TODO: logic for determining content to show based on user history?
-    return media[type][Math.floor(Math.random() * media[type].length)].url;
+  // TODO: logic for determining content to show based on user history?
+  return media[type][Math.floor(Math.random() * media[type].length)].url;
 }
 
 /**
@@ -883,55 +872,55 @@ function getMediaUrlForMessage(type, user, media) {
  * @return {Object}
 */
 function getNextMessageForCollection(
-    collectionId,
-    collections,
-    series,
-    blocks,
-    messages,
-    userUpdates
+  collectionId,
+  collections,
+  series,
+  blocks,
+  messages,
+  userUpdates
 ) {
-    const collection = collections.find(c => c.id === collectionId);
+  const collection = collections.find(c => c.id === collectionId);
 
-    userUpdates = Object.assign({}, userUpdates, {
-        [COLLECTION_SCOPE]: (userUpdates[COLLECTION_SCOPE] || []).concat(
-            collectionId
-        )
-    });
+  userUpdates = Object.assign({}, userUpdates, {
+    [COLLECTION_SCOPE]: (userUpdates[COLLECTION_SCOPE] || []).concat(
+      collectionId
+    )
+  });
 
-    const {
-        next: nextSeries,
-        seenEntities: seriesSeen
-    } = getNextSeriesForCollection(collection, series, userUpdates);
+  const {
+    next: nextSeries,
+    seenEntities: seriesSeen
+  } = getNextSeriesForCollection(collection, series, userUpdates);
 
-    const { next: nextBlock, seenEntities: blocksSeen } = getNextBlockForSeries(
-        nextSeries,
-        blocks,
-        userUpdates
-    );
+  const { next: nextBlock, seenEntities: blocksSeen } = getNextBlockForSeries(
+    nextSeries,
+    blocks,
+    userUpdates
+  );
 
-    let user = Object.assign({}, userUpdates, {
-        [COLLECTION_PROGRESS]: updateProgressForEntity(
-            userUpdates,
-            collection.id,
-            seriesSeen,
-            COLLECTION_PROGRESS,
-            SERIES_SEEN
-        ),
-        [SERIES_PROGRESS]: updateProgressForEntity(
-            userUpdates,
-            nextSeries.id,
-            blocksSeen,
-            SERIES_PROGRESS,
-            BLOCKS_SEEN
-        )
-    });
+  let user = Object.assign({}, userUpdates, {
+    [COLLECTION_PROGRESS]: updateProgressForEntity(
+      userUpdates,
+      collection.id,
+      seriesSeen,
+      COLLECTION_PROGRESS,
+      SERIES_SEEN
+    ),
+    [SERIES_PROGRESS]: updateProgressForEntity(
+      userUpdates,
+      nextSeries.id,
+      blocksSeen,
+      SERIES_PROGRESS,
+      BLOCKS_SEEN
+    )
+  });
 
-    const message = getFirstMessageForBlock(nextBlock.id, messages);
+  const message = getFirstMessageForBlock(nextBlock.id, messages);
 
-    return {
-        message,
-        user
-    };
+  return {
+    message,
+    user
+  };
 }
 
 function createCustomMessageForHistory({
@@ -1017,390 +1006,390 @@ function createQuickReplyRetryNextMessageResponse(action, messageOptions) {
  * @return {Object}
 */
 function getMessagesForAction({
-    action,
-    conversations,
-    collections,
-    series,
-    messages,
-    blocks,
-    user,
-    media,
-    studyInfo
+  action,
+  conversations,
+  collections,
+  series,
+  messages,
+  blocks,
+  user,
+  media,
+  studyInfo
 }) {
-    let messagesToSend = [];
-    let curr;
+  let messagesToSend = [];
+  let curr;
 
-    let userUpdates = Object.assign({}, user);
+  let userUpdates = Object.assign({}, user);
 
-    if (action.type === ACTION_CRISIS_REPONSE) {
-      curr = {
+  if (action.type === ACTION_CRISIS_REPONSE) {
+    curr = {
+      type: TYPE_MESSAGE,
+      message: { text: CRISIS_RESPONSE_MESSAGE }
+    };
+
+    messagesToSend.push(curr);
+
+    curr = createCustomMessageForHistory({
+      type: TYPE_MESSAGE,
+      messageType: MESSAGE_TYPE_TEXT,
+      text: curr.message.text,
+    });
+    curr.isCrisisMessage = true;
+
+    userUpdates = R.merge(userUpdates, {
+      history: updateHistory(
+        R.merge(curr, {
+          timestamp: Date.now()
+        }),
+        userUpdates.history
+      )
+    });
+    curr = null;
+  } else if (action.type === ACTION_RETRY_QUICK_REPLY) {
+    curr = createQuickReplyRetryMessage(
+      QUICK_REPLY_RETRY_MESSAGE,
+      QUICK_REPLY_RETRY_BUTTONS
+    );
+
+    messagesToSend.push(curr);
+
+    curr = createCustomMessageForHistory({
+      id: QUICK_REPLY_RETRY_ID,
+      type: TYPE_MESSAGE,
+      messageType: TYPE_QUESTION_WITH_REPLIES,
+      text: curr.message.text,
+    });
+
+    curr.isQuickReplyRetry = true;
+
+    userUpdates = R.merge(userUpdates, {
+      history: updateHistory(
+        R.merge(curr, {
+          timestamp: Date.now()
+        }),
+        userUpdates.history
+      )
+    });
+    curr = null;
+  } else if (action.type === ACTION_QUICK_REPLY_RETRY_NEXT_MESSAGE) {
+    let message = createQuickReplyRetryNextMessageResponse(
+      action,
+      QUICK_REPLY_RETRY_BUTTONS
+    );
+
+    if (!message) {
+      curr = Object.assign({}, getLastSentMessageInHistory(user));
+    } else {
+      curr = message;
+
+      messagesToSend.push(curr);
+
+      curr = createCustomMessageForHistory({
+        id: action.quickReplyRetryId,
         type: TYPE_MESSAGE,
-        message: { text: CRISIS_RESPONSE_MESSAGE }
-      };
-
-      messagesToSend.push(curr);
-
-      curr = createCustomMessageForHistory({
-          type: TYPE_MESSAGE,
-          messageType: MESSAGE_TYPE_TEXT,
-          text: curr.message.text,
+        messageType: TYPE_QUESTION,
+        text: curr.message.text,
       });
-      curr.isCrisisMessage = true;
-
-      userUpdates = R.merge(userUpdates, {
-          history: updateHistory(
-              R.merge(curr, {
-                  timestamp: Date.now()
-              }),
-              userUpdates.history
-          )
-      });
-      curr = null;
-    } else if (action.type === ACTION_RETRY_QUICK_REPLY) {
-      curr = createQuickReplyRetryMessage(
-        QUICK_REPLY_RETRY_MESSAGE,
-        QUICK_REPLY_RETRY_BUTTONS
-      );
-
-      messagesToSend.push(curr);
-
-      curr = createCustomMessageForHistory({
-          id: QUICK_REPLY_RETRY_ID,
-          type: TYPE_MESSAGE,
-          messageType: TYPE_QUESTION_WITH_REPLIES,
-          text: curr.message.text,
-      });
-
       curr.isQuickReplyRetry = true;
 
       userUpdates = R.merge(userUpdates, {
-          history: updateHistory(
-              R.merge(curr, {
-                  timestamp: Date.now()
-              }),
-              userUpdates.history
-          )
+        history: updateHistory(
+          R.merge(curr, {
+            timestamp: Date.now()
+          }),
+          userUpdates.history
+        )
       });
       curr = null;
-    } else if (action.type === ACTION_QUICK_REPLY_RETRY_NEXT_MESSAGE) {
-      let message = createQuickReplyRetryNextMessageResponse(
-        action,
-        QUICK_REPLY_RETRY_BUTTONS
-      );
-
-      if (!message) {
-        curr = Object.assign({}, getLastSentMessageInHistory(user));
-      } else {
-        curr = message;
-
-        messagesToSend.push(curr);
-
-        curr = createCustomMessageForHistory({
-            id: action.quickReplyRetryId,
-            type: TYPE_MESSAGE,
-            messageType: TYPE_QUESTION,
-            text: curr.message.text,
-        });
-        curr.isQuickReplyRetry = true;
-
-        userUpdates = R.merge(userUpdates, {
-            history: updateHistory(
-                R.merge(curr, {
-                    timestamp: Date.now()
-                }),
-                userUpdates.history
-            )
-        });
-        curr = null;
-      }
-    } else if (action.type === ACTION_REPLAY_PREVIOUS_MESSAGE) {
-      curr = Object.assign({}, getLastSentMessageInHistory(user));
-    } else if (action.type === ACTION_COME_BACK_LATER) {
-      curr = {
-          type: TYPE_MESSAGE,
-          message: { text: END_OF_CONVERSATION_MESSAGE },
-      };
-      messagesToSend.push(curr);
-
-      curr = createCustomMessageForHistory({
-          id: END_OF_CONVERSATION_ID,
-          type: TYPE_MESSAGE,
-          messageType: MESSAGE_TYPE_TEXT,
-          text: curr.message.text,
-          next: {id: END_OF_CONVERSATION_ID }
-      });
-      userUpdates = R.merge(userUpdates, {
-          history: updateHistory(
-              R.merge(curr, {
-                  timestamp: Date.now()
-              }),
-              userUpdates.history
-          )
-      });
-      curr = null;
-    } else if (action.type === TYPE_MESSAGE) {
-        curr = messages.find(m => m.id === action.id);
-    } else if (action.type === TYPE_COLLECTION) {
-        let nextMessage = getNextMessageForCollection(
-            action.id,
-            collections,
-            series,
-            blocks,
-            messages,
-            userUpdates
-        );
-
-        curr = nextMessage.message;
-        userUpdates = nextMessage.user;
     }
+  } else if (action.type === ACTION_REPLAY_PREVIOUS_MESSAGE) {
+    curr = Object.assign({}, getLastSentMessageInHistory(user));
+  } else if (action.type === ACTION_COME_BACK_LATER) {
+    curr = {
+      type: TYPE_MESSAGE,
+      message: { text: END_OF_CONVERSATION_MESSAGE },
+    };
+    messagesToSend.push(curr);
 
-    while (curr) {
-        if (
-            curr.messageType === TYPE_IMAGE ||
+    curr = createCustomMessageForHistory({
+      id: END_OF_CONVERSATION_ID,
+      type: TYPE_MESSAGE,
+      messageType: MESSAGE_TYPE_TEXT,
+      text: curr.message.text,
+      next: {id: END_OF_CONVERSATION_ID }
+    });
+    userUpdates = R.merge(userUpdates, {
+      history: updateHistory(
+        R.merge(curr, {
+          timestamp: Date.now()
+        }),
+        userUpdates.history
+      )
+    });
+    curr = null;
+  } else if (action.type === TYPE_MESSAGE) {
+    curr = messages.find(m => m.id === action.id);
+  } else if (action.type === TYPE_COLLECTION) {
+    let nextMessage = getNextMessageForCollection(
+      action.id,
+      collections,
+      series,
+      blocks,
+      messages,
+      userUpdates
+    );
+
+    curr = nextMessage.message;
+    userUpdates = nextMessage.user;
+  }
+
+  while (curr) {
+    if (
+      curr.messageType === TYPE_IMAGE ||
             curr.messageType === TYPE_VIDEO
-        ) {
-            messagesToSend.push({
-                type: TYPE_MESSAGE,
-                message: makePlatformMediaMessagePayload(
-                    curr.messageType,
-                    curr.url,
-                    media
-                )
-            });
-        } else if (
-          curr.messageType === MESSAGE_TYPE_TRANSITION &&
+    ) {
+      messagesToSend.push({
+        type: TYPE_MESSAGE,
+        message: makePlatformMediaMessagePayload(
+          curr.messageType,
+          curr.url,
+          media
+        )
+      });
+    } else if (
+      curr.messageType === MESSAGE_TYPE_TRANSITION &&
           transitionIsDelayed(
             curr,
             userUpdates.conversationStartTimestamp,
             moment().unix() * 1000
           )
-        ) {
-          if (messagesToSend.length === 0) {
-            curr = {
-                type: TYPE_MESSAGE,
-                message: { text: END_OF_CONVERSATION_MESSAGE },
-            };
-            messagesToSend.push(curr);
+    ) {
+      if (messagesToSend.length === 0) {
+        curr = {
+          type: TYPE_MESSAGE,
+          message: { text: END_OF_CONVERSATION_MESSAGE },
+        };
+        messagesToSend.push(curr);
 
-            curr = createCustomMessageForHistory({
-                id: END_OF_CONVERSATION_ID,
-                type: TYPE_MESSAGE,
-                messageType: MESSAGE_TYPE_TEXT,
-                text: curr.message.text,
-                next: {id: END_OF_CONVERSATION_ID }
-            });
-            userUpdates = R.merge(userUpdates, {
-                history: updateHistory(
-                    R.merge(curr, {
-                        timestamp: Date.now()
-                    }),
-                    userUpdates.history
-                )
-            });
-          }
-          break;
-        } else if (
-          curr.messageType === MESSAGE_TYPE_TRANSITION
-        ) {
-          let conversationsForNewTrack = [];
-          if (R.path(['nextConversations', 'length'], curr) > 0) {
-            conversationsForNewTrack = curr.nextConversations.map(nC =>
-              conversations.find(c => c.id === nC.id)
-            ).filter(nc => !!nc);
-          }
+        curr = createCustomMessageForHistory({
+          id: END_OF_CONVERSATION_ID,
+          type: TYPE_MESSAGE,
+          messageType: MESSAGE_TYPE_TEXT,
+          text: curr.message.text,
+          next: {id: END_OF_CONVERSATION_ID }
+        });
+        userUpdates = R.merge(userUpdates, {
+          history: updateHistory(
+            R.merge(curr, {
+              timestamp: Date.now()
+            }),
+            userUpdates.history
+          )
+        });
+      }
+      break;
+    } else if (
+      curr.messageType === MESSAGE_TYPE_TRANSITION
+    ) {
+      let conversationsForNewTrack = [];
+      if (R.path(['nextConversations', 'length'], curr) > 0) {
+        conversationsForNewTrack = curr.nextConversations.map(nC =>
+          conversations.find(c => c.id === nC.id)
+        ).filter(nc => !!nc);
+      }
 
-          const newTrack = newConversationTrack(
-            conversationsForNewTrack,
-            messages,
+      const newTrack = newConversationTrack(
+        conversationsForNewTrack,
+        messages,
+        collections,
+        studyInfo,
+        userUpdates
+      );
+
+      const transition = curr.nextConversations.find(nC => (
+        nC.id === newTrack.user.assignedConversationTrack
+      ));
+      if (R.path(['text'], transition)) {
+        messagesToSend.push({
+          type: TYPE_MESSAGE,
+          message: { text: transition.text }
+        });
+
+        let messageForHistory = createCustomMessageForHistory({
+          id: transition.id,
+          type: TYPE_MESSAGE,
+          messageType: MESSAGE_TYPE_TEXT,
+          text: transition.text
+        });
+        newTrack.user = R.merge(newTrack.user, {
+          history: updateHistory(
+            R.merge(messageForHistory, {
+              timestamp: Date.now()
+            }),
+            userUpdates.history
+          )
+        }
+        );
+      }
+
+      if (
+        userIsStartingStudy(userUpdates, R.path(['user'], newTrack)) &&
+            studyIdIsNotificationEligable(R.path(['user'], newTrack))
+      ) {
+        const text = STUDY_MESSAGES[0].text.replace(/XXXXX/, newTrack.user.studyId);
+        messagesToSend.push({
+          type: TYPE_MESSAGE,
+          message: { text }
+        });
+
+        let messageForHistory = createCustomMessageForHistory({
+          type: TYPE_MESSAGE,
+          messageType: MESSAGE_TYPE_TEXT,
+          text: text
+        });
+        newTrack.user = R.merge(newTrack.user, {
+          history: updateHistory(
+            R.merge(messageForHistory, {
+              timestamp: Date.now()
+            }),
+            userUpdates.history
+          )
+        }
+        );
+      }
+
+      if (newTrack.action.type === TYPE_COLLECTION) {
+        let nextMessage = getNextMessageForCollection(
+          newTrack.action.id,
+          collections,
+          series,
+          blocks,
+          messages,
+          newTrack.user
+        );
+
+        curr = nextMessage.message;
+        userUpdates = nextMessage.user;
+      } else {
+        curr = messages.find(m => m.id === newTrack.action.id);
+        userUpdates = Object.assign({}, userUpdates, newTrack.user);
+      }
+
+      continue;
+    } else {
+      messagesToSend.push({
+        type: TYPE_MESSAGE,
+        message: makePlatformMessagePayload(curr.id, messages)
+      });
+    }
+
+    userUpdates = R.merge(userUpdates, {
+      history: updateHistory(
+        R.merge(curr, {
+          timestamp: Date.now()
+        }),
+        userUpdates.history
+      )
+    });
+
+    if (
+      curr.messageType === TYPE_QUESTION ||
+            curr.messageType === TYPE_QUESTION_WITH_REPLIES
+    ) {
+      break;
+    }
+
+    if (curr.next && curr.next.id !== END_OF_CONVERSATION_ID) {
+      if (curr.next.type === TYPE_MESSAGE) {
+        curr = Object.assign(
+          {},
+          getNextMessage(curr, userUpdates, messages, blocks)
+        );
+      } else if (curr.next.type === TYPE_COLLECTION) {
+        let nextMessage = getNextMessageForCollection(
+          curr.next.id,
+          collections,
+          series,
+          blocks,
+          messages,
+          userUpdates
+        );
+
+        curr = nextMessage.message;
+        userUpdates = nextMessage.user;
+      }
+    } else {
+      if (
+        userUpdates[COLLECTION_SCOPE] &&
+                userUpdates[COLLECTION_SCOPE].length
+      ) {
+        const collectionScopeLeavingId =
+                    userUpdates[COLLECTION_SCOPE][
+                      userUpdates[COLLECTION_SCOPE].length - 1
+                    ];
+
+        const collectionScopeLeaving = collections.find(
+          c => c.id === collectionScopeLeavingId
+        );
+
+        if (
+          R.pathEq(
+            ['next', 'type'],
+            TYPE_COLLECTION,
+            collectionScopeLeaving || {}
+          )
+        ) {
+          userUpdates = popScope(userUpdates, COLLECTION_SCOPE);
+
+          let nextMessage = getNextMessageForCollection(
+            collectionScopeLeaving.next.id,
             collections,
-            studyInfo,
+            series,
+            blocks,
+            messages,
             userUpdates
           );
 
-          const transition = curr.nextConversations.find(nC => (
-            nC.id === newTrack.user.assignedConversationTrack
-          ));
-          if (R.path(['text'], transition)) {
-            messagesToSend.push({
-              type: TYPE_MESSAGE,
-              message: { text: transition.text }
-            });
-
-            let messageForHistory = createCustomMessageForHistory({
-                id: transition.id,
-                type: TYPE_MESSAGE,
-                messageType: MESSAGE_TYPE_TEXT,
-                text: transition.text
-            });
-            newTrack.user = R.merge(newTrack.user, {
-                history: updateHistory(
-                    R.merge(messageForHistory, {
-                        timestamp: Date.now()
-                    }),
-                    userUpdates.history
-                )
-              }
-            );
-          }
-
-          if (
-            userIsStartingStudy(userUpdates, R.path(['user'], newTrack)) &&
-            studyIdIsNotificationEligable(R.path(['user'], newTrack))
-          ) {
-            const text = STUDY_MESSAGES[0].text.replace(/XXXXX/, newTrack.user.studyId);
-            messagesToSend.push({
-              type: TYPE_MESSAGE,
-              message: { text }
-            });
-
-            let messageForHistory = createCustomMessageForHistory({
-                type: TYPE_MESSAGE,
-                messageType: MESSAGE_TYPE_TEXT,
-                text: text
-            });
-            newTrack.user = R.merge(newTrack.user, {
-                history: updateHistory(
-                    R.merge(messageForHistory, {
-                        timestamp: Date.now()
-                    }),
-                    userUpdates.history
-                )
-              }
-            );
-          }
-
-          if (newTrack.action.type === TYPE_COLLECTION) {
-            let nextMessage = getNextMessageForCollection(
-                newTrack.action.id,
-                collections,
-                series,
-                blocks,
-                messages,
-                newTrack.user
-            );
-
-            curr = nextMessage.message;
-            userUpdates = nextMessage.user;
-          } else {
-            curr = messages.find(m => m.id === newTrack.action.id);
-            userUpdates = Object.assign({}, userUpdates, newTrack.user);
-          }
-
-          continue;
-        } else {
-            messagesToSend.push({
-                type: TYPE_MESSAGE,
-                message: makePlatformMessagePayload(curr.id, messages)
-            });
-        }
-
-        userUpdates = R.merge(userUpdates, {
-            history: updateHistory(
-                R.merge(curr, {
-                    timestamp: Date.now()
-                }),
-                userUpdates.history
-            )
-        });
-
-        if (
-            curr.messageType === TYPE_QUESTION ||
-            curr.messageType === TYPE_QUESTION_WITH_REPLIES
+          curr = nextMessage.message;
+          userUpdates = nextMessage.user;
+        } else if (
+          R.pathEq(
+            ['next', 'type'],
+            TYPE_MESSAGE,
+            collectionScopeLeaving || {}
+          )
         ) {
-            break;
-        }
-
-        if (curr.next && curr.next.id !== END_OF_CONVERSATION_ID) {
-            if (curr.next.type === TYPE_MESSAGE) {
-                curr = Object.assign(
-                    {},
-                    getNextMessage(curr, userUpdates, messages, blocks)
-                );
-            } else if (curr.next.type === TYPE_COLLECTION) {
-                let nextMessage = getNextMessageForCollection(
-                    curr.next.id,
-                    collections,
-                    series,
-                    blocks,
-                    messages,
-                    userUpdates
-                );
-
-                curr = nextMessage.message;
-                userUpdates = nextMessage.user;
-            }
+          curr = messages.find(
+            m => m.id === collectionScopeLeaving.next.id
+          );
+          userUpdates = popScope(userUpdates, COLLECTION_SCOPE);
         } else {
-            if (
-                userUpdates[COLLECTION_SCOPE] &&
-                userUpdates[COLLECTION_SCOPE].length
-            ) {
-                const collectionScopeLeavingId =
-                    userUpdates[COLLECTION_SCOPE][
-                        userUpdates[COLLECTION_SCOPE].length - 1
-                    ];
-
-                const collectionScopeLeaving = collections.find(
-                    c => c.id === collectionScopeLeavingId
-                );
-
-                if (
-                    R.pathEq(
-                        ['next', 'type'],
-                        TYPE_COLLECTION,
-                        collectionScopeLeaving || {}
-                    )
-                ) {
-                    userUpdates = popScope(userUpdates, COLLECTION_SCOPE);
-
-                    let nextMessage = getNextMessageForCollection(
-                        collectionScopeLeaving.next.id,
-                        collections,
-                        series,
-                        blocks,
-                        messages,
-                        userUpdates
-                    );
-
-                    curr = nextMessage.message;
-                    userUpdates = nextMessage.user;
-                } else if (
-                    R.pathEq(
-                        ['next', 'type'],
-                        TYPE_MESSAGE,
-                        collectionScopeLeaving || {}
-                    )
-                ) {
-                    curr = messages.find(
-                        m => m.id === collectionScopeLeaving.next.id
-                    );
-                    userUpdates = popScope(userUpdates, COLLECTION_SCOPE);
-                } else {
-                    curr = null;
-                    userUpdates = popScope(userUpdates, COLLECTION_SCOPE);
-                }
-            } else {
-                curr = null;
-            }
+          curr = null;
+          userUpdates = popScope(userUpdates, COLLECTION_SCOPE);
         }
+      } else {
+        curr = null;
+      }
     }
+  }
 
-    return {
-        messagesToSend,
-        userUpdates
-    };
+  return {
+    messagesToSend,
+    userUpdates
+  };
 }
 
 module.exports = {
-    makePlatformMessagePayload,
-    makePlatformMediaMessagePayload,
-    getMessagesForAction,
-    getActionForMessage,
-    getUpdateActionForUsers,
-    updateHistory,
-    getNextMessage,
-    getMediaUrlForMessage,
-    generateUniqueStudyId,
-    shouldReceiveUpdate,
-    isCrisisMessage,
-    createCustomMessageForHistory,
+  makePlatformMessagePayload,
+  makePlatformMediaMessagePayload,
+  getMessagesForAction,
+  getActionForMessage,
+  getUpdateActionForUsers,
+  updateHistory,
+  getNextMessage,
+  getMediaUrlForMessage,
+  generateUniqueStudyId,
+  shouldReceiveUpdate,
+  isCrisisMessage,
+  createCustomMessageForHistory,
 };

@@ -9,25 +9,25 @@ const { updateUser, updateAllUsers, setStudyInfo } = require('./database');
 const { logger } = require('./logger');
 
 const {
-    FB_GRAPH_ROOT_URL,
-    FB_PAGE_ACCESS_TOKEN,
-    TYPING_TIME_IN_MILLISECONDS,
-    FB_MESSAGE_TYPE,
-    FB_ERROR_CODE_INVALID_USER,
-    FB_ERROR_CODE_UNAVAILABLE_USER,
-    FB_ERROR_CODE_UNAVAILABLE_USER_10,
-    FB_TYPING_ON_TYPE,
-    FB_MESSAGING_TYPE_RESPONSE,
-    FB_MESSAGING_TYPE_UPDATE,
-    TYPE_ANSWER,
-    TYPE_MESSAGE,
-    MESSAGE_TYPE_TEXT,
-    MAX_UPDATE_ACTIONS_ALLOWED,
-    STUDY_ID_NO_OP,
-    STUDY_MESSAGES,
-    STOP_MESSAGE,
-    RESUME_MESSAGE,
-    STOPPED_MESSAGE
+  FB_GRAPH_ROOT_URL,
+  FB_PAGE_ACCESS_TOKEN,
+  TYPING_TIME_IN_MILLISECONDS,
+  FB_MESSAGE_TYPE,
+  FB_ERROR_CODE_INVALID_USER,
+  FB_ERROR_CODE_UNAVAILABLE_USER,
+  FB_ERROR_CODE_UNAVAILABLE_USER_10,
+  FB_TYPING_ON_TYPE,
+  FB_MESSAGING_TYPE_RESPONSE,
+  FB_MESSAGING_TYPE_UPDATE,
+  TYPE_ANSWER,
+  TYPE_MESSAGE,
+  MESSAGE_TYPE_TEXT,
+  MAX_UPDATE_ACTIONS_ALLOWED,
+  STUDY_ID_NO_OP,
+  STUDY_MESSAGES,
+  STOP_MESSAGE,
+  RESUME_MESSAGE,
+  STOPPED_MESSAGE
 } = require('./constants');
 
 const {
@@ -46,32 +46,32 @@ const { promiseSerial, promiseSerialKeepGoingOnError } = require('./utils');
  * @return {Promise}
 */
 function getUserDetails(userId) {
-    return new Promise((resolve, reject) => {
-        request(
-            {
-                url: `${FB_GRAPH_ROOT_URL}${userId}?fields=first_name,last_name,profile_pic&access_token=${FB_PAGE_ACCESS_TOKEN}`,
-                qs: { access_token: FB_PAGE_ACCESS_TOKEN },
-                method: 'GET'
-            },
-            (error, response) => {
-                resolve(JSON.parse(response.body));
+  return new Promise((resolve, reject) => {
+    request(
+      {
+        url: `${FB_GRAPH_ROOT_URL}${userId}?fields=first_name,last_name,profile_pic&access_token=${FB_PAGE_ACCESS_TOKEN}`, // eslint-disable-line max-len
+        qs: { access_token: FB_PAGE_ACCESS_TOKEN },
+        method: 'GET'
+      },
+      (error, response) => {
+        resolve(JSON.parse(response.body));
 
-                if (error) {
-                    console.error(
-                        'error: getUserDetails - sending message: ',
-                        error
-                    );
-                    reject(error);
-                } else if (response.body.error) {
-                    console.error(
-                        'error: getUserDetails - response body error',
-                        response.body.error
-                    );
-                    reject(response.body.error);
-                }
-            }
-        );
-    });
+        if (error) {
+          console.error(
+            'error: getUserDetails - sending message: ',
+            error
+          );
+          reject(error);
+        } else if (response.body.error) {
+          console.error(
+            'error: getUserDetails - response body error',
+            response.body.error
+          );
+          reject(response.body.error);
+        }
+      }
+    );
+  });
 }
 
 /**
@@ -81,52 +81,53 @@ function getUserDetails(userId) {
  * @return {Promise<String>}
 */
 function callSendAPI(messageData) {
-    return new Promise((resolve, reject) => {
-        request(
-            {
-                uri: `${FB_GRAPH_ROOT_URL}me/messages`,
-                qs: { access_token: FB_PAGE_ACCESS_TOKEN },
-                method: 'POST',
-                json: messageData
-            },
-            (error, response, body) => {
-                if (!error && response.statusCode == 200) {
-                    var messageId = body.message_id;
+  return new Promise((resolve, reject) => {
+    request(
+      {
+        uri: `${FB_GRAPH_ROOT_URL}me/messages`,
+        qs: { access_token: FB_PAGE_ACCESS_TOKEN },
+        method: 'POST',
+        json: messageData
+      },
+      (error, response, body) => {
+        if (!error && response.statusCode == 200) {
+          var messageId = body.message_id;
 
-                    resolve(messageId);
-                } else {
-                    if (!error) {
-                      error = {
-                        statusCode: R.path(['statusCode'], response),
-                        id: R.path(['recipient', 'id'], messageData),
-                        fbCode: R.path(['body', 'error', 'code'], response),
-                        fbErrorSubcode: R.path(['body', 'error', 'error_subcode'], response),
-                        fbMessage: R.path(['body', 'error', 'message'], response)
-                      };
-                    }
+          resolve(messageId);
+        } else {
+          if (!error) {
+            error = {
+              statusCode: R.path(['statusCode'], response),
+              id: R.path(['recipient', 'id'], messageData),
+              fbCode: R.path(['body', 'error', 'code'], response),
+              fbErrorSubcode: R.path(['body', 'error', 'error_subcode'], response),
+              fbMessage: R.path(['body', 'error', 'message'], response)
+            };
+          }
 
-                    console.error('ERROR: Unable to send message in callSendAPI');
-                    logger.log('error', `Unable to send message to user, error: ${JSON.stringify(error)}, message: ${JSON.stringify(messageData)}`)
+          console.error('ERROR: Unable to send message in callSendAPI');
+          logger.log('error',
+            `Unable to send message to user, error: ${JSON.stringify(error)}, message: ${JSON.stringify(messageData)}`)
 
-                    reject(error);
-                }
-            }
-        );
-    });
+          reject(error);
+        }
+      }
+    );
+  });
 }
 
-/**
- * Send a follow-up message to a user
- *
- * @param {String} recipientId
- * @param {Object} content
- * @return {Promise<String>}
-*/
-function sendFollowUpMessageToUser(recipientId, content) {
-    const messageData = createMessagePayload(recipientId, content, FB_MESSAGING_TYPE_UPDATE);
-
-    return callSendAPI(messageData);
-}
+// /**
+//  * Send a follow-up message to a user
+//  *
+//  * @param {String} recipientId
+//  * @param {Object} content
+//  * @return {Promise<String>}
+// */
+// function sendFollowUpMessageToUser(recipientId, content) {
+//   const messageData = createMessagePayload(recipientId, content, FB_MESSAGING_TYPE_UPDATE);
+//
+//   return callSendAPI(messageData);
+// }
 
 /**
  * Create the FB Message Payload
@@ -140,22 +141,22 @@ function createMessagePayload(
   content,
   fbMessagingType=FB_MESSAGING_TYPE_RESPONSE
 ) {
-    const { type, message } = content;
+  const { type, message } = content;
 
-    let payload = {
-        messaging_type: fbMessagingType,
-        recipient: {
-            id: recipientId
-        }
-    };
-
-    if (type === FB_MESSAGE_TYPE) {
-        payload.message = message;
-    } else if (type === FB_TYPING_ON_TYPE) {
-        payload.sender_action = FB_TYPING_ON_TYPE;
+  let payload = {
+    messaging_type: fbMessagingType,
+    recipient: {
+      id: recipientId
     }
+  };
 
-    return payload;
+  if (type === FB_MESSAGE_TYPE) {
+    payload.message = message;
+  } else if (type === FB_TYPING_ON_TYPE) {
+    payload.sender_action = FB_TYPING_ON_TYPE;
+  }
+
+  return payload;
 }
 
 /**
@@ -166,17 +167,17 @@ function createMessagePayload(
  * @return {Promise<String>}
 */
 function sendMessage(recipientId, content, fbMessagingType=FB_MESSAGING_TYPE_RESPONSE) {
-    const messageData = createMessagePayload(recipientId, content, fbMessagingType);
-    const time =
+  const messageData = createMessagePayload(recipientId, content, fbMessagingType);
+  const time =
         content.type === FB_MESSAGE_TYPE ? TYPING_TIME_IN_MILLISECONDS : 0;
 
-    return () => {
-        return new Promise(r => {
-            return setTimeout(() => {
-                r(callSendAPI(messageData));
-            }, time);
-        });
-    };
+  return () => {
+    return new Promise(r => {
+      return setTimeout(() => {
+        r(callSendAPI(messageData));
+      }, time);
+    });
+  };
 }
 
 function serializeSend({
@@ -202,28 +203,26 @@ function sendAllMessagesToMessenger({
   studyInfo,
   fbMessagingType=FB_MESSAGING_TYPE_RESPONSE
 }) {
-    return serializeSend({messages, senderID, fbMessagingType})
+  return serializeSend({messages, senderID, fbMessagingType})
+    .then(() => {
+      updateUser(user)
         .then(() => {
-            updateUser(user)
-                .then(() => {
-                  console.log(`User ${user.id} updated successfully`);
-                })
-                .then(() => {
-                  if (Array.isArray(studyInfo)) {
-                    return setStudyInfo(studyInfo).then(() => {
-                      let logStr = `New study participant (user: ${user.id}) created with study id: ${studyInfo[studyInfo.length - 1]}`;
-                      console.log(logStr);
-                      logger.log('info', logStr);
-                    });
-                  }
-                })
-                .catch(e => {
-                  logger.log('error', `Error: updateUser, ${JSON.stringify(e)}`);
-                })
+          logger.log(`User ${user.id} updated successfully`);
+          if (Array.isArray(studyInfo)) {
+            return setStudyInfo(studyInfo).then(() => {
+              let logStr = `New study participant (user: ${user.id}) created with study id: ` +
+              `${studyInfo[studyInfo.length - 1]}`;
+              logger.log('info', logStr);
+            });
+          }
         })
         .catch(e => {
-          logger.log('error', `Promise serial, ${JSON.stringify(e)}`);
+          logger.log('error', `Error: updateUser, ${JSON.stringify(e)}`);
         })
+    })
+    .catch(e => {
+      logger.log('error', `Promise serial, ${JSON.stringify(e)}`);
+    })
 }
 
 function userIsStartingStudy(oldUser, newUser) {
@@ -238,104 +237,104 @@ function userIsStartingStudy(oldUser, newUser) {
  * @return {void}
 */
 function receivedMessage({
-    senderID,
+  senderID,
+  message,
+  user,
+  allConversations,
+  allCollections,
+  allMessages,
+  allSeries,
+  allBlocks,
+  media,
+  studyInfo
+}) {
+  let userToUpdate = Object.assign({}, user);
+  const prevMessage = getPreviousMessageInHistory(allMessages, user);
+
+  logger.log('debug', `receivedMessage: ${JSON.stringify(message)} prevMessage: ${JSON.stringify(prevMessage)}`);
+  // HERE if we get a Specific 'STOP' message.text, we stop the service
+  if (message.text && R.equals(message.text.toUpperCase(),STOP_MESSAGE)) {
+    userToUpdate = Object.assign({}, userToUpdate, {
+      stopNotifications: true,
+    });
+    serializeSend({
+      messages: [STOPPED_MESSAGE],
+      senderID,
+    }).then(() =>{
+      updateUser(userToUpdate).then(() =>
+        logger.log('debug', `user stopped notifications: ${userToUpdate.id}`))
+    }).catch(err => {
+      logger.log(err)
+      logger.log('debug', `something went wrong sending stop message to ${userToUpdate.id}`)
+    })
+    return;
+  }
+
+  if (message.text && R.equals(message.text.toUpperCase(), RESUME_MESSAGE)) {
+    userToUpdate = Object.assign({}, userToUpdate, {
+      stopNotifications: false,
+    });
+  }
+
+  userToUpdate = Object.assign({}, userToUpdate, {
+    history: updateHistory(
+      {
+        type: TYPE_ANSWER,
+        timestamp: Date.now(),
+        message,
+        previous: prevMessage.id
+      },
+      userToUpdate.history
+    )
+  });
+
+  const { action, userActionUpdates } =  getActionForMessage({
     message,
-    user,
-    allConversations,
-    allCollections,
-    allMessages,
-    allSeries,
-    allBlocks,
+    user: userToUpdate,
+    blocks: allBlocks,
+    series: allSeries,
+    messages: allMessages,
+    collections: allCollections,
+    conversations: allConversations,
+    studyInfo
+  });
+
+  userToUpdate = Object.assign({}, userToUpdate, userActionUpdates);
+
+  const { messagesToSend, userUpdates } = getMessagesForAction({
+    action,
+    conversations: allConversations,
+    collections: allCollections,
+    messages: allMessages,
+    series: allSeries,
+    blocks: allBlocks,
+    user: userToUpdate,
     media,
     studyInfo
-}) {
-    let userToUpdate = Object.assign({}, user);
-    const prevMessage = getPreviousMessageInHistory(allMessages, user);
+  });
 
-    logger.log('debug', `receivedMessage: ${JSON.stringify(message)} prevMessage: ${JSON.stringify(prevMessage)}`);
-    // HERE if we get a Specific 'STOP' message.text, we stop the service
-    if (message.text && R.equals(message.text.toUpperCase(),STOP_MESSAGE)) {
-      userToUpdate = Object.assign({}, userToUpdate, {
-        stopNotifications: true,
-      });
-      serializeSend({
-        messages: [STOPPED_MESSAGE],
-        senderID,
-      }).then(() =>{
-        updateUser(userToUpdate).then(() =>
-         logger.log('debug', `user stopped notifications: ${userToUpdate.id}`))
-      }).catch((err) => {
-          logger.log(err)
-          logger.log('debug', `something went wrong sending stop message to ${userToUpdate.id}`)
-      })
-      return;
-    }
+  userToUpdate = Object.assign({}, userToUpdate, userUpdates);
 
-    if (message.text && R.equals(message.text.toUpperCase(), RESUME_MESSAGE)) {
-      userToUpdate = Object.assign({}, userToUpdate, {
-        stopNotifications: false,
-      });
-    }
+  const messagesWithTyping = R.intersperse(
+    { type: FB_TYPING_ON_TYPE },
+    messagesToSend
+  );
 
-    userToUpdate = Object.assign({}, userToUpdate, {
-        history: updateHistory(
-            {
-                type: TYPE_ANSWER,
-                timestamp: Date.now(),
-                message,
-                previous: prevMessage.id
-            },
-            userToUpdate.history
-        )
-    });
+  let newStudyInfo;
+  if (userIsStartingStudy(user, userToUpdate)) {
+    newStudyInfo = studyInfo.slice();
+    newStudyInfo.push(userToUpdate.studyId);
 
-    const { action, userActionUpdates } =  getActionForMessage({
-        message,
-        user: userToUpdate,
-        blocks: allBlocks,
-        series: allSeries,
-        messages: allMessages,
-        collections: allCollections,
-        conversations: allConversations,
-        studyInfo
-    });
+    // TODO: send study survey every 2 weeks for 6 weeks
+  }
 
-    userToUpdate = Object.assign({}, userToUpdate, userActionUpdates);
-
-    const { messagesToSend, userUpdates } = getMessagesForAction({
-        action,
-        conversations: allConversations,
-        collections: allCollections,
-        messages: allMessages,
-        series: allSeries,
-        blocks: allBlocks,
-        user: userToUpdate,
-        media,
-        studyInfo
-    });
-
-    userToUpdate = Object.assign({}, userToUpdate, userUpdates);
-
-    const messagesWithTyping = R.intersperse(
-        { type: FB_TYPING_ON_TYPE },
-        messagesToSend
-    );
-
-    let newStudyInfo;
-    if (userIsStartingStudy(user, userToUpdate)) {
-      newStudyInfo = studyInfo.slice();
-      newStudyInfo.push(userToUpdate.studyId);
-
-      // TODO: send study survey every 2 weeks for 6 weeks
-    }
-
-    sendAllMessagesToMessenger({
-      messages: messagesWithTyping,
-      senderID,
-      user: userToUpdate,
-      studyInfo: newStudyInfo,
-      fbMessagingType: FB_MESSAGING_TYPE_RESPONSE
-    });
+  sendAllMessagesToMessenger({
+    messages: messagesWithTyping,
+    senderID,
+    user: userToUpdate,
+    studyInfo: newStudyInfo,
+    fbMessagingType: FB_MESSAGING_TYPE_RESPONSE
+  });
 }
 
 function sendPushMessagesToUsers({
@@ -349,14 +348,13 @@ function sendPushMessagesToUsers({
   studyInfo
 }) {
   const allActions = getUpdateActionForUsers({users,
-      allConversations,
-      allCollections,
-      allMessages,
-      allSeries,
-      allBlocks,
-      media,
-      studyInfo
-  });
+    allConversations,
+    allCollections,
+    allMessages,
+    allSeries,
+    allBlocks,
+    media,
+    studyInfo});
 
   // Throttle the number of updates that happend at once.
   const actions = allActions.slice(0, MAX_UPDATE_ACTIONS_ALLOWED);
@@ -371,15 +369,15 @@ function sendPushMessagesToUsers({
     }
 
     const { messagesToSend, userUpdates } = getMessagesForAction({
-        action,
-        conversations: allConversations,
-        collections: allCollections,
-        messages: allMessages,
-        series: allSeries,
-        blocks: allBlocks,
-        user: userToUpdate,
-        media,
-        studyInfo
+      action,
+      conversations: allConversations,
+      collections: allCollections,
+      messages: allMessages,
+      series: allSeries,
+      blocks: allBlocks,
+      user: userToUpdate,
+      media,
+      studyInfo
     });
 
     userToUpdate = Object.assign({}, userToUpdate, userUpdates);
@@ -395,15 +393,15 @@ function sendPushMessagesToUsers({
     userToUpdate = Object.assign({}, userToUpdate, {history});
 
     const messagesWithTyping = R.intersperse(
-        { type: FB_TYPING_ON_TYPE },
-        messagesToSend
+      { type: FB_TYPING_ON_TYPE },
+      messagesToSend
     );
 
     return () => serializeSend({
-        messages: messagesWithTyping,
-        senderID: userToUpdate.id,
-        fbMessagingType: FB_MESSAGING_TYPE_UPDATE
-      }).then(() => userToUpdate);
+      messages: messagesWithTyping,
+      senderID: userToUpdate.id,
+      fbMessagingType: FB_MESSAGING_TYPE_UPDATE
+    }).then(() => userToUpdate);
   });
 
   if (!Array.isArray(promisesForSend) || promisesForSend.length === 0) {
@@ -413,47 +411,46 @@ function sendPushMessagesToUsers({
 
   logger.log("debug", `About to push to ${promisesForSend.length} users`);
   return promiseSerialKeepGoingOnError(promisesForSend)
-            .then(usersToUpdate => {
-              logger.log('debug', `Messages sent, now saving updates for ${R.path(['length'],usersToUpdate)} users`)
-              return usersToUpdate;
-            })
-            .then(usersToUpdate => { // TODO: replace this with function defined below
-              let updates = usersToUpdate.map(user => {
-                if (
-                  R.path(['isError'], user) &&
+    .then(usersToUpdate => {
+      logger.log('debug', `Messages sent, now saving updates for ${R.path(['length'],usersToUpdate)} users`)
+      return usersToUpdate;
+    })
+    .then(usersToUpdate => { // TODO: replace this with function defined below
+      let updates = usersToUpdate.map(user => {
+        if (
+          R.path(['isError'], user) &&
                   (
                     R.path(['error', 'fbCode'], user) === FB_ERROR_CODE_INVALID_USER ||
                     R.path(['error', 'fbCode'], user) === FB_ERROR_CODE_UNAVAILABLE_USER ||
                     R.path(['error', 'fbCode'], user) === FB_ERROR_CODE_UNAVAILABLE_USER_10
                   )
-                ) {
-                  let actualUser = users.find(u => R.path(['error', 'id'], user) === u.id);
-                  if (!actualUser) { return undefined; }
-                  return Object.assign({}, actualUser, {invalidUser: true});
-                } else if (R.path(['isError'], user)) {
-                  // If there was a facebook error but it was not an invalid
-                  // user error, do not mark the user as invalid
-                  return undefined;
-                }
-                return user;
-              }).filter(u => !!u);
-              return updateAllUsers(updates).then(() => usersToUpdate)
-            })
-            .then(usersToUpdate => {
-              if (Array.isArray(usersToUpdate)) {
-                usersToUpdate.forEach(u => {
-                  if (!u || R.path(['isError'], u)) {
-                    logger.log('info', `User, ${R.path(['error','id'], u)}, was not updated successfully, Data: ${JSON.stringify(u)}`);
-                    console.log(`User, ${R.path(['error','id'], u)}, was not updated successfully`);
-                  } else {
-                    console.log(`User ${u.id} updated successfully`)
-                    logger.log('info', `User, ${u.id}, updated successfully`)
-                  }
-                });
-              }
-              return usersToUpdate;
-            })
-            .catch(e => console.error('Error: updateAllUsers', e));
+        ) {
+          let actualUser = users.find(u => R.path(['error', 'id'], user) === u.id);
+          if (!actualUser) { return undefined; }
+          return Object.assign({}, actualUser, {invalidUser: true});
+        } else if (R.path(['isError'], user)) {
+          // If there was a facebook error but it was not an invalid
+          // user error, do not mark the user as invalid
+          return undefined;
+        }
+        return user;
+      }).filter(u => !!u);
+      return updateAllUsers(updates).then(() => usersToUpdate)
+    })
+    .then(usersToUpdate => {
+      if (Array.isArray(usersToUpdate)) {
+        usersToUpdate.forEach(u => {
+          if (!u || R.path(['isError'], u)) {
+            logger.log('info', `User, ${R.path(['error','id'], u)},` +
+            ` was not updated successfully, Data: ${JSON.stringify(u)}`);
+          } else {
+            logger.log('info', `User, ${u.id}, updated successfully`)
+          }
+        });
+      }
+      return usersToUpdate;
+    })
+    .catch(e => console.error('Error: updateAllUsers', e));
 }
 
 function updateUsersCheckForErrors(usersToUpdate) {
@@ -490,7 +487,7 @@ function shouldSendStudyMessageUpdate(user, studyMessage, currentTimeMs) {
   const studyStartTime = Number(R.path(['studyStartTime'], user));
 
   if (
-    !!(R.path(['invalidUser'], user))
+    R.path(['invalidUser'], user)
   ) {
     return false;
   }
@@ -515,18 +512,18 @@ function updateUserWithStudyMessage(user, studyMessage) {
 
   let text = studyMessage.text.replace(/XXXXX/, userUpdates.studyId);
   let message = createCustomMessageForHistory({
-      type: TYPE_MESSAGE,
-      messageType: MESSAGE_TYPE_TEXT,
-      text,
+    type: TYPE_MESSAGE,
+    messageType: MESSAGE_TYPE_TEXT,
+    text,
   });
 
   userUpdates = R.merge(userUpdates, {
-      history: updateHistory(
-          R.merge(message, {
-              timestamp: Date.now()
-          }),
-          userUpdates.history
-      )
+    history: updateHistory(
+      R.merge(message, {
+        timestamp: Date.now()
+      }),
+      userUpdates.history
+    )
   });
   return {
     userUpdates,
@@ -576,14 +573,14 @@ function sendStudyMessageToUsers(users) {
   let promisesForSend = userUpdatesAndMessages.map(userAndMessages => {
     const {userUpdates, messagesToSend} = userAndMessages;
     const messagesWithTyping = R.intersperse(
-        { type: FB_TYPING_ON_TYPE },
-        messagesToSend
+      { type: FB_TYPING_ON_TYPE },
+      messagesToSend
     );
     return () => serializeSend({
-        messages: messagesWithTyping,
-        senderID: userUpdates.id,
-        fbMessagingType: FB_MESSAGING_TYPE_UPDATE
-     }).then(() => userUpdates);
+      messages: messagesWithTyping,
+      senderID: userUpdates.id,
+      fbMessagingType: FB_MESSAGING_TYPE_UPDATE
+    }).then(() => userUpdates);
   });
 
   if (!Array.isArray(promisesForSend) || promisesForSend.length === 0) {
@@ -596,8 +593,8 @@ function sendStudyMessageToUsers(users) {
 }
 
 module.exports = {
-    getUserDetails,
-    receivedMessage,
-    sendPushMessagesToUsers,
-    sendStudyMessageToUsers,
+  getUserDetails,
+  receivedMessage,
+  sendPushMessagesToUsers,
+  sendStudyMessageToUsers,
 };
