@@ -1,3 +1,5 @@
+// NOTE: This script will delete individual message keys, and delete the list of message ids
+
 const constants = require('../src/constants');
 
 const { DB_MESSAGE_LIST } = constants;

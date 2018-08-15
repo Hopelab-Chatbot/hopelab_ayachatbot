@@ -8,7 +8,7 @@ To install dependencies:
 yarn
 ```
 
-Running application:
+Running application Locally:
 
 ## Environment Variables
 
@@ -17,9 +17,21 @@ These are obtained from `https://developers.facebook.com`.
 ```
 FB_VERIFY_TOKEN
 FB_PAGE_ACCESS_TOKEN
+```
+
+These are set locally.
+```
 REDIS_HOST
 REDIS_PORT
 ```
+
+## getting app Setup
+
+You can use
+```
+yarn mock-db
+```
+to create a small local test db.
 
 ## Running app locally with Facebook Messenger:
 
@@ -39,6 +51,10 @@ Click 'Edit Events' in the 'Webhooks' section of the 'Messenger Platform', and c
 Go to the page you've created and write a message to it. If you have a database instantiated with a response, then the bot will reply.
 
 A second thing needed is when running this Bot locally, it needs to be exposed publicly to a URL that Facebook can resolve so that it can sync with it. You can do this several different ways, one way is to use [ngrok](https://ngrok.com/). Once installed, running `ngrok http 5000` should expose the running app (assuming the Bot is running on Port 5000). You should see something like `Forwarding https://5c8c992b.ngrok.io -> localhost:5000` in the terminal. *IMPORTANT*: Facebook Messenger needs the `https` URL because they are running TLS. You then use this URL back on the `https://developers.facebook.com` dashboard under webhooks. There should be a button on this page called `Edit Subscription`. Once you click this button, enter in the URL you generated and add the `/webhook` route listener that the Bot is running. So like `https://5c8c992b.ngrok.io/webhook`. Then, the `Verify Token` is the `FB_VERIFY_TOKEN`. It can be anything you want. It just has to be set in your environment and it has to match what you enter here. With those in place, hit `Verify and Save` and then it should be synced with the Bot you have running locally. If you message the Page for which the Bot was registered to, it should start receiving messages locally to your Bot.
+
+A second thing needed is when running this Bot locally, is that it needs to be exposed publicly to a URL that Facebook can resolve so that it can sync with it. You can do this several different ways, one way is to use [ngrok](https://ngrok.com/). Once installed, running `ngrok http 5000` should expose the running app (assuming the Bot is running on Port 5000). You should see something like `Forwarding https://5c8c992b.ngrok.io -> localhost:5000` in the terminal. *IMPORTANT*: Facebook Messenger needs the `https` URL because they are running TLS.
+
+You then use this URL back on the `https://developers.facebook.com` dashboard under webhooks. There should be a button on this page called `Edit Subscription`. Once you click this button, enter in the URL you generated and add the `/webhook` route listener that the Bot is running. So like `https://5c8c992b.ngrok.io/webhook`. Then, the `Verify Token` is `FB_VERIFY_TOKEN`. It can be anything you want. It just has to be set in your environment and it has to match what you enter here. With those in place, hit `Verify and Save` and then it should be synced with the Bot you have running locally. If you message the Page for which the Bot was registered to, it should start receiving messages locally to your Bot.
 
 You'll also need to do this again when the Bot is running on the Prod environment.
 

@@ -1,3 +1,6 @@
+// NOTE: this script breaks the large JSON string of messages into discrete msg keys for better 
+// performance, storage, and debug ability.
+
 const constants = require('../src/constants');
 
 const { DB_MESSAGE_LIST } = constants;

@@ -1,3 +1,6 @@
+// NOTE: this script gets the largest user key. It is useful if you think there may be a bot
+// trying to spam our bot. This script will write to a file to easily inspect the object.
+
 const constants = require('../src/constants');
 var fs = require('fs');
 
@@ -35,7 +38,7 @@ getLAsync(DB_USER_LIST, 0, 2000).then(userIds => {
       }
 
       if ((userIds.length - 1) === i){
-        fs.writeFileSync('./myjsonfile.json', json, 'utf8');
+        fs.writeFileSync('./largestuser.json', json, 'utf8');
         console.log('the largest user is ' + lgst)
         console.log('with ' + length + ' long string')
       }

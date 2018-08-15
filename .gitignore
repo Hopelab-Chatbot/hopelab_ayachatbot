@@ -4,3 +4,4 @@ error.log
 environment.sh
 .env
 coverage
+largestuser.json

@@ -1,3 +1,6 @@
+// NOTE: this script is just a performance test of the new method vs the old method of persisting users
+// This script tests changing a single user, which is the usual change case
+
 const constants = require('../src/constants');
 
 const { DB_USERS, DB_USER_LIST } = constants;

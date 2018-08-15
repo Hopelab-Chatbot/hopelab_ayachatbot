@@ -1,3 +1,5 @@
+// NOTE: this script renames the 'users' JSON string to 'users_bkp' in order to test that there is no
+// code using the old 'users' string
 const constants = require('../src/constants');
 
 const { DB_USERS } = constants;

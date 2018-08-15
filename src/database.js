@@ -68,9 +68,6 @@ const removeUserFromCache = user => { // eslint-disable-line no-unused-vars
   ));
 };
 
-// const setAllUsersInCache = usersToUpdate => {
-//   return usersToUpdate.forEach(user => setUserInCache(user))
-// }
 
 /**
  * Update User By ID
@@ -96,7 +93,9 @@ const updateAllUsers = (usersToUpdate = []) =>
 function returnNewOrOldUser({ id, user }) {
   if (!user && id) {
     const newUser = createNewUser(id);
+    // remove the id if it exists for some reason already
     redisClient.lrem(DB_USER_LIST, 1, id);
+    // add the id to the user list array
     redisClient.lpush(DB_USER_LIST, id);
     setUserInCache(newUser);
     return Promise.resolve(newUser);

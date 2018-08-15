@@ -1,4 +1,4 @@
-// NOTE: this is a helpful utility while doing dev
+// NOTE: this is a helpful utility while doing dev. It will return when a key expires in redis
 // $ node ./scripts/dod.js user:189184588598805
 // will return the expiration time for key user:189184588598805
 const moment = require('moment');
