@@ -25,7 +25,7 @@ const getAsync = promisify(redisClient.get).bind(redisClient);
 const getLAsync = promisify(redisClient.lrange).bind(redisClient);
 setTimeout(() => {console.log('exiting early at 30s');process.exit()}, 30000)
 
-var iterations = 5;
+const iterations = 5;
 
 const knowId = () => {
     i = 0;

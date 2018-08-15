@@ -851,3 +851,39 @@ describe('Messages Module', () => {
     });
   });
 });
+
+describe('message function tests', () => {
+  it('getUpdateActionForUsers should update up to maxUpdate number', () => {
+    const user = {
+      introConversationSeen: true,
+      history: [
+        {
+          type: TYPE_ANSWER,
+          timestamp: moment().subtract(2, 'day').unix() * 1000,
+          message: {text: "hi"},
+          previous: undefined
+        }
+      ],
+      invalidUser: false
+    };
+    const users = [];
+    for (let i = 0; i < 10; i++) {
+      users.push(user);
+    }
+
+    const allMessages = mocks.messages.slice();
+    const allConversations = mocks.conversations.slice();
+    const allCollections = mocks.collections.slice();
+
+    const actions = testModule.getUpdateActionForUsers({
+      users,
+      allConversations,
+      allCollections,
+      allMessages,
+      studyInfo: {},
+      maxUpdates: 2,
+    });
+    expect(actions.length).to.be.at.most(2);
+
+  });
+});

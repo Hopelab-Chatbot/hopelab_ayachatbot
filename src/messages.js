@@ -336,7 +336,8 @@ function getUpdateActionForUsers({
   allConversations,
   allCollections,
   allMessages,
-  studyInfo
+  studyInfo,
+  maxUpdates
 }) {
   return users.reduce((acc, user) => {
     let {action, userActionUpdates} = getUserUpdateAction({
@@ -346,7 +347,7 @@ function getUpdateActionForUsers({
       collections: allCollections,
       studyInfo
     });
-    if (action.type !== ACTION_NO_UPDATE_NEEDED) {
+    if (action.type !== ACTION_NO_UPDATE_NEEDED && acc.length < maxUpdates) {
       acc.push({action, userActionUpdates});
     }
     return acc;

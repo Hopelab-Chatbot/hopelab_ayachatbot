@@ -255,7 +255,6 @@ function receivedMessage({
 
   logger.log('debug', `receivedMessage: ${JSON.stringify(message)} prevMessage: ${JSON.stringify(prevMessage)}`);
 
-  //FIXME: should move this into the normal flow
   // HERE if we get a Specific 'STOP' message.text, we stop the service
   if (message.text && R.equals(message.text.toUpperCase(),STOP_MESSAGE)) {
     userToUpdate = Object.assign({}, userToUpdate, {
@@ -360,18 +359,15 @@ function sendPushMessagesToUsers({
   media,
   studyInfo
 }) {
-  const allActions = getUpdateActionForUsers({users,
+  const actions = getUpdateActionForUsers({users,
     allConversations,
     allCollections,
     allMessages,
     allSeries,
     allBlocks,
     media,
-    studyInfo});
-
-  // Throttle the number of updates that happend at once.
-  // FIXME: this seems like a bad place to do this. Why not decrease actions created earlier
-  const actions = allActions.slice(0, MAX_UPDATE_ACTIONS_ALLOWED);
+    studyInfo,
+    maxUpdates: MAX_UPDATE_ACTIONS_ALLOWED});
 
   logger.log("debug", `Begin of push messages to ${actions.length} users`);
   const promisesForSend = actions.map(({action, userActionUpdates}) => {
