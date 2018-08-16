@@ -3,13 +3,7 @@
 // will return the expiration time for key user:189184588598805
 const moment = require('moment');
 const redis = require('redis');
-
-const config = {
-  redis: {
-    host: '127.0.0.1',
-    port: 6379
-  }
-};
+const config = require('config');
 
 const redisClient = redis.createClient({
   host: config.redis.host,

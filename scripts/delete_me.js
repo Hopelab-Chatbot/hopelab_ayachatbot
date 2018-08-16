@@ -6,18 +6,13 @@ const redis = require('redis');
 const constants = require('../src/constants');
 
 const { DB_USER_LIST } = constants;
-
-const config = {
-  redis: {
-    host: '127.0.0.1',
-    port: 6379
-  }
-};
+const config = require('config');
 
 const redisClient = redis.createClient({
   host: config.redis.host,
   port: config.redis.port
 });
+
 
 const myId = process.argv[2];
 

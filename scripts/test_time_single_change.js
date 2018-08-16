@@ -7,18 +7,13 @@ const { DB_USERS, DB_USER_LIST } = constants;
 const {promisify} = require('util');
 
 let redis = require('redis');
-
-const config = {
-  redis: {
-    host: '127.0.0.1',
-    port: 6379
-  }
-};
+const config = require('config');
 
 const redisClient = redis.createClient({
   host: config.redis.host,
   port: config.redis.port
 });
+
 let id;
 let i = 0;
 const getAsync = promisify(redisClient.get).bind(redisClient);
