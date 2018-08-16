@@ -96,15 +96,15 @@ const QUICK_REPLY_RETRY_BUTTONS = [
     text: CRISIS_RESPONSE_MESSAGE_FOR_BUTTONS
   },
   {
-    title: "Send Feedback",
-    id: `${QUICK_REPLY_RETRY_ID}-send-feedback`,
-    text: SUPPORT_MESSAGE
-  },
-  {
     title: "Stop Notifications",
     id: `${QUICK_REPLY_RETRY_ID}-stop-notifications`,
     text: STOP_NOTIFICATIONS,
     type: TYPE_STOP_NOTIFICATIONS,
+  },
+  {
+    title: "Send Feedback",
+    id: `${QUICK_REPLY_RETRY_ID}-send-feedback`,
+    text: SUPPORT_MESSAGE
   }
 ];
 
