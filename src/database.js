@@ -34,7 +34,12 @@ const { createNewUser } = require('./users');
 const getJSONItemFromCache = key =>
   getAsync(key)
     .then(item => item ? JSON.parse(item) : null)
-    .catch(null);
+    .catch(e => (
+      console.error(
+        `error: getItemFromCache on key: ${key}`,
+        e
+      )
+    ));
 
 const keyFormatUserId = id => `user:${id}`;
 

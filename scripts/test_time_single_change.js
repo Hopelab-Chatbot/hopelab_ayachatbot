@@ -34,7 +34,7 @@ const knowId = () => {
       getAsync(`user:${id}`).then(user => {
         user.history = user.history
         redisClient.set(`user:${id}`, user);
-      }).catch();;
+      }).catch();
       redisClient.quit();
     }
     if (i === iterations -1) {

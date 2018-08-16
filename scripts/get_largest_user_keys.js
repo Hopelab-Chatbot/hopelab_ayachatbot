@@ -3,6 +3,7 @@
 
 const constants = require('../src/constants');
 var fs = require('fs');
+const { keyFormatUserId, getUserById } = require('../src/database');
 
 const { DB_USER_LIST } = constants;
 
@@ -23,28 +24,30 @@ const redisClient = redis.createClient({
 });
 
 const getLAsync = promisify(redisClient.lrange).bind(redisClient);
-const getAsync = promisify(redisClient.get).bind(redisClient);
 
-let lgst = '';
-let length = 0
-let json = ''
-getLAsync(DB_USER_LIST, 0, 2000).then(userIds => {
-  userIds.forEach((id, i) => {
-    getAsync(`user:${id}`).then(user => {
-      if (user.length > length) {
-        length = user.length;
-        lgst = id
+
+getLAsync(DB_USER_LIST, 0, -1).then(userIds => {
+  const promises = userIds.map(id => {
+    return getUserById(id);
+  });
+  Promise.all(promises).then(users => {
+    let lgst = '';
+    let length = 0
+    let json = ''
+    users.forEach(user => {
+      if (JSON.stringify(user).length > length) {
+        length = JSON.stringify(user).length;
+        lgst = user.id
         json = user
       }
-
-      if ((userIds.length - 1) === i){
-        fs.writeFileSync('./largestuser.json', json, 'utf8');
-        console.log('the largest user is ' + lgst)
-        console.log('with ' + length + ' long string')
-      }
-    });
-
-  });
-
-  redisClient.quit();
+    })
+    fs.writeFileSync('./largestuser.json', JSON.stringify(json), 'utf8');
+    console.log('the largest user is ' + lgst)
+    console.log('with ' + length + ' long string')
+    redisClient.quit();
+    setTimeout(() => {
+      process.exit(0)
+    }, 3000);
+  })
+  .catch(console.log);
 }).catch(err => {console.log(err);process.exit(1);});// eslint-disable-line no-console

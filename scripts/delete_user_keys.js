@@ -2,7 +2,7 @@
 // It will seed the 'users' JSON array
 
 const constants = require('../src/constants');
-const { keyFormatUserId } = require('../src/database');
+const { keyFormatUserId, getUserById } = require('../src/database');
 
 const { DB_USER_LIST } = constants;
 
@@ -23,22 +23,28 @@ const redisClient = redis.createClient({
 });
 
 const getLAsync = promisify(redisClient.lrange).bind(redisClient);
-const getAsync = promisify(redisClient.get).bind(redisClient);
 
 getLAsync(DB_USER_LIST, 0, -1).then(userIds => {
-  const users = []
-  userIds.forEach((id, i) => {
-    getAsync(keyFormatUserId(id)).then(user => {
-      users.push(user);
-      redisClient.del(keyFormatUserId(id));
-      if (i === userIds.length - 1 ) {
-        redisClient.set('users', users);
-        redisClient.del(DB_USER_LIST);
-        redisClient.quit();
-        setTimeout(() => {
-          process.exit(0)
-        }, 3000);
-      }
-    }).catch(err => {console.log(err);process.exit(1);});
-  });
+  if (!userIds || userIds.length === 0) {
+    console.log('no users to reset to user key')
+    redisClient.quit();
+    setTimeout(() => {
+      process.exit(0)
+    }, 3000);
+  } else {
+    const promises = userIds.map(id => {
+      return getUserById(id);
+    });
+    Promise.all(promises).then(users => {
+      redisClient.set('users', JSON.stringify(users));
+      redisClient.del(DB_USER_LIST);
+      users.forEach(({id}) => redisClient.del(keyFormatUserId(id)))
+      console.log('deleted ' + promises.length + ' individual user keys')
+      redisClient.quit();
+      setTimeout(() => {
+        process.exit(0)
+      }, 3000);
+    })
+    .catch(err => console.log(err));// eslint-disable-line no-console
+  }
 }).catch(err => {console.log(err);process.exit(1);});// eslint-disable-line no-console
