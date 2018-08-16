@@ -5,6 +5,12 @@ const {
   popScope,
   hasStoppedNotifications
 } = require('./users');
+
+const {
+  newConversationTrack,
+  conversationIsLiveAndNotIntro
+} = require('./conversations');
+
 const {
   TYPE_COLLECTION,
   TYPE_BLOCK,
@@ -31,8 +37,6 @@ const {
   CRISIS_RESPONSE_MESSAGE,
   LOGIC_SEQUENTIAL,
   LOGIC_RANDOM,
-  INTRO_CONVERSATION_ID,
-  INTRO_BLOCK_ID,
   COLLECTION_PROGRESS,
   SERIES_PROGRESS,
   SERIES_SEEN,
@@ -41,7 +45,6 @@ const {
   CUT_OFF_HOUR_FOR_NEW_MESSAGES,
   NUMBER_OF_UPDATE_MESSAGES_ALLOWED,
   MINUTES_OF_INACTIVITY_BEFORE_UPDATE_MESSAGE,
-  STUDY_ID_LIST,
   STUDY_ID_NO_OP,
   STUDY_MESSAGES
 } = require('./constants');
@@ -114,7 +117,7 @@ function makePlatformMediaMessagePayload(type, url, media) {
           attachment_id
         }
       }
-    }
+    };
   } else if (type === 'image' || !isYouTubeVideo(url)) {
     return  {
       attachment: {
@@ -159,41 +162,6 @@ function getLastSentMessageInHistory(user, ignoreQuickReplyRetryMessages=true) {
 }
 
 
-/**
- * Check if conversation is live and not the intro
- *
- * @param {Object} conversation
- * @return {Boolean}
-*/
-function conversationIsLiveAndNotIntro(conversation) {
-  return conversation.isLive && conversation.id !== INTRO_CONVERSATION_ID;
-}
-
-
-/**
- * Get a random conversation track
- *
- * @param {Array} conversations
- * @return {String}
-*/
-function getRandomConversationTrack(conversations) {
-  return R.prop(
-    'id',
-    conversations[Math.floor(Math.random() * conversations.length)]
-  );
-}
-
-/**
- * Check if the assigned conversation track is gone
- *
- * @param {String} conversation
- * @param {Array} conversations
- * @return {Boolean}
-*/
-function assignedConversationTrackIsDeleted(conversation, conversations) {
-  return conversations.indexOf(conversation) === -1;
-}
-
 function generateUniqueStudyId(studyInfo, studyIdList) {
   let studyInfoSet = new Set(studyInfo.map(String));
 
@@ -205,70 +173,9 @@ function generateUniqueStudyId(studyInfo, studyIdList) {
   return String(STUDY_ID_NO_OP);
 }
 
-/**
- * Start a new Converation Track
- *
- * @param {Array} conversations
- * @param {Array} messages
- * @param {Array} collections
- * @param {Object} user
- * @return {Object}
-*/
-function newConversationTrack(conversations, messages, collections, studyInfo, user) {
-  let conversationTrack;
 
-  let userUpdates = Object.assign({}, user);
-
-  if (!user.introConversationSeen) {
-    conversationTrack = INTRO_CONVERSATION_ID;
-    userUpdates.introConversationSeen = true;
-  } else if (
-    !userUpdates.assignedConversationTrack ||
-        assignedConversationTrackIsDeleted(
-          userUpdates.assignedConversationTrack,
-          conversations
-        )
-  ) {
-    userUpdates.assignedConversationTrack = getRandomConversationTrack(
-      conversations
-    );
-    conversationTrack = userUpdates.assignedConversationTrack;
-  } else {
-    conversationTrack = userUpdates.assignedConversationTrack;
-  }
-
-  const next = messages
-    .concat(collections)
-    .find(
-      R.both(
-        R.pathEq(['parent', 'id'], conversationTrack),
-        R.propEq('start', true)
-      )
-    );
-
-  if (
-    user.assignedConversationTrack !== userUpdates.assignedConversationTrack
-  ) {
-    userUpdates.conversationStartTimestamp = Date.now();
-    const newConversation = conversations.find(c => (
-      c.id === userUpdates.assignedConversationTrack
-    ));
-    if (
-      !Number.isFinite(Number(userUpdates.studyId)) &&
-        newConversation &&
-        newConversation.isStudy
-    ) {
-      userUpdates.studyId = generateUniqueStudyId(studyInfo, STUDY_ID_LIST);
-      userUpdates.studyStartTime = Date.now();
-    }
-  }
-  return {
-    action: { type: next.type, id: next.id },
-    block: INTRO_BLOCK_ID,
-    user: userUpdates
-  };
-}
-
+//TODO: could rewrite this and getLastSentMessageInHistory as they both look through user
+// history for something... could reduce code here.
 function findLastUserAnswer(user) {
   if (!user.history) { return undefined; }
 
@@ -337,6 +244,7 @@ function atEndOfConversationAndShouldRestart(user, timeNow, cutOffHour, cutOffMi
 
 }
 
+//TODO: could rewrite this using reduce
 function hasExceededMaxUpdates(user, maxUpdates) {
   let updates = 0;
   for (var i = user.history.length - 1; i >= 0; i--) {
@@ -373,11 +281,9 @@ function shouldReceiveUpdate(user, currentTimeMs) {
   if (R.path(['invalidUser'], user) === true) {
     return false;
   }
-
   let minutesSinceLastActivity = Math.floor(
     (currentTimeMs - lastAnswer.timestamp) / 1000 / 60
   );
-
   return minutesSinceLastActivity > MINUTES_OF_INACTIVITY_BEFORE_UPDATE_MESSAGE;
 }
 
@@ -430,7 +336,8 @@ function getUpdateActionForUsers({
   allConversations,
   allCollections,
   allMessages,
-  studyInfo
+  studyInfo,
+  maxUpdates
 }) {
   return users.reduce((acc, user) => {
     let {action, userActionUpdates} = getUserUpdateAction({
@@ -440,14 +347,14 @@ function getUpdateActionForUsers({
       collections: allCollections,
       studyInfo
     });
-    if (action.type !== ACTION_NO_UPDATE_NEEDED) {
+    if (action.type !== ACTION_NO_UPDATE_NEEDED && acc.length < maxUpdates) {
       acc.push({action, userActionUpdates});
     }
     return acc;
   }, []);
 }
 
-function doesMessageStillExit(message, messages) {
+function doesMessageStillExist(message, messages) {
   return !!(messages.find(m => message.id === m.id));
 }
 
@@ -467,7 +374,7 @@ function isCrisisMessage(message, crisisKeywords) {
       if (crisisWord === wordInMessage) {
         acc = true;
       }
-    })
+    });
     return acc;
   }, false);
 }
@@ -510,7 +417,6 @@ function getActionForMessage({
 }) {
   let userActionUpdates = user;
   const lastMessage = getLastSentMessageInHistory(user);
-
   if (isCrisisMessage(message, CRISIS_KEYWORDS)) {
     return {
       action: { type: ACTION_CRISIS_REPONSE },
@@ -518,34 +424,10 @@ function getActionForMessage({
     };
   }
 
-  let lastMessageWithQucikReply = getLastSentMessageInHistory(user, false);
-  const quickReplyButton = QUICK_REPLY_RETRY_BUTTONS.find(b => (
-    b.id === R.path(['id'], lastMessageWithQucikReply)
-  ));
-
-  if (
-    R.path(['isQuickReplyRetry'], lastMessageWithQucikReply) &&
-      R.path(['text'], quickReplyButton)
-  ) {
-    return {
-      action: { type: ACTION_REPLAY_PREVIOUS_MESSAGE },
-      userActionUpdates
-    };
-  }
-
-  if (
-    R.path(['next', 'id'], lastMessage) === END_OF_CONVERSATION_ID &&
-      R.path(['messageType'], lastMessage) !== TYPE_QUESTION_WITH_REPLIES &&
-      atEndOfConversationAndShouldRestart(user, moment().unix(), CUT_OFF_HOUR_FOR_NEW_MESSAGES)
-  ) {
-    let convoOptions = conversations.filter(conversationIsLiveAndNotIntro);
-    if (R.path(['assignedConversationTrack'], user)) {
-      convoOptions = conversations.filter(
-        c => c.id === user.assignedConversationTrack
-      );
-    }
+  // this is just to reduce clutter later on
+  const startNewConversationTrack = convo => {
     const newTrack = newConversationTrack(
-      convoOptions,
+      convo,
       messages,
       collections,
       studyInfo,
@@ -560,8 +442,42 @@ function getActionForMessage({
       action,
       userActionUpdates
     };
+  };
+
+  let lastMessageWithQuickReply = getLastSentMessageInHistory(user, false);
+  // NOTE: I'm not sure what this block does... seems like it never could be triggered
+  // This block below returns the previous message before the user entered something
+  // unscripted.
+  const quickReplyButton = QUICK_REPLY_RETRY_BUTTONS.find(b => (
+    b.id === R.path(['id'], lastMessageWithQuickReply)
+  ));
+  if (
+    R.path(['isQuickReplyRetry'], lastMessageWithQuickReply) &&
+      R.path(['text'], quickReplyButton)
+  ) {
+
+    return {
+      action: { type: ACTION_REPLAY_PREVIOUS_MESSAGE },
+      userActionUpdates
+    };
   }
 
+  // here we start another conversation if the user finished the old one
+  if (
+    R.path(['next', 'id'], lastMessage) === END_OF_CONVERSATION_ID &&
+      R.path(['messageType'], lastMessage) !== TYPE_QUESTION_WITH_REPLIES &&
+      atEndOfConversationAndShouldRestart(user, moment().unix(), CUT_OFF_HOUR_FOR_NEW_MESSAGES)
+  ) {
+    let convoOptions = conversations.filter(conversationIsLiveAndNotIntro);
+    if (R.path(['assignedConversationTrack'], user)) {
+      convoOptions = conversations.filter(
+        c => c.id === user.assignedConversationTrack
+      );
+    }
+    return startNewConversationTrack(convoOptions);
+  }
+
+  // here we say this convo is done, and we'll talk to you tomorrow
   if (
     R.path(['next', 'id'], lastMessage) === END_OF_CONVERSATION_ID &&
       R.path(['messageType'], lastMessage) !== TYPE_QUESTION_WITH_REPLIES
@@ -572,6 +488,8 @@ function getActionForMessage({
     };
   }
 
+  // here we do whatever the action is we were supposed to do when
+  // the user replies with a quick reply btn
   let quickReplyRetryButton = getButtonForQuickReplyRetry(
     message,
     QUICK_REPLY_RETRY_BUTTONS
@@ -584,33 +502,20 @@ function getActionForMessage({
         quickReplyRetryId: quickReplyRetryButton.id
       },
       userActionUpdates
-    }
-  }
-
-  if (
-    R.path(['next', 'id'], lastMessage) &&
-      lastMessage.messageType !== TYPE_QUESTION_WITH_REPLIES &&
-      (!doesMessageStillExit(lastMessage, messages) ||
-       !doesMessageStillExit(lastMessage.next, messages))
-  ) {
-    const newTrack = newConversationTrack(
-      conversations.filter(conversationIsLiveAndNotIntro),
-      messages,
-      collections,
-      studyInfo,
-      user
-    );
-
-    let action = newTrack.action;
-
-    userActionUpdates = Object.assign({}, userActionUpdates, newTrack.user);
-
-    return {
-      action,
-      userActionUpdates
     };
   }
 
+  // If the message track this user has been following has been deleted, start a new conversation
+  if (
+    R.path(['next', 'id'], lastMessage) &&
+      lastMessage.messageType !== TYPE_QUESTION_WITH_REPLIES &&
+      (!doesMessageStillExist(lastMessage, messages) ||
+       !doesMessageStillExist(lastMessage.next, messages))
+  ) {
+    return startNewConversationTrack(conversations.filter(conversationIsLiveAndNotIntro));
+  }
+
+  // end conversation if appropriate...
   if (
     R.path(['messageType'], lastMessage) === TYPE_QUESTION_WITH_REPLIES &&
       !!message.quick_reply
@@ -631,6 +536,8 @@ function getActionForMessage({
     }
   }
 
+  // if the user did not respond correctly to the question
+  // try the message with the quick-reply buttons saying 'Hey, I don't get that'
   if (
     R.path(['messageType'], lastMessage) === TYPE_QUESTION_WITH_REPLIES &&
       !message.quick_reply
@@ -643,12 +550,12 @@ function getActionForMessage({
 
   let action;
 
-
   if (
     lastMessage &&
         R.path(['next'], lastMessage)
   ) {
     action = { type: lastMessage.next.type, id: lastMessage.next.id };
+    // if the user is working through a collection, then we move through that
   } else if (user[COLLECTION_SCOPE] && user[COLLECTION_SCOPE].length) {
     let nextMessage = getNextMessageForCollection(
       R.last(user[COLLECTION_SCOPE]),
@@ -664,18 +571,9 @@ function getActionForMessage({
       id: nextMessage.message.id
     };
     userActionUpdates = nextMessage.user;
+    // just start a new conversation
   } else {
-    const newTrack = newConversationTrack(
-      conversations.filter(conversationIsLiveAndNotIntro),
-      messages,
-      collections,
-      studyInfo,
-      user
-    );
-
-    action = newTrack.action;
-
-    userActionUpdates = Object.assign({}, userActionUpdates, newTrack.user);
+    return startNewConversationTrack(conversations.filter(conversationIsLiveAndNotIntro));
   }
 
   return { action, userActionUpdates };
@@ -937,7 +835,7 @@ function createCustomMessageForHistory({
     next,
     text,
     timestamp: Date.now()
-  }
+  };
 }
 
 function transitionIsDelayed(message, conversationStartTimestampMs, timeNowMs) {
@@ -963,18 +861,18 @@ function createQuickReplyRetryMessage(message, messageOptions) {
     title: button.title,
     payload: JSON.stringify({id: button.id, type: TYPE_MESSAGE})
   }));
-  const messageId = QUICK_REPLY_RETRY_ID
+  const messageId = QUICK_REPLY_RETRY_ID;
   const messages = [{
     id: messageId,
     text: message,
     messageType: TYPE_QUESTION_WITH_REPLIES,
     quick_replies
-  }]
+  }];
 
   return {
     type: TYPE_MESSAGE,
     message: makePlatformMessagePayload(messageId, messages)
-  }
+  };
 }
 
 function createQuickReplyRetryNextMessageResponse(action, messageOptions) {

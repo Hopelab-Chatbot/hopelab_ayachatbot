@@ -17,11 +17,14 @@ const FB_MESSAGING_TYPE_RESPONSE = 'RESPONSE';
 const FB_MESSAGING_TYPE_UPDATE = 'UPDATE';
 
 // database keys
+// deprecated
 const DB_USERS = 'users';
+const DB_USER_LIST = 'userlist';
 const DB_CONVERSATIONS = 'conversations';
 const DB_COLLECTIONS = 'collections';
 const DB_SERIES = 'series';
 const DB_MESSAGES = 'messages';
+const DB_MESSAGE_LIST = 'msglist';
 const DB_USER_HISTORY = 'user-history';
 const DB_BLOCKS = 'blocks';
 const DB_MEDIA = 'media';
@@ -53,7 +56,7 @@ const MESSAGE_TYPE_TEXT = 'text';
 const TYPE_STOP_NOTIFICATIONS = 'stopNotifications';
 
 const STOP_MESSAGE = 'STOP';
-const RESUME_MESSAGE = 'RESUME'
+const RESUME_MESSAGE = 'RESUME';
 // entity keys
 const INTRO_CONVERSATION_ID = 'intro-conversation';
 const INTRO_BLOCK_ID = 'intro-block';
@@ -72,7 +75,12 @@ const BLOCKS_SEEN = 'blocks-seen';
 // caching time
 const ONE_DAY_IN_MILLISECONDS = 1000 * 60 * 60 * 24;
 const ONE_WEEK_IN_MILLISECONDS = 1000 * 60 * 60 * 24 * 7 * 4;
+const ONE_WEEK_IN_SECONDS =  60 * 60 * 24 * 7;
 
+const SECONDS_EXPIRE_ARG = 'EX'; // redis argument for setting expiry time. don't modify
+
+const ONE_MONTH_IN_SECONDS =  60 * 60 * 24 * 7 * 4;
+const EXPIRE_USER_AFTER = ONE_MONTH_IN_SECONDS;
 // Special Messages
 const QUICK_REPLY_RETRY_MESSAGE = "Sorry can’t compute! 🤖 Buttons plz. What would you like to do next?";
 const QUICK_REPLY_RETRY_ID = 'quick-reply-retry-id';
@@ -80,8 +88,8 @@ const QUICK_REPLY_RETRY_ID = 'quick-reply-retry-id';
 const END_OF_CONVERSATION_MESSAGE = "Sorry! I’m hanging out with my bot friends for the rest of the day 💅🏽. Plus I want to make sure we talk a bit every day so you get the most out of our chats. Text me tomorrow!";
 const UPDATE_USER_MESSAGE = "Hi! Don't forget about me!";
 const CRISIS_RESPONSE_MESSAGE = "hey, I hope everything is ok. Your response included a few words that indicate you may be struggling. If you want to talk to a real person text Crisis Text Line at 741741 or call this hotline: 1-800-273-8255";
-const CRISIS_RESPONSE_MESSAGE_FOR_BUTTONS = "I can't connect you directly to a human but if you text Crisis Text Line at m.me/crisistextline there is always someone there to help when you are struggling."
-const SUPPORT_MESSAGE = "I love feedback! Please type anything you'd like to send my human makers here in one message. Or you can e-mail my team at vivibot@hopelab.org"
+const CRISIS_RESPONSE_MESSAGE_FOR_BUTTONS = "I can't connect you directly to a human but if you text Crisis Text Line at m.me/crisistextline there is always someone there to help when you are struggling.";
+const SUPPORT_MESSAGE = "I love feedback! Please type anything you'd like to send my human makers here in one message. Or you can e-mail my team at vivibot@hopelab.org";
 // const SUPPORT_MESSAGE = "I can’t stop automatically but you can change your settings to turn me off like this:\n\nOn a phone: Click the settings gear in the top right corner. Then click “Manage Messages”. You can either turn off just notifications or all messages from me there.\n\nOn the computer: look for the “Options” panel to the right of our chat. Click either “Manage Messages” or “Notifications” from here to change your settings."
 const STOP_NOTIFICATIONS = `Type ${STOP_MESSAGE} and I'll stop sending you notifications until you contact me by typing ${RESUME_MESSAGE}`;
 
@@ -113,7 +121,7 @@ const STOPPED_MESSAGE = {
   message: {
     text: `Ok, I will stop all messages. If you ever want to chat again just type ${RESUME_MESSAGE}`
   }
-}
+};
 
 // Crisis Keywords
 const CRISIS_KEYWORDS = [
@@ -242,5 +250,11 @@ module.exports = {
   TYPE_STOP_NOTIFICATIONS,
   STOP_MESSAGE,
   RESUME_MESSAGE,
-  STOPPED_MESSAGE
+  STOPPED_MESSAGE,
+  DB_USER_LIST,
+  DB_MESSAGE_LIST,
+  ONE_WEEK_IN_SECONDS,
+  ONE_MONTH_IN_SECONDS,
+  EXPIRE_USER_AFTER,
+  SECONDS_EXPIRE_ARG
 };

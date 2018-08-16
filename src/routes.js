@@ -34,7 +34,6 @@ module.exports = app => {
             if (event.message) {
               const senderID = event.sender.id;
               const message = event.message;
-
               const promises = [
                 getUserById(senderID),
                 getConversations(),
@@ -45,7 +44,6 @@ module.exports = app => {
                 getMedia(),
                 getStudyInfo(),
               ];
-
               Promise.all(promises)
                 .then(res => {
                   let user = Object.assign({}, res[0]);

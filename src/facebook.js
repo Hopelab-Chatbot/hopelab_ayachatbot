@@ -4,6 +4,8 @@ const R = require('ramda');
 
 const { updateHistory, getPreviousMessageInHistory, hasStoppedNotifications } = require('./users');
 
+const { isReturningBadFBCode } = require('./utils/fb_utils');
+
 const { updateUser, updateAllUsers, setStudyInfo } = require('./database');
 
 const { logger } = require('./logger');
@@ -37,7 +39,7 @@ const {
   createCustomMessageForHistory
 } = require('./messages');
 
-const { promiseSerial, promiseSerialKeepGoingOnError } = require('./utils');
+const { promiseSerial, promiseSerialKeepGoingOnError } = require('./utils/gen_utils');
 
 /**
  * Get User Details
@@ -107,7 +109,7 @@ function callSendAPI(messageData) {
 
           console.error('ERROR: Unable to send message in callSendAPI');
           logger.log('error',
-            `Unable to send message to user, error: ${JSON.stringify(error)}, message: ${JSON.stringify(messageData)}`)
+            `Unable to send message to user, error: ${JSON.stringify(error)}, message: ${JSON.stringify(messageData)}`);
 
           reject(error);
         }
@@ -218,11 +220,11 @@ function sendAllMessagesToMessenger({
         })
         .catch(e => {
           logger.log('error', `Error: updateUser, ${JSON.stringify(e)}`);
-        })
+        });
     })
     .catch(e => {
       logger.log('error', `Promise serial, ${JSON.stringify(e)}`);
-    })
+    });
 }
 
 function userIsStartingStudy(oldUser, newUser) {
@@ -252,6 +254,7 @@ function receivedMessage({
   const prevMessage = getPreviousMessageInHistory(allMessages, user);
 
   logger.log('debug', `receivedMessage: ${JSON.stringify(message)} prevMessage: ${JSON.stringify(prevMessage)}`);
+
   // HERE if we get a Specific 'STOP' message.text, we stop the service
   if (message.text && R.equals(message.text.toUpperCase(),STOP_MESSAGE)) {
     userToUpdate = Object.assign({}, userToUpdate, {
@@ -262,19 +265,22 @@ function receivedMessage({
       senderID,
     }).then(() =>{
       updateUser(userToUpdate).then(() =>
-        logger.log('debug', `user stopped notifications: ${userToUpdate.id}`))
+        logger.log('debug', `user stopped notifications: ${userToUpdate.id}`));
     }).catch(err => {
-      logger.log(err)
-      logger.log('debug', `something went wrong sending stop message to ${userToUpdate.id}`)
-    })
+      logger.log(err);
+      logger.log('debug', `something went wrong sending stop message to ${userToUpdate.id}`);
+    });
     return;
   }
-
+  // If message is 'resume' message, we resume the communication with the bot
   if (message.text && R.equals(message.text.toUpperCase(), RESUME_MESSAGE)) {
     userToUpdate = Object.assign({}, userToUpdate, {
       stopNotifications: false,
     });
   }
+
+  // if user is an 'invalidUser' lets stop here as well
+  if (R.path(['invalidUser'], user)) return;
 
   userToUpdate = Object.assign({}, userToUpdate, {
     history: updateHistory(
@@ -288,6 +294,8 @@ function receivedMessage({
     )
   });
 
+  // here we decide what to do next based on this message
+
   const { action, userActionUpdates } =  getActionForMessage({
     message,
     user: userToUpdate,
@@ -299,8 +307,10 @@ function receivedMessage({
     studyInfo
   });
 
+  // update the user to include that action in it's history
   userToUpdate = Object.assign({}, userToUpdate, userActionUpdates);
 
+  // attach a message/messages related to action
   const { messagesToSend, userUpdates } = getMessagesForAction({
     action,
     conversations: allConversations,
@@ -328,6 +338,8 @@ function receivedMessage({
     // TODO: send study survey every 2 weeks for 6 weeks
   }
 
+  // send it
+
   sendAllMessagesToMessenger({
     messages: messagesWithTyping,
     senderID,
@@ -347,17 +359,15 @@ function sendPushMessagesToUsers({
   media,
   studyInfo
 }) {
-  const allActions = getUpdateActionForUsers({users,
+  const actions = getUpdateActionForUsers({users,
     allConversations,
     allCollections,
     allMessages,
     allSeries,
     allBlocks,
     media,
-    studyInfo});
-
-  // Throttle the number of updates that happend at once.
-  const actions = allActions.slice(0, MAX_UPDATE_ACTIONS_ALLOWED);
+    studyInfo,
+    maxUpdates: MAX_UPDATE_ACTIONS_ALLOWED});
 
   logger.log("debug", `Begin of push messages to ${actions.length} users`);
   const promisesForSend = actions.map(({action, userActionUpdates}) => {
@@ -412,19 +422,12 @@ function sendPushMessagesToUsers({
   logger.log("debug", `About to push to ${promisesForSend.length} users`);
   return promiseSerialKeepGoingOnError(promisesForSend)
     .then(usersToUpdate => {
-      logger.log('debug', `Messages sent, now saving updates for ${R.path(['length'],usersToUpdate)} users`)
+      logger.log('debug', `Messages sent, now saving updates for ${R.path(['length'],usersToUpdate)} users`);
       return usersToUpdate;
     })
     .then(usersToUpdate => { // TODO: replace this with function defined below
       let updates = usersToUpdate.map(user => {
-        if (
-          R.path(['isError'], user) &&
-                  (
-                    R.path(['error', 'fbCode'], user) === FB_ERROR_CODE_INVALID_USER ||
-                    R.path(['error', 'fbCode'], user) === FB_ERROR_CODE_UNAVAILABLE_USER ||
-                    R.path(['error', 'fbCode'], user) === FB_ERROR_CODE_UNAVAILABLE_USER_10
-                  )
-        ) {
+        if (R.path(['isError'], user) && isReturningBadFBCode(user)) {
           let actualUser = users.find(u => R.path(['error', 'id'], user) === u.id);
           if (!actualUser) { return undefined; }
           return Object.assign({}, actualUser, {invalidUser: true});
@@ -435,7 +438,7 @@ function sendPushMessagesToUsers({
         }
         return user;
       }).filter(u => !!u);
-      return updateAllUsers(updates).then(() => usersToUpdate)
+      return updateAllUsers(updates).then(() => usersToUpdate);
     })
     .then(usersToUpdate => {
       if (Array.isArray(usersToUpdate)) {
@@ -444,7 +447,7 @@ function sendPushMessagesToUsers({
             logger.log('info', `User, ${R.path(['error','id'], u)},` +
             ` was not updated successfully, Data: ${JSON.stringify(u)}`);
           } else {
-            logger.log('info', `User, ${u.id}, updated successfully`)
+            logger.log('info', `User, ${u.id}, updated successfully`);
           }
         });
       }
@@ -473,7 +476,7 @@ function updateUsersCheckForErrors(usersToUpdate) {
     }
     return user;
   }).filter(u => !!u);
-  return updateAllUsers(updates).then(() => usersToUpdate)
+  return updateAllUsers(updates).then(() => usersToUpdate);
 }
 
 function hasValidStudyId(user) {
@@ -533,7 +536,7 @@ function updateUserWithStudyMessage(user, studyMessage) {
         message: { text }
       }
     ]
-  }
+  };
 }
 
 function mapUserToUserAndMessagesToSend(user) {

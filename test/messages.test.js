@@ -65,7 +65,7 @@ const createModifiedMocksForTransition = mocks => {
     text: "Stuff",
     next: {id: transitionId, type: TYPE_MESSAGE},
     parent: {type: TYPE_CONVERSATION, id: "intro-conversation"}
-  }
+  };
   modifiedMocks.messages.push(previousMessage);
 
   modifiedMocks.user = {
@@ -83,7 +83,7 @@ const createModifiedMocksForTransition = mocks => {
   };
 
   return modifiedMocks;
-}
+};
 
 const createModifiedMocksForConversationStartingWithCollection = mocks => {
   let modifiedMocks = Object.assign(
@@ -108,7 +108,7 @@ const createModifiedMocksForConversationStartingWithCollection = mocks => {
   });
 
   // new Collection
-  const collectionId = "SJoihxbLM"
+  const collectionId = "SJoihxbLM";
   modifiedMocks.collections.push({
     id: collectionId,
     name: "Collection Test",
@@ -147,7 +147,7 @@ const createModifiedMocksForConversationStartingWithCollection = mocks => {
     start: true,
     text: "hello?",
     type: TYPE_MESSAGE
-  })
+  });
 
   const transitionId = 'transition123';
   modifiedMocks.messages.push({
@@ -164,7 +164,7 @@ const createModifiedMocksForConversationStartingWithCollection = mocks => {
     text: "Stuff",
     next: {id: transitionId, type: TYPE_MESSAGE},
     parent: {type: TYPE_CONVERSATION, id: "intro-conversation"}
-  }
+  };
   modifiedMocks.messages.push(previousMessage);
 
   modifiedMocks.user = {
@@ -182,7 +182,7 @@ const createModifiedMocksForConversationStartingWithCollection = mocks => {
   };
 
   return modifiedMocks;
-}
+};
 
 describe('Messages Module', () => {
   it('should have an getActionForMessage function', () => {
@@ -439,7 +439,7 @@ describe('Messages Module', () => {
 
       const declaration = {
         text: "When, in the course of human events, it becomes necessary for one people to dissolve the political bands which have connected them with another, and to assume among the powers of the earth, the separate and equal station to which the laws of nature and of nature's God entitle them, a decent respect to the opinions of mankind requires that they should declare the causes which impel them to the separation. We hold these truths to be self-evident, that all men are created equal, that they are endowed by their Creator with certain unalienable rights, that among these are life, liberty and the pursuit of happiness. That to secure these rights, governments are instituted among men, deriving their just powers from the consent of the governed. That whenever any form of government becomes destructive to these ends, it is the right of the people to alter or to abolish it, and to institute new government, laying its foundation on such principles and organizing its powers in such form, as to them shall seem most likely to effect their safety and happiness. Prudence, indeed, will dictate that governments long established should not be changed for light and transient causes; and accordingly all experience hath shown that mankind are more disposed to suffer, while evils are sufferable, than to right themselves by abolishing the forms to which they are accustomed. But when a long train of abuses and usurpations, pursuing invariably the same object evinces a design to reduce them under absolute despotism, it is their right, it is their duty, to throw off such government, and to provide new guards for their future security. --Such has been the patient sufferance of these colonies; and such is now the necessity which constrains them to alter their former systems of government. The history of the present King of Great Britain is a history of repeated injuries and usurpations, all having in direct object the establishment of an absolute tyranny over these states. To prove this, let facts be submitted to a candid world." //eslint-disable-line max-len
-      }
+      };
 
       expect(testModule.isCrisisMessage(declaration, CRISIS_KEYWORDS)).to.be.false;
     });
@@ -448,8 +448,8 @@ describe('Messages Module', () => {
       const message = {text: "hurt.,#?!$%^&*;:{}=-_`~() myself"};
 
       expect(testModule.isCrisisMessage(message, CRISIS_KEYWORDS)).to.be.true;
-    })
-  })
+    });
+  });
 
   describe('makePlatformMessagePayload', () => {
     const messages = [
@@ -495,7 +495,7 @@ describe('Messages Module', () => {
       expect(message.text).to.equal(messages[2].text);
       expect(message.quick_replies.length).to.equal(1);
       expect(message.quick_replies[0].title).to.be.undefined;
-      expect(message.quick_replies[0].payload).to.equal("{}")
+      expect(message.quick_replies[0].payload).to.equal("{}");
     });
   });
 
@@ -519,7 +519,7 @@ describe('Messages Module', () => {
           m.start && m.parent && m.parent.id === INTRO_CONVERSATION_ID
         ));
         expect(action.id).to.eq(firstIntroMessage.id);
-      })
+      });
     });
 
     it('starts in the assigned conversation track', () => {
@@ -721,7 +721,7 @@ describe('Messages Module', () => {
       expect(messagesToSend).to.exist;
       expect(Array.isArray(messagesToSend)).to.be.true;
       expect(messagesToSend.length).to.equal(2);
-      expect(messagesToSend[0].message.text).to.equal(text)
+      expect(messagesToSend[0].message.text).to.equal(text);
       expect(messagesToSend[1].message.text).to.equal(firstMessageInConversation);
 
       expect(userUpdates).to.exist;
@@ -835,7 +835,7 @@ describe('Messages Module', () => {
       expect(payload.attachment.type).to.equal('video');
       expect(payload.attachment.payload).to.exist;
       expect(payload.attachment.payload.url).to.equal(url);
-    })
+    });
 
     it('creates a payload for a video that HAS been uploaded to facebook', () => {
       const url = 'https://www.test.com/video.mp4';
@@ -848,6 +848,42 @@ describe('Messages Module', () => {
       expect(payload.attachment.type).to.equal('video');
       expect(payload.attachment.payload).to.exist;
       expect(payload.attachment.payload.attachment_id).to.equal(attachment_id);
-    })
+    });
+  });
+});
+
+describe('message function tests', () => {
+  it('getUpdateActionForUsers should update up to maxUpdate number', () => {
+    const user = {
+      introConversationSeen: true,
+      history: [
+        {
+          type: TYPE_ANSWER,
+          timestamp: moment().subtract(2, 'day').unix() * 1000,
+          message: {text: "hi"},
+          previous: undefined
+        }
+      ],
+      invalidUser: false
+    };
+    const users = [];
+    for (let i = 0; i < 10; i++) {
+      users.push(user);
+    }
+
+    const allMessages = mocks.messages.slice();
+    const allConversations = mocks.conversations.slice();
+    const allCollections = mocks.collections.slice();
+
+    const actions = testModule.getUpdateActionForUsers({
+      users,
+      allConversations,
+      allCollections,
+      allMessages,
+      studyInfo: {},
+      maxUpdates: 2,
+    });
+    expect(actions.length).to.be.at.most(2);
+
   });
 });

@@ -3,10 +3,12 @@ jobs:
   build:
     docker:
       - image: circleci/node:9.5
+      - image: redis
     steps:
       - checkout
       - run: yarn install
       - run: yarn lint
+      - run: yarn mock-db
       - run: yarn test
       - run: sudo apt-get update
       - run: sudo apt install -y rsync
