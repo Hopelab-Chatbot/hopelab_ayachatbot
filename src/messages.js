@@ -7,8 +7,13 @@ const {
 } = require('./users');
 
 const {
+  hasFinishedIntro,
+  hasBegunIntro
+} = require('./utils/user_utils');
+
+const {
   newConversationTrack,
-  conversationIsLiveAndNotIntro
+  conversationIsLiveAndNotIntro,
 } = require('./conversations');
 
 const {
@@ -46,7 +51,7 @@ const {
   NUMBER_OF_UPDATE_MESSAGES_ALLOWED,
   MINUTES_OF_INACTIVITY_BEFORE_UPDATE_MESSAGE,
   STUDY_ID_NO_OP,
-  STUDY_MESSAGES
+  STUDY_MESSAGES,
 } = require('./constants');
 
 const R = require('ramda');
@@ -478,6 +483,7 @@ function getActionForMessage({
   }
 
   // here we say this convo is done, and we'll talk to you tomorrow
+
   if (
     R.path(['next', 'id'], lastMessage) === END_OF_CONVERSATION_ID &&
       R.path(['messageType'], lastMessage) !== TYPE_QUESTION_WITH_REPLIES
@@ -1095,7 +1101,12 @@ function getMessagesForAction({
           conversations.find(c => c.id === nC.id)
         ).filter(nc => !!nc);
       }
-
+      // here we mark this user as having completed the intro conversation,
+      // so we can send push messages to them
+      if (hasBegunIntro(user) && !hasFinishedIntro(user)) {
+        const updates = { introConversationFinished: true};
+        userUpdates = Object.assign({}, userUpdates, updates);
+      }
       const newTrack = newConversationTrack(
         conversationsForNewTrack,
         messages,

@@ -10,6 +10,7 @@ const {
 } = require('./database');
 
 const { hasStoppedNotifications } = require('./users');
+const { hasFinishedIntro } = require('./utils/user_utils');
 
 const { sendPushMessagesToUsers } = require('./facebook');
 
@@ -29,7 +30,7 @@ module.exports = () => {
   logger.log('debug', 'About to execute promise for all redis data, push messages');
   return Promise.all(promises)
     .then(res => {
-      const users = res[0].filter(u => !hasStoppedNotifications(u));
+      const users = res[0].filter(u => !hasStoppedNotifications(u) && hasFinishedIntro(u));
       const allConversations = res[1];
       const allCollections = res[2];
       const allMessages = res[3];
