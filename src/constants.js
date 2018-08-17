@@ -99,15 +99,15 @@ const QUICK_REPLY_RETRY_BUTTONS = [
     id: `${QUICK_REPLY_RETRY_ID}-continue`,
   },
   {
-    title: "Talk to a human",
-    id: `${QUICK_REPLY_RETRY_ID}-talk-to-human`,
-    text: CRISIS_RESPONSE_MESSAGE_FOR_BUTTONS
-  },
-  {
     title: "Stop Notifications",
     id: `${QUICK_REPLY_RETRY_ID}-stop-notifications`,
     text: STOP_NOTIFICATIONS,
     type: TYPE_STOP_NOTIFICATIONS,
+  },
+  {
+    title: "Talk to a human",
+    id: `${QUICK_REPLY_RETRY_ID}-talk-to-human`,
+    text: CRISIS_RESPONSE_MESSAGE_FOR_BUTTONS
   },
   {
     title: "Send Feedback",
