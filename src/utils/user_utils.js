@@ -6,7 +6,11 @@ const hasFinishedIntro = user =>
 const hasBegunIntro = user =>
   R.pathOr(false, ['introConversationSeen'], user);
 
+const isInvalidUser = user =>
+  R.pathOr(false, ['invalidUser'], user);
+
 module.exports = {
   hasFinishedIntro,
-  hasBegunIntro
+  hasBegunIntro,
+  isInvalidUser
 };

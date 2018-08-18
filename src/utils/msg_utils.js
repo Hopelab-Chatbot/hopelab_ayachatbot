@@ -5,9 +5,8 @@ const messageIsTransition = message => (
   R.path(['messageType'], message) === MESSAGE_TYPE_TRANSITION
 );
 
-const havePassedTransition = user => {
-  return !!R.find(messageIsTransition, user.history)
-};
+const havePassedTransition = user =>
+  !!R.find(messageIsTransition, user.history);
 
 const messageIsInIntroConversation = message => {
   const convoId = R.path(["parent","id"], message);
