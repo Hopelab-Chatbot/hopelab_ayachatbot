@@ -5,6 +5,7 @@ const R = require('ramda');
 const { updateHistory, getPreviousMessageInHistory, hasStoppedNotifications } = require('./users');
 
 const { isReturningBadFBCode } = require('./utils/fb_utils');
+const { isInvalidUser } = require('./utils/user_utils');
 
 const { updateUser, updateAllUsers, setStudyInfo } = require('./database');
 
@@ -280,7 +281,7 @@ function receivedMessage({
   }
 
   // if user is an 'invalidUser' lets stop here as well
-  if (R.path(['invalidUser'], user)) return;
+  if (isInvalidUser(userToUpdate)) return;
 
   userToUpdate = Object.assign({}, userToUpdate, {
     history: updateHistory(

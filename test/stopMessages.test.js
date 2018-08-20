@@ -1,13 +1,7 @@
 const expect = require('chai').expect;
 const moment = require('moment');
-// const rewire = require('rewire');
-// const sinon = require('sinon');
 
 const testModule = require('../src/messages');
-// const facebookTestModule = rewire('../src/facebook');
-// const databaseModule = rewire('../src/database');
-// const stub = sinon.stub(databaseModule, 'updateUser');
-// stub.returns(true);
 
 const {
   TYPE_ANSWER,

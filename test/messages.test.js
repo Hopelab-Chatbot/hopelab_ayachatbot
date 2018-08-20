@@ -800,6 +800,25 @@ describe('Messages Module', () => {
       expect(userUpdates.history.length > 2).to.be.true;
       expect(userUpdates.history[userUpdates.history.length - 1 ].text).to.eq("hello?");
     });
+
+    it('will set the introConversationFinished value to true at the correct time', () => {
+      const modifiedMocks =
+            createModifiedMocksForConversationStartingWithCollection(mocks);
+
+      const transitionMessage = modifiedMocks.messages.find(
+        m => m.messageType === MESSAGE_TYPE_TRANSITION
+      );
+      expect(modifiedMocks.user.introConversationSeen).to.be.true;
+      expect(transitionMessage).to.exist;
+
+      const data = Object.assign(
+        {},
+        modifiedMocks,
+        {action: {id: transitionMessage.id, type: TYPE_MESSAGE}}
+      );
+      const {userUpdates} = testModule.getMessagesForAction(data);
+      expect(userUpdates.introConversationFinished).to.be.true;
+    });
   });
 
   describe('getMediaUrlForMessage', () => {
