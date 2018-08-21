@@ -38,6 +38,8 @@ const ACTION_NO_UPDATE_NEEDED = 'ACTION_NO_UPDATE_NEEDED';
 const ACTION_CRISIS_REPONSE = 'ACTION_CRISIS_REPONSE';
 const ACTION_QUICK_REPLY_RETRY_NEXT_MESSAGE = 'ACTION_QUICK_REPLY_RETRY_NEXT_MESSAGE';
 
+const RESET_USER_RESPONSE_TYPE = 'RESET_USER_RESPONSE_TYPE';
+
 const END_OF_CONVERSATION_ID = 'END-OF-CONVERSATION-ID';
 
 // data types
@@ -92,6 +94,25 @@ const CRISIS_RESPONSE_MESSAGE_FOR_BUTTONS = "I can't connect you directly to a h
 const SUPPORT_MESSAGE = "I love feedback! Please type anything you'd like to send my human makers here in one message. Or you can e-mail my team at vivibot@hopelab.org";
 // const SUPPORT_MESSAGE = "I can’t stop automatically but you can change your settings to turn me off like this:\n\nOn a phone: Click the settings gear in the top right corner. Then click “Manage Messages”. You can either turn off just notifications or all messages from me there.\n\nOn the computer: look for the “Options” panel to the right of our chat. Click either “Manage Messages” or “Notifications” from here to change your settings."
 const STOP_NOTIFICATIONS = `Type ${STOP_MESSAGE} and I'll stop sending you notifications until you contact me by typing ${RESUME_MESSAGE}`;
+
+const RESET_USER_QUESTION = 'Are you sure you want to wipe your history from my memory?🤖';
+
+const RESET_USER_RESPONSE_CONFIRM = {
+  title: "Yes, wipe it clean",
+  text: "Yes, wipe it clean",
+  id: 'reset-user-confirm',
+};
+
+const RESET_USER_RESPONSE_CANCEL = {
+  title: 'Nope, resume normal flow',
+  id: `reset-user-reject`,
+  text: 'Nope, resume normal flow'
+};
+
+const RESET_USER_KEY_RESPONSE = [RESET_USER_RESPONSE_CONFIRM, RESET_USER_RESPONSE_CANCEL];
+
+const RESET_USER_CONFIRM = 'Your user information has been completely reset 🤖';
+const RESET_USER_KEY_MESSAGE = '#oz8mu[M7h9C6rsrNza9';
 
 const QUICK_REPLY_RETRY_BUTTONS = [
   {
@@ -256,5 +277,12 @@ module.exports = {
   ONE_WEEK_IN_SECONDS,
   ONE_MONTH_IN_SECONDS,
   EXPIRE_USER_AFTER,
-  SECONDS_EXPIRE_ARG
+  SECONDS_EXPIRE_ARG,
+  RESET_USER_KEY_MESSAGE,
+  RESET_USER_RESPONSE_TYPE,
+  RESET_USER_KEY_RESPONSE,
+  RESET_USER_CONFIRM,
+  RESET_USER_QUESTION,
+  RESET_USER_RESPONSE_CONFIRM,
+  RESET_USER_RESPONSE_CANCEL,
 };

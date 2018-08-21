@@ -7,6 +7,9 @@ const { updateHistory, getPreviousMessageInHistory, hasStoppedNotifications } = 
 const { isReturningBadFBCode } = require('./utils/fb_utils');
 const { isInvalidUser } = require('./utils/user_utils');
 
+const { isUserConfirmReset } = require('./utils/msg_utils');
+
+const {  createNewUser } = require('./users');
 const { updateUser, updateAllUsers, setStudyInfo } = require('./database');
 
 const { logger } = require('./logger');
@@ -30,7 +33,7 @@ const {
   STUDY_MESSAGES,
   STOP_MESSAGE,
   RESUME_MESSAGE,
-  STOPPED_MESSAGE
+  STOPPED_MESSAGE,
 } = require('./constants');
 
 const {
@@ -337,6 +340,11 @@ function receivedMessage({
     newStudyInfo.push(userToUpdate.studyId);
 
     // TODO: send study survey every 2 weeks for 6 weeks
+  }
+
+  // This is where we totally blow away all user data if an admin entered the RESET USER KEY FLOW and Confirmed
+  if (isUserConfirmReset(message)) {
+    userToUpdate = Object.assign({}, createNewUser(user.id));
   }
 
   // send it

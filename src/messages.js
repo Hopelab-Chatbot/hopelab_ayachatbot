@@ -3,13 +3,20 @@ const {
   getChildEntitiesSeenByUserForParent,
   updateProgressForEntity,
   popScope,
-  hasStoppedNotifications
+  hasStoppedNotifications,
 } = require('./users');
 
 const {
   hasFinishedIntro,
   hasBegunIntro
 } = require('./utils/user_utils');
+
+const {
+  getLastSentMessageInHistory,
+  isUserConfirmReset,
+  isUserCancelReset,
+  getLastMessageSentByUser
+} = require('./utils/msg_utils');
 
 const {
   newConversationTrack,
@@ -52,6 +59,10 @@ const {
   MINUTES_OF_INACTIVITY_BEFORE_UPDATE_MESSAGE,
   STUDY_ID_NO_OP,
   STUDY_MESSAGES,
+  RESET_USER_RESPONSE_TYPE,
+  RESET_USER_KEY_RESPONSE,
+  RESET_USER_QUESTION,
+  RESET_USER_CONFIRM
 } = require('./constants');
 
 const R = require('ramda');
@@ -59,6 +70,8 @@ const R = require('ramda');
 const { logger } = require('./logger');
 
 const moment = require('moment');
+
+const { isUserResetMessage } = require('./utils/msg_utils');
 
 /**
  * Create Specific Platform Payload
@@ -142,29 +155,6 @@ function makePlatformMediaMessagePayload(type, url, media) {
       }
     };
   }
-}
-
-
-/**
- * Get the last message sent to user in history
- *
- * @param {Object} user
- * @return {Object}
-*/
-function getLastSentMessageInHistory(user, ignoreQuickReplyRetryMessages=true) {
-  if (!(R.path(['history', 'length'], user))) { return undefined; }
-
-  for (let i = user.history.length - 1; i >= 0; i--) {
-    if (
-      user.history[i].type !== TYPE_ANSWER &&
-          !user.history[i].isCrisisMessage &&
-          !(user.history[i].isQuickReplyRetry && ignoreQuickReplyRetryMessages)
-    ) {
-      return user.history[i];
-    }
-  }
-
-  return undefined;
 }
 
 
@@ -421,7 +411,7 @@ function getActionForMessage({
   conversations,
   studyInfo
 }) {
-  let userActionUpdates = user;
+  let userActionUpdates = Object.assign({}, user);
   const lastMessage = getLastSentMessageInHistory(user);
   if (isCrisisMessage(message, CRISIS_KEYWORDS)) {
     return {
@@ -462,6 +452,30 @@ function getActionForMessage({
       R.path(['text'], quickReplyButton)
   ) {
 
+    return {
+      action: { type: ACTION_REPLAY_PREVIOUS_MESSAGE },
+      userActionUpdates
+    };
+  }
+  // here we check if the message sent was a request to reset the user data (admin only)
+  if (isUserResetMessage(message)) {
+    return {
+      action: { type: RESET_USER_RESPONSE_TYPE },
+      userActionUpdates
+    };
+  }
+  // here we check if the message sent was a confirmation to reset user data (admin only)
+
+  if (isUserConfirmReset(message)) {
+    return {
+      action: { type: RESET_USER_CONFIRM },
+      userActionUpdates
+    };
+  }
+
+  // here we check if the message sent was canceling a request to reset user data (admin only)
+
+  if (isUserCancelReset(getLastMessageSentByUser(user))) {
     return {
       action: { type: ACTION_REPLAY_PREVIOUS_MESSAGE },
       userActionUpdates
@@ -925,8 +939,26 @@ function getMessagesForAction({
   let curr;
 
   let userUpdates = Object.assign({}, user);
+  // if it was a reset user request, send the button array with responses
+  if (action.type === RESET_USER_RESPONSE_TYPE) {
+    curr = createQuickReplyRetryMessage(
+      RESET_USER_QUESTION,
+      RESET_USER_KEY_RESPONSE
+    );
 
-  if (action.type === ACTION_CRISIS_REPONSE) {
+    messagesToSend.push(curr);
+    curr = null;
+  // if it was a reset user confirm, send the confrimation text
+  } else if (action.type === RESET_USER_CONFIRM) {
+    curr = {
+      type: TYPE_MESSAGE,
+      message: { text: RESET_USER_CONFIRM }
+    };
+
+    messagesToSend.push(curr);
+    curr = null;
+
+  } else if (action.type === ACTION_CRISIS_REPONSE) {
     curr = {
       type: TYPE_MESSAGE,
       message: { text: CRISIS_RESPONSE_MESSAGE }
