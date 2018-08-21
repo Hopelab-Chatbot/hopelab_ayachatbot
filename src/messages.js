@@ -113,13 +113,14 @@ function getMediaAttachmentId(type, url, media) {
 */
 function makePlatformMediaMessagePayload(type, url, media) {
   const attachment_id = getMediaAttachmentId(type, url, media);
-
+  const is_reusable = true;
   if (attachment_id) {
     return {
       attachment: {
         type,
         payload: {
-          attachment_id
+          attachment_id,
+          is_reusable
         }
       }
     };
@@ -127,7 +128,7 @@ function makePlatformMediaMessagePayload(type, url, media) {
     return  {
       attachment: {
         type,
-        payload: { url }
+        payload: { url, is_reusable }
       }
     };
   } else {
@@ -136,7 +137,7 @@ function makePlatformMediaMessagePayload(type, url, media) {
         type: 'template',
         payload: {
           template_type: 'open_graph',
-          elements: [{ url }]
+          elements: [{ url, is_reusable }]
         }
       }
     };
