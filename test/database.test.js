@@ -2,20 +2,16 @@ const expect = require('chai').expect;
 const rewire = require('rewire');
 
 const testModule = rewire('../src/database');
-const usersModule = rewire('../src/users');
+const { createNewUser } = require('../src/users');
 
 testModule.returnNewOrOldUser = testModule.__get__('returnNewOrOldUser');
 testModule.setUserInCache = testModule.__get__('setUserInCache');
 testModule.removeUserFromCache = testModule.__get__('removeUserFromCache');
 testModule.getJSONItemFromCache = testModule.__get__('getJSONItemFromCache');
 
-usersModule.createNewUser = usersModule.__get__('createNewUser');
-
-
 describe('database user module functions', () => {
-  // doesn't actually create new user, just creates format to compare against
-  const testUser = usersModule.createNewUser('123');
-  const testUser2 = usersModule.createNewUser('321');
+  const testUser = createNewUser('123');
+  const testUser2 = createNewUser('321');
   it('returnNewOrOldUser should create a new user if that user doesnt already exist', done => {
     testModule.returnNewOrOldUser({id: '123', user: null}).then(result => {
       expect(result.id).to.equal(testUser.id);
