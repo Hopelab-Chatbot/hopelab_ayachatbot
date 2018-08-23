@@ -133,7 +133,6 @@ function makePlatformMediaMessagePayload(type, url, media) {
         type,
         payload: {
           attachment_id,
-          is_reusable
         }
       }
     };
