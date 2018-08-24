@@ -115,3 +115,45 @@ const SERIES_PROGRESS = 'series-progress';
 const SERIES_SEEN = 'series-seen';
 const BLOCKS_SEEN = 'blocks-seen';
 ```
+## Helpful Development tips:
+
+### Database management
+
+#### Visualization
+In order to see what's going on the database I recommend downloading a redis gui client. My preferred tool is the Redsmin app. I've found it's the easiest for ssh tunneling to inspect the production/staging database. It also seems to crash less than the others I've tried.
+
+#### Redis-Server tools and database dump
+In order to get a bot talking back to you, you'll need to create a conversation database. The easiest (and most helpful for debugging) way to do this is to simply import the production or staging database. Download a backup from staging or production (downloaded from s3 bucket). Then use the command:
+
+```bash
+cp ~/downloads/dump.rdb /usr/local/var/db/redis/dump.rdb
+```
+The second path is the location of the dump that the redis server expects to find when it boots up. This is set in your redis.conf file, which is probably at the path listed in the second command below:
+
+If your redis server is already running use:
+```
+redis-cli shutdown
+```
+
+to turn off your server.
+
+Then, reboot your server while it is pointing at the correct redis.conf file, which ideally has a file_dir var pointing at the dump location we copied the database dump to above.
+
+
+```
+redis-server /usr/local/etc/redis.conf
+```
+
+Tada! Now you have all the production data locally.
+
+### Bot Helpful tools/tricks/troubleshooting
+
+#### Reset your user:
+
+Send the bot the string value listed at RESET_USER_KEY_MESSAGE in the constants.js file. Currently that value is: '#oz8mu[M7h9C6rsrNza9' (don't include the apostrophes). The bot will prompt, and if you answer affirmatively your user key will be reset to nominal state.
+
+#### Why isn't my local bot talking back to me?
+
+1) Check that your subscription is live. You should have gotten a positive affirmation from facebook when you set up the 'Webhooks Subscription' in the modal. If it fails, make sure you are using https, and that your app is running...  Test this by curling the url directly with a get request to /webhook and make sure that it responds complaining about the correct token.
+
+2) Do you have data in your db? Your bot wants to talk to you, but she's gotta have something to say! Get the prod db downloaded and in your local server ASAP. Check the cms app to make sure you have collections/conversations/messages.
