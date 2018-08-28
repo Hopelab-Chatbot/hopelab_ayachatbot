@@ -4,10 +4,20 @@ const redisClient = redis.createClient({
   host: config.redis.host,
   port: config.redis.port
 });
+
+redisClient.on("error", function (err) {
+  console.log("Error " + err); //eslint-disable-line no-console
+});
+
 const cacheUtils = require('alien-node-redis-utils')(redisClient);
+
+const {promisify} = require('util');
+const getAsync = promisify(redisClient.get).bind(redisClient);
+const getLAsync = promisify(redisClient.lrange).bind(redisClient);
 
 const {
   DB_USERS,
+  DB_USER_LIST,
   DB_CONVERSATIONS,
   DB_COLLECTIONS,
   DB_SERIES,
@@ -15,36 +25,53 @@ const {
   DB_BLOCKS,
   DB_MEDIA,
   DB_STUDY,
-  ONE_DAY_IN_MILLISECONDS
+  ONE_DAY_IN_MILLISECONDS,
+  EXPIRE_USER_AFTER
 } = require('./constants');
 
 const { createNewUser } = require('./users');
+
+const getJSONItemFromCache = key =>
+  getAsync(key)
+    .then(item => item ? JSON.parse(item) : null)
+    .catch(e => (
+      console.error(
+        `error: getItemFromCache on key: ${key}`,
+        e
+      )
+    ));
+
+const keyFormatUserId = id => `user:${id}`;
 
 /**
  * Set User in Cache
  *
  * @param {Object} user
- * @return {Promise}
 */
-const setUserInCache = user => users =>
+const setUserInCache = user => {
   cacheUtils.setItem(
-    DB_USERS,
-    ONE_DAY_IN_MILLISECONDS,
-    users.map(u => (u.id === user.id ? user : u))
-  );
-
-
-const setAllUsersInCache = usersToUpdate => users => {
-  let allUpdatedUsers = users.map(u => {
-    let found = usersToUpdate.find(updateMe => u.id === updateMe.id);
-    return found ? found : u;
-  });
-  return cacheUtils.setItem(
-    DB_USERS,
-    ONE_DAY_IN_MILLISECONDS,
-    allUpdatedUsers
-  );
-}
+    keyFormatUserId(user.id),
+    // expires user in ONE month (default) if no changes are made to it
+    EXPIRE_USER_AFTER,
+    user
+  ).catch(e => (
+    console.error(
+      `error: setStudyInfo - cacheUtils.setItem(user:${user.id})`,
+      e
+    )
+  ));
+};
+// NOTE: this is used in testing. DO NOT DELETE
+const removeUserFromCache = user => { // eslint-disable-line no-unused-vars
+  cacheUtils.deleteItem(
+    keyFormatUserId(user.id)
+  ).catch(e => (
+    console.error(
+      `error: setStudyInfo - cacheUtils.deleteIrem(user:${user.id})`,
+      e
+    )
+  ));
+};
 
 
 /**
@@ -54,72 +81,32 @@ const setAllUsersInCache = usersToUpdate => users => {
  * @return {Promise}
 */
 const updateUser = user =>
-  new Promise((resolve, reject) => {
-    cacheUtils
-      .getItem(DB_USERS)
-      .then(JSON.parse)
-      .then(setUserInCache(user))
-      .then(resolve)
-      .catch(e => {
-        console.error(
-          `error: updateUser - cacheUtils.getItem(${DB_USERS})`,
-          e
-        );
-        reject();
-      });
-  });
+  new Promise(resolve =>
+    resolve(setUserInCache(user))
+  );
 
-const updateAllUsers = usersToUpdate =>
-  new Promise((resolve, reject) => {
-    cacheUtils
-      .getItem(DB_USERS)
-      .then(JSON.parse)
-      .then(setAllUsersInCache(usersToUpdate))
-      .then(resolve)
-      .catch(e => {
-        console.error(
-          `error: updateUser - cacheUtils.getItem(${DB_USERS})`,
-          e
-        );
-        reject();
-      });
+const updateAllUsers = (usersToUpdate = []) =>
+  new Promise(resolve => {
+    resolve(usersToUpdate.forEach(user => setUserInCache(user)));
   });
-
-/**
- * Find User By Id
- *
- * @param {String} id
- * @return {Object}
-*/
-const findUserById = id => users => ({
-  id,
-  user: users.find(u => u.id === id),
-  users
-});
 
 /**
  * Create a User in Database
  *
- * @param {Object} { id, user, users }
- * @return {Promise<Object>}
+ * @param {Object} { id, user }
 */
-function createUserIfNotExisting({ id, user, users }) {
-  if (!user) {
-    user = createNewUser(id);
-    const newUsers = users.concat(user);
-
-    return cacheUtils
-      .setItem(DB_USERS, ONE_DAY_IN_MILLISECONDS, newUsers)
-      .then(() => user)
-      .catch(e =>
-        console.error(
-          `error: getUserById - cacheUtils.setItem(${DB_USERS})`,
-          e
-        )
-      );
+function returnNewOrOldUser({ id, user }) {
+  if (!user && id) {
+    const newUser = createNewUser(id);
+    // remove the id if it exists for some reason already
+    redisClient.lrem(DB_USER_LIST, 1, id);
+    // add the id to the user list array
+    redisClient.lpush(DB_USER_LIST, id);
+    setUserInCache(newUser);
+    return Promise.resolve(newUser);
+  } else {
+    return Promise.resolve(user);
   }
-
-  return Promise.resolve(user);
 }
 
 /**
@@ -130,16 +117,12 @@ function createUserIfNotExisting({ id, user, users }) {
 */
 const getUserById = id =>
   new Promise(resolve => {
-    cacheUtils
-      .getItem(DB_USERS)
-      .then(JSON.parse)
-      .then(findUserById(id))
-      .then(createUserIfNotExisting)
-      .then(resolve)
+    getJSONItemFromCache(keyFormatUserId(id))
+      .then(user => resolve(returnNewOrOldUser({ id, user})))
       .catch(e => {
         // no item found matching cacheKey
         console.error(
-          `error: getUserById - cacheUtils.getItem(${DB_USERS})`,
+          `error: getUserById - getJSONItemFromCache(user:${id}})`,
           e
         );
       });
@@ -148,10 +131,12 @@ const getUserById = id =>
 
 const getUsers = () =>
   new Promise(resolve => {
-    cacheUtils
-      .getItem(DB_USERS)
-      .then(JSON.parse)
-      .then(resolve)
+    getLAsync(DB_USER_LIST, 0, -1)
+      .then(userIds =>
+        resolve(Promise.all(
+          userIds.map(id => getUserById(id)))
+        )
+      )
       .catch(e => {
         // no item found matching cacheKey
         console.error(
@@ -160,6 +145,7 @@ const getUsers = () =>
         );
       });
   });
+
 
 /**
  * Get Conversations
@@ -291,7 +277,7 @@ const getStudyInfo = () =>
                 `error: getStudyInfo - cacheUtils.getItem(${DB_STUDY})`,
                 e
               );
-            })
+            });
         } else {
           console.error(
             `error: getStudyInfo - cacheUtils.getItem(${DB_STUDY})`,
@@ -326,5 +312,7 @@ module.exports = {
   getStudyInfo,
   setStudyInfo,
   updateUser,
-  updateAllUsers
+  updateAllUsers,
+  keyFormatUserId,
+  setUserInCache
 };

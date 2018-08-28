@@ -9,4 +9,4 @@ module.exports = () => {
   return getUsers().then(users => {
     sendStudyMessageToUsers(users);
   });
-}
+};

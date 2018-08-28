@@ -2,6 +2,8 @@ const {
   TYPE_BLOCK,
 } = require('./constants');
 
+const { emptyUser } = require('./utils/user_utils');
+
 const R = require('ramda');
 
 /**
@@ -11,19 +13,14 @@ const R = require('ramda');
  * @return {Object}
 */
 function createNewUser(id) {
-  return {
-    id,
-    history: [],
-    progress: {
-      prevMessage: '',
-      nextMessage: ''
-    }
-  };
+  return Object.assign({},
+    {id},
+    emptyUser);
 }
 
 const hasStoppedNotifications = user => (
   R.pathOr(false, ['stopNotifications'], user)
-)
+);
 
 /**
  * Update History with Message

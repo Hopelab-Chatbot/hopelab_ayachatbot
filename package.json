@@ -33,13 +33,13 @@
     "winston": "^3.0.0-rc4"
   },
   "scripts": {
-    "coverage": "istanbul cover _mocha -- test/ -R spec",
+    "coverage": "istanbul cover _mocha -- test/ --exit -R spec",
     "lint": "eslint .",
     "mock-db": "node ./src/mockDatabaseSetup.js",
     "prettify": "prettier --write './**/*.js'",
     "start": "node index.js",
     "debug": "node --inspect index.js",
-    "test": "mocha",
+    "test": "mocha --exit",
     "test-debug": "mocha --inspect-brk"
   },
   "prettier": {
