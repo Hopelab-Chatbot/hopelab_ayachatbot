@@ -157,3 +157,26 @@ Send the bot the string value listed at RESET_USER_KEY_MESSAGE in the constants.
 1) Check that your subscription is live. You should have gotten a positive affirmation from facebook when you set up the 'Webhooks Subscription' in the modal. If it fails, make sure you are using https, and that your app is running...  Test this by curling the url directly with a get request to /webhook and make sure that it responds complaining about the correct token.
 
 2) Do you have data in your db? Your bot wants to talk to you, but she's gotta have something to say! Get the prod db downloaded and in your local server ASAP. Check the cms app to make sure you have collections/conversations/messages.
+
+## Doing something complicated on production/staging, eh?
+
+### Best Practices
+
+1) I think it's a good idea to tunnel into the redis DB so you can inspect it if necessary:
+
+After STOPPING your local redis server (`redis-cli shutdown`),
+
+```bash something like
+ssh -i "~/.ssh/safe_pem.pem" -L 6379:redis_host:6379 ubuntu@ec2_instance_endpoint
+```
+
+replace the appropriate values above. Now use your redis gui to inspect your local 6379 port, which is now the remote redis db.
+
+2) Back up the DB you are doing operations on. Easiest to do in the AWS dashboard.
+
+3) Ensure that the required technology (node, redis, etc) have the same version on the remote version as your local env.
+
+4) If you update a env variable on the instance, modify it in ~.profile, `exit` the ssh session, re-enter to reload the environmental vars in your new shell session, and run
+```bash
+pm2 reload index (or cms) --update-env
+```
