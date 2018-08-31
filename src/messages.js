@@ -7,6 +7,10 @@ const {
 } = require('./users');
 
 const {
+  logEvent
+} = require('./events');
+
+const {
   hasFinishedIntro,
   hasBegunIntro
 } = require('./utils/user_utils');
@@ -62,7 +66,8 @@ const {
   RESET_USER_RESPONSE_TYPE,
   RESET_USER_KEY_RESPONSE,
   RESET_USER_QUESTION,
-  RESET_USER_CONFIRM
+  RESET_USER_CONFIRM,
+  FB_EVENT_COMPLETE_INTRO_CONVERSATION
 } = require('./constants');
 
 const R = require('ramda');
@@ -1136,6 +1141,7 @@ function getMessagesForAction({
       // here we mark this user as having completed the intro conversation,
       // so we can send push messages to them
       if (hasBegunIntro(user) && !hasFinishedIntro(user)) {
+        logEvent({ userId: user.id, eventName: FB_EVENT_COMPLETE_INTRO_CONVERSATION });
         const updates = { introConversationFinished: true};
         userUpdates = Object.assign({}, userUpdates, updates);
       }
