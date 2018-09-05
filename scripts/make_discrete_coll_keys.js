@@ -2,8 +2,8 @@
 // performance, storage, and debug ability.
 
 const constants = require('../src/constants');
-const { keyFormatMessageId } = require('../src/utils/msg_utils');
-const { DB_MESSAGE_LIST, DB_MESSAGES } = constants;
+const { keyFormatCollectionId } = require('../src/utils/collection_utils');
+const { DB_COLLECTION_LIST, DB_COLLECTIONS } = constants;
 
 
 const {promisify} = require('util');
@@ -20,15 +20,15 @@ const redisClient = redis.createClient({
 
 const getAsync = promisify(redisClient.get).bind(redisClient);
 
-getAsync(DB_MESSAGES).then(res => {
-  const json_msgs = JSON.parse(res);
-  const length = json_msgs.length;
-  json_msgs.forEach(msg => {
-    const { id } = msg;
-    redisClient.lpush(DB_MESSAGE_LIST, id);
-    redisClient.set(keyFormatMessageId(id), JSON.stringify(msg));
+getAsync(DB_COLLECTIONS).then(res => {
+  const json_colls = JSON.parse(res);
+  const length = json_colls.length;
+  json_colls.forEach(coll => {
+    const { id } = coll;
+    redisClient.lpush(DB_COLLECTION_LIST, id);
+    redisClient.set(keyFormatCollectionId(id), JSON.stringify(coll));
   });
-  console.log('rewrote ' + length + ' messages');// eslint-disable-line no-console
+  console.log('rewrote ' + length + ' collections');// eslint-disable-line no-console
 
   redisClient.quit();
   setTimeout(() => {

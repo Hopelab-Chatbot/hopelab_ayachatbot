@@ -25,8 +25,11 @@ const FB_MESSAGING_TYPE_UPDATE = 'UPDATE';
 const DB_USERS = 'users';
 const DB_USER_LIST = 'userlist';
 const DB_CONVERSATIONS = 'conversations';
+const DB_COLLECTION_LIST = 'collectionList';
+// deprecated
 const DB_COLLECTIONS = 'collections';
 const DB_SERIES = 'series';
+// deprecated
 const DB_MESSAGES = 'messages';
 const DB_MESSAGE_LIST = 'msglist';
 const DB_USER_HISTORY = 'user-history';
@@ -293,4 +296,5 @@ module.exports = {
   FB_GRAPH_TRUE_ROOT,
   FB_PAGE_ID,
   FB_EVENT_COMPLETE_INTRO_CONVERSATION,
+  DB_COLLECTION_LIST,
 };
