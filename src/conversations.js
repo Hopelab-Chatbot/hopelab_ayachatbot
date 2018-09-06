@@ -1,6 +1,6 @@
 const {
   generateUniqueStudyId
-} = require('./messages');
+} = require('./utils/msg_utils');
 
 const {
   INTRO_CONVERSATION_ID,
