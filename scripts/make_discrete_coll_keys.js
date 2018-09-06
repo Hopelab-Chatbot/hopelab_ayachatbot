@@ -23,15 +23,16 @@ const getAsync = promisify(redisClient.get).bind(redisClient);
 getAsync(DB_COLLECTIONS).then(res => {
   const json_colls = JSON.parse(res);
   const length = json_colls.length;
-  json_colls.forEach(coll => {
+  json_colls.forEach((coll, i) => {
     const { id } = coll;
     redisClient.lpush(DB_COLLECTION_LIST, id);
     redisClient.set(keyFormatCollectionId(id), JSON.stringify(coll));
+    if ( i === json_colls.length - 1) {
+      console.log('rewrote ' + length + ' collections');// eslint-disable-line no-console
+      redisClient.quit();
+      setTimeout(() => {
+        process.exit(0);
+      }, 3000);
+    }
   });
-  console.log('rewrote ' + length + ' collections');// eslint-disable-line no-console
-
-  redisClient.quit();
-  setTimeout(() => {
-    process.exit(0);
-  }, 3000);
 }).catch(err => {console.log(err); process.exit(1);}); // eslint-disable-line no-console

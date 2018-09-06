@@ -23,15 +23,16 @@ const getAsync = promisify(redisClient.get).bind(redisClient);
 getAsync(DB_MESSAGES).then(res => {
   const json_msgs = JSON.parse(res);
   const length = json_msgs.length;
-  json_msgs.forEach(msg => {
+  json_msgs.forEach((msg, i) => {
     const { id } = msg;
     redisClient.lpush(DB_MESSAGE_LIST, id);
     redisClient.set(keyFormatMessageId(id), JSON.stringify(msg));
+    if (i === json_msgs.length - 1) {
+      console.log('rewrote ' + length + ' messages');// eslint-disable-line no-console
+      redisClient.quit();
+      setTimeout(() => {
+        process.exit(0);
+      }, 3000);
+    }
   });
-  console.log('rewrote ' + length + ' messages');// eslint-disable-line no-console
-
-  redisClient.quit();
-  setTimeout(() => {
-    process.exit(0);
-  }, 3000);
 }).catch(err => {console.log(err); process.exit(1);}); // eslint-disable-line no-console

@@ -35,13 +35,17 @@ getLAsync(DB_COLLECTION_LIST, 0, -1).then(collIds => {
       if (colls && colls.length > 0 && colls[0]) {
         redisClient.set(DB_COLLECTIONS, JSON.stringify(colls));
         redisClient.del(DB_COLLECTION_LIST);
-        colls.forEach(({id = ''}) => redisClient.del(keyFormatMessageId(id)));
-        console.log('deleted ' + promises.length + ' individual collection keys');
+        colls.forEach(({id = ''}, i) =>  {
+          redisClient.del(keyFormatMessageId(id)))
+          if (i === colls.length -1) {
+            console.log('deleted ' + promises.length + ' individual collection keys');
+            redisClient.quit();
+            setTimeout(() => {
+              process.exit(0);
+            }, 3000);
+          }
+        };
       }
-      redisClient.quit();
-      setTimeout(() => {
-        process.exit(0);
-      }, 3000);
     })
       .catch(err => {console.log(err);process.exit(1);});// eslint-disable-line no-console
   }
