@@ -4,6 +4,7 @@ const { MESSAGE_TYPE_TRANSITION,
   RESET_USER_KEY_MESSAGE,
   RESET_USER_RESPONSE_CONFIRM,
   RESET_USER_RESPONSE_CANCEL,
+  STUDY_ID_NO_OP,
   TYPE_ANSWER } = require('../constants');
 
 const messageIsTransition = message => (
@@ -75,6 +76,18 @@ const getLastMessageSentByUser = user => {
   return R.findLast(R.propEq('type', TYPE_ANSWER), user.history);
 };
 
+
+function generateUniqueStudyId(studyInfo, studyIdList) {
+  let studyInfoSet = new Set(studyInfo.map(String));
+
+  for(let i = 0; i < studyIdList.length; i++) {
+    if (!studyInfoSet.has(String(studyIdList[i]))) {
+      return String(studyIdList[i]);
+    }
+  }
+  return String(STUDY_ID_NO_OP);
+}
+
 module.exports = {
   havePassedTransition,
   messageIsInIntroConversation,
@@ -82,5 +95,6 @@ module.exports = {
   isUserConfirmReset,
   getLastSentMessageInHistory,
   getLastMessageSentByUser,
-  isUserCancelReset
+  isUserCancelReset,
+  generateUniqueStudyId
 };

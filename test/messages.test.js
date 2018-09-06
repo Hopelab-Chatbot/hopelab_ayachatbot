@@ -1,5 +1,8 @@
 const expect = require('chai').expect;
 const testModule = require('../src/messages');
+const { generateUniqueStudyId } = require('../src/utils/msg_utils');
+
+testModule.generateUniqueStudyId = generateUniqueStudyId;
 const {
   TYPE_BLOCK,
   TYPE_SERIES,
