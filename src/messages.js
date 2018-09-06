@@ -162,18 +162,6 @@ function makePlatformMediaMessagePayload(type, url, media) {
 }
 
 
-function generateUniqueStudyId(studyInfo, studyIdList) {
-  let studyInfoSet = new Set(studyInfo.map(String));
-
-  for(let i = 0; i < studyIdList.length; i++) {
-    if (!studyInfoSet.has(String(studyIdList[i]))) {
-      return String(studyIdList[i]);
-    }
-  }
-  return String(STUDY_ID_NO_OP);
-}
-
-
 //TODO: could rewrite this and getLastSentMessageInHistory as they both look through user
 // history for something... could reduce code here.
 function findLastUserAnswer(user) {
@@ -1335,7 +1323,6 @@ module.exports = {
   updateHistory,
   getNextMessage,
   getMediaUrlForMessage,
-  generateUniqueStudyId,
   shouldReceiveUpdate,
   isCrisisMessage,
   createCustomMessageForHistory,
