@@ -12,14 +12,23 @@ Running application Locally:
 
 ## Environment Variables
 
-These are obtained from `https://developers.facebook.com`.
+These are obtained from `https://developers.facebook.com`. They are required.
 
 ```
 FB_VERIFY_TOKEN
 FB_PAGE_ACCESS_TOKEN
 ```
 
-These are set locally.
+
+These are obtained from the Facebook App and the Facebook Page you create below. They are required
+for logging facebook events (ie the event logging intro conversation complete). They aren't required for anything else yet, so don't worry about them on the development environment unless you are specifically developing custom events. They are optional.
+```
+FB_APP_ID
+FB_PAGE_ID
+```
+
+
+These are set locally. They are required.
 ```
 REDIS_HOST
 REDIS_PORT
