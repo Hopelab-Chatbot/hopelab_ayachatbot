@@ -88,6 +88,8 @@ function generateUniqueStudyId(studyInfo, studyIdList) {
   return String(STUDY_ID_NO_OP);
 }
 
+const keyFormatMessageId = id => `message:${id}`;
+
 module.exports = {
   havePassedTransition,
   messageIsInIntroConversation,
@@ -96,5 +98,6 @@ module.exports = {
   getLastSentMessageInHistory,
   getLastMessageSentByUser,
   isUserCancelReset,
-  generateUniqueStudyId
+  generateUniqueStudyId,
+  keyFormatMessageId,
 };

@@ -2,10 +2,10 @@
 
 const constants = require('../src/constants');
 
-const { DB_MESSAGE_LIST, DB_MESSAGES } = constants;
+const { DB_COLLECTION_LIST, DB_COLLECTIONS } = constants;
 
 const { keyFormatMessageId } = require('../src/utils/msg_utils');
-const { getMessageById } = require('../src/database');
+const { getCollectionById } = require('../src/database');
 
 const {promisify} = require('util');
 
@@ -20,31 +20,31 @@ const redisClient = redis.createClient({
 
 const getLAsync = promisify(redisClient.lrange).bind(redisClient);
 
-getLAsync(DB_MESSAGE_LIST, 0, -1).then(msgIds => {
-  if (!msgIds || msgIds.length === 0) {
-    console.log('no messages to reset to message key')
+getLAsync(DB_COLLECTION_LIST, 0, -1).then(collIds => {
+  if (!collIds || collIds.length === 0) {
+    console.log('no collections to reset to collection key')
     redisClient.quit();
     setTimeout(() => {
       process.exit(0)
     }, 3000);
   } else {
-    const promises = msgIds.map(id => {
-      return getMessageById(id);
+    const promises = collIds.map(id => {
+      return getCollectionById(id);
     });
-    Promise.all(promises).then(msgs => {
-      if (msgs && msgs.length > 0 && msgs[0]) {
-        redisClient.set(DB_MESSAGES, JSON.stringify(msgs));
-        redisClient.del(DB_MESSAGE_LIST);
-        msgs.forEach(({id = ''}, i) => {
-          redisClient.del(keyFormatMessageId(id))
-          if (i === msgs.length - 1) {
-            console.log('deleted ' + promises.length + ' individual message keys');
+    Promise.all(promises).then(colls => {
+      if (colls && colls.length > 0 && colls[0]) {
+        redisClient.set(DB_COLLECTIONS, JSON.stringify(colls));
+        redisClient.del(DB_COLLECTION_LIST);
+        colls.forEach(({id = ''}, i) =>  {
+          redisClient.del(keyFormatMessageId(id)))
+          if (i === colls.length -1) {
+            console.log('deleted ' + promises.length + ' individual collection keys');
             redisClient.quit();
             setTimeout(() => {
               process.exit(0);
             }, 3000);
           }
-        });
+        };
       }
     })
       .catch(err => {console.log(err);process.exit(1);});// eslint-disable-line no-console
