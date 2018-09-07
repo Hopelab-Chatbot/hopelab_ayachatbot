@@ -98,9 +98,6 @@ module.exports = {
   getLastSentMessageInHistory,
   getLastMessageSentByUser,
   isUserCancelReset,
-<<<<<<< refs/remotes/origin/staging
-  generateUniqueStudyId
-=======
+  generateUniqueStudyId,
   keyFormatMessageId,
->>>>>>> refactor messages/collections issue
 };
