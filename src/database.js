@@ -330,6 +330,7 @@ const setStudyInfo = studyInfo =>
 
 module.exports = {
   getUserById,
+  getMessageById,
   getUsers,
   getConversations,
   getCollections,
