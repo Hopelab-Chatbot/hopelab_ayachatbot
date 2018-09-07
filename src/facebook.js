@@ -19,7 +19,6 @@ const {
   FB_PAGE_ACCESS_TOKEN,
   TYPING_TIME_IN_MILLISECONDS,
   FB_MESSAGE_TYPE,
-  FB_ERROR_CODE_INVALID_USER,
   FB_ERROR_CODE_UNAVAILABLE_USER,
   FB_ERROR_CODE_UNAVAILABLE_USER_10,
   FB_TYPING_ON_TYPE,
@@ -470,7 +469,6 @@ function updateUsersCheckForErrors(usersToUpdate) {
     if (
       R.path(['isError'], user) &&
       (
-        R.path(['error', 'fbCode'], user) === FB_ERROR_CODE_INVALID_USER ||
         R.path(['error', 'fbCode'], user) === FB_ERROR_CODE_UNAVAILABLE_USER ||
         R.path(['error', 'fbCode'], user) === FB_ERROR_CODE_UNAVAILABLE_USER_10
       )
