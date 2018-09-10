@@ -58,7 +58,7 @@ const setUserInCache = user => {
     user
   ).catch(e => (
     console.error(
-      `error: setStudyInfo - cacheUtils.setItem(user:${user.id})`,
+      `error: setUserInCache - cacheUtils.setItem(user:${user.id})`,
       e
     )
   ));
@@ -69,7 +69,7 @@ const removeUserFromCache = user => { // eslint-disable-line no-unused-vars
     keyFormatUserId(user.id)
   ).catch(e => (
     console.error(
-      `error: setStudyInfo - cacheUtils.deleteIrem(user:${user.id})`,
+      `error: removeUserFromCache - cacheUtils.deleteIrem(user:${user.id})`,
       e
     )
   ));

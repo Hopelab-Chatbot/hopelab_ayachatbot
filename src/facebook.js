@@ -347,7 +347,6 @@ function receivedMessage({
   }
 
   // send it
-
   sendAllMessagesToMessenger({
     messages: messagesWithTyping,
     senderID,
