@@ -12,7 +12,7 @@ const logEvent = ({ userId, eventName }) => {
     event: 'CUSTOM_APP_EVENTS',
     custom_events: JSON.stringify([{
       _eventName: eventName,
-      _app_user_id: userId,
+      app_user_id: userId,
     }]),
     advertiser_tracking_enabled: 1,
     application_tracking_enabled: 1,
