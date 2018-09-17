@@ -147,7 +147,7 @@ function makePlatformMediaMessagePayload(type, url, media) {
     return  {
       attachment: {
         type,
-        payload: { url, is_reusable }
+        payload: { url: encodeURI(url), is_reusable }
       }
     };
   } else {
@@ -156,7 +156,7 @@ function makePlatformMediaMessagePayload(type, url, media) {
         type: 'template',
         payload: {
           template_type: 'open_graph',
-          elements: [{ url, is_reusable }]
+          elements: [{ url: encodeURI(url), is_reusable }]
         }
       }
     };
