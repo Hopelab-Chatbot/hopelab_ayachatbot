@@ -8,7 +8,10 @@ const FB_TEXT_LIMIT = 640;
 const FB_GRAPH_TRUE_ROOT = 'https://graph.facebook.com/';
 const FB_GRAPH_ROOT_URL = `${FB_GRAPH_TRUE_ROOT}v2.6/`;
 const FB_ACTIVITIES_URL = '/activities';
+
 const FB_EVENT_COMPLETE_INTRO_CONVERSATION = 'fb_complete_intro_conversation';
+const FB_STOP_MSG_EVENT = 'fb_stop_messages_event';
+const FB_QUICK_REPLY_RETRY_EVENT = 'fb_quick_reply_retry_event';
 
 const FB_ERROR_CODE_UNAVAILABLE_USER = 551;
 const FB_ERROR_CODE_UNAVAILABLE_USER_10 = 10;
@@ -297,4 +300,6 @@ module.exports = {
   FB_PAGE_ID,
   FB_EVENT_COMPLETE_INTRO_CONVERSATION,
   DB_COLLECTION_LIST,
+  FB_STOP_MSG_EVENT,
+  FB_QUICK_REPLY_RETRY_EVENT
 };

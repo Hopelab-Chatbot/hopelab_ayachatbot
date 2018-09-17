@@ -67,7 +67,8 @@ const {
   RESET_USER_KEY_RESPONSE,
   RESET_USER_QUESTION,
   RESET_USER_CONFIRM,
-  FB_EVENT_COMPLETE_INTRO_CONVERSATION
+  FB_EVENT_COMPLETE_INTRO_CONVERSATION,
+  FB_QUICK_REPLY_RETRY_EVENT
 } = require('./constants');
 
 const R = require('ramda');
@@ -555,6 +556,10 @@ function getActionForMessage({
     R.path(['messageType'], lastMessage) === TYPE_QUESTION_WITH_REPLIES &&
       !message.quick_reply
   ) {
+    logEvent({userId: user.id, eventName: FB_QUICK_REPLY_RETRY_EVENT}).catch(err => {
+      logger.log(err);
+      logger.log('error', `something went wrong logging event ${FB_QUICK_REPLY_RETRY_EVENT} ${user.id}`);
+    });
     return {
       action: {type: ACTION_RETRY_QUICK_REPLY},
       userActionUpdates
