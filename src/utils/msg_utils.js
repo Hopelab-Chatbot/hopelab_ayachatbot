@@ -90,7 +90,10 @@ function generateUniqueStudyId(studyInfo, studyIdList) {
 
 const keyFormatMessageId = id => `message:${id}`;
 
+const formatAsEventName = name => `msg_event-${name}`;
+
 module.exports = {
+  formatAsEventName,
   havePassedTransition,
   messageIsInIntroConversation,
   isUserResetMessage,
