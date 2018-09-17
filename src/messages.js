@@ -19,7 +19,8 @@ const {
   getLastSentMessageInHistory,
   isUserConfirmReset,
   isUserCancelReset,
-  getLastMessageSentByUser
+  getLastMessageSentByUser,
+  formatAsEventName
 } = require('./utils/msg_utils');
 
 const {
@@ -1078,6 +1079,7 @@ function getMessagesForAction({
   }
 
   while (curr) {
+    if (curr.isEvent) logEvent({eventName: formatAsEventName(curr.name), userId: user.id });
     if (
       curr.messageType === TYPE_IMAGE ||
             curr.messageType === TYPE_VIDEO
