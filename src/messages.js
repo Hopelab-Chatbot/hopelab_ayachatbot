@@ -1062,7 +1062,7 @@ function getMessagesForAction({
       )
     });
     curr = null;
-  } else if (action.type === TYPE_MESSAGE) {
+  } else if (action.type === TYPE_MESSAGE || action.type === TYPE_QUESTION) {
     curr = messages.find(m => m.id === action.id);
   } else if (action.type === TYPE_COLLECTION) {
     let nextMessage = getNextMessageForCollection(
@@ -1259,6 +1259,8 @@ function getMessagesForAction({
 
         curr = nextMessage.message;
         userUpdates = nextMessage.user;
+      } else {
+        curr = null;
       }
     } else {
       if (
