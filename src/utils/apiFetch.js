@@ -3,18 +3,14 @@ const request = require('request');
 const R = require('ramda');
 const { logger } = require('../logger');
 
-const {
-  FB_PAGE_ACCESS_TOKEN
-} = require('../constants');
-
 const apiFetch = ({ uri, data, method, options }) => {
   return new Promise((resolve, reject) => {
     request(
       {
         uri,
-        qs: { access_token: FB_PAGE_ACCESS_TOKEN },
         method: method || 'GET',
-        json: data,
+        body: data,
+        json: true,
         ...options,
       },
       (error, response, body) => {
