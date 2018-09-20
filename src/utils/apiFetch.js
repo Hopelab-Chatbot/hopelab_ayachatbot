@@ -3,17 +3,18 @@ const request = require('request');
 const R = require('ramda');
 const { logger } = require('../logger');
 
+const {
+  FB_PAGE_ACCESS_TOKEN
+} = require('../constants');
+
 const apiFetch = ({ uri, data, method, options }) => {
   return new Promise((resolve, reject) => {
-    return request(
+    request(
       {
         uri,
-        headers: {
-          "Content-Type": "application/json"
-        },
+        qs: { access_token: FB_PAGE_ACCESS_TOKEN },
         method: method || 'GET',
-        body: data,
-        json: true,
+        json: data,
         ...options,
       },
       (error, response, body) => {
@@ -30,8 +31,7 @@ const apiFetch = ({ uri, data, method, options }) => {
             };
           }
 
-          console.error('ERROR: Unable to fetch in callSendAPI');
-          console.error(error);
+          console.error('ERROR: Unable to send message in callSendAPI');
           logger.log('error',
             `Unable to fetch, error: ${JSON.stringify(error)}, message: ${JSON.stringify(data)}`);
           reject(error);

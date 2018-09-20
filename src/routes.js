@@ -27,6 +27,7 @@ module.exports = app => {
   app.post('/webhook/', (req, res) => {
     try {
       const data = JSONbig.parse(req.body);
+
       if (data.object === 'page') {
         data.entry.forEach(entry => {
           entry.messaging.forEach(event => {

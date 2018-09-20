@@ -19,9 +19,9 @@ const {
   DB_USERS,
   DB_USER_LIST,
   DB_CONVERSATIONS,
-  DB_COLLECTION_LIST,
+  DB_COLLECTIONS,
   DB_SERIES,
-  DB_MESSAGE_LIST,
+  DB_MESSAGES,
   DB_BLOCKS,
   DB_MEDIA,
   DB_STUDY,
@@ -30,8 +30,6 @@ const {
 } = require('./constants');
 
 const { createNewUser } = require('./users');
-const { keyFormatMessageId } = require('./utils/msg_utils');
-const { keyFormatCollectionId } = require('./utils/collection_utils');
 
 const getJSONItemFromCache = key =>
   getAsync(key)
@@ -58,7 +56,7 @@ const setUserInCache = user => {
     user
   ).catch(e => (
     console.error(
-      `error: setUserInCache - cacheUtils.setItem(user:${user.id})`,
+      `error: setStudyInfo - cacheUtils.setItem(user:${user.id})`,
       e
     )
   ));
@@ -69,7 +67,7 @@ const removeUserFromCache = user => { // eslint-disable-line no-unused-vars
     keyFormatUserId(user.id)
   ).catch(e => (
     console.error(
-      `error: removeUserFromCache - cacheUtils.deleteIrem(user:${user.id})`,
+      `error: setStudyInfo - cacheUtils.deleteIrem(user:${user.id})`,
       e
     )
   ));
@@ -145,7 +143,6 @@ const getUsers = () =>
           `error: getUsers - cacheUtils.getItem(${DB_USERS})`,
           e
         );
-        resolve({});
       });
   });
 
@@ -176,28 +173,17 @@ const getConversations = () =>
 */
 const getCollections = () =>
   new Promise(resolve => {
-    getLAsync(DB_COLLECTION_LIST, 0, -1)
-      .then(collIds =>
-        resolve(Promise.all(
-          collIds.map(id => getCollectionById(id)))
-        )
-      )
-      .catch(e => console.error(e));
-  });
-
-const getCollectionById = id => (
-  new Promise(resolve => {
-    getJSONItemFromCache(keyFormatCollectionId(id))
-      .then(coll => resolve(coll))
+    cacheUtils
+      .getItem(DB_COLLECTIONS)
+      .then(JSON.parse)
+      .then(resolve)
       .catch(e => {
-        // no item found matching cacheKey
         console.error(
-          `error: getCollectionById - getJSONItemFromCache(collection:${id}})`,
+          `error: getCollections - cacheUtils.getItem(${DB_COLLECTIONS})`,
           e
         );
       });
-  })
-);
+  });
 
 /**
  * Get Series
@@ -223,30 +209,16 @@ const getSeries = () =>
  *
  * @return {Promise<Array>}
 */
-
-const getMessageById = id => (
+const getMessages = () =>
   new Promise(resolve => {
-    getJSONItemFromCache(keyFormatMessageId(id))
-      .then(msg => resolve(msg))
+    cacheUtils
+      .getItem(DB_MESSAGES)
+      .then(JSON.parse)
+      .then(resolve)
       .catch(e => {
-        // no item found matching cacheKey
-        console.error(
-          `error: getMessageById - getJSONItemFromCache(message:${id}})`,
-          e
-        );
+        console.error('error: getMessages', e);
       });
-  })
-);
-
-const getMessages = () =>  new Promise(resolve => {
-  getLAsync(DB_MESSAGE_LIST, 0, -1)
-    .then(messageIds =>
-      resolve(Promise.all(
-        messageIds.map(id => getMessageById(id)))
-      )
-    )
-    .catch(e => console.error(e));
-});
+  });
 
 /**
  * Get Blocks
@@ -330,7 +302,6 @@ const setStudyInfo = studyInfo =>
 
 module.exports = {
   getUserById,
-  getMessageById,
   getUsers,
   getConversations,
   getCollections,
@@ -343,7 +314,5 @@ module.exports = {
   updateUser,
   updateAllUsers,
   keyFormatUserId,
-  setUserInCache,
-  getJSONItemFromCache,
-  getCollectionById
+  setUserInCache
 };
