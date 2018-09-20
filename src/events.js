@@ -12,13 +12,14 @@ const logEvent = ({ userId, eventName }) => {
     event: 'CUSTOM_APP_EVENTS',
     custom_events: JSON.stringify([{
       _eventName: eventName,
+      _app_user_id: userId,
+      user_unique_id: userId
     }]),
-    advertiser_tracking_enabled: 0,
-    application_tracking_enabled: 0,
+    advertiser_tracking_enabled: 1,
+    application_tracking_enabled: 1,
     extinfo: JSON.stringify(['mb1']),
     page_id: FB_PAGE_ID,
     page_scoped_user_id: userId,
-    app_user_id: userId,
   };
   return apiFetch({ method: 'POST', data, uri});
 };

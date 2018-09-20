@@ -902,7 +902,7 @@ describe('message function tests', () => {
       allConversations,
       allCollections,
       allMessages,
-      studyInfo: {},
+      studyInfo: [],
       maxUpdates: 2,
     });
     expect(actions.length).to.be.at.most(2);

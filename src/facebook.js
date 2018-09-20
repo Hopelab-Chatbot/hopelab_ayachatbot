@@ -15,6 +15,10 @@ const { updateUser, updateAllUsers, setStudyInfo } = require('./database');
 const { logger } = require('./logger');
 
 const {
+  logEvent
+} = require('./events');
+
+const {
   FB_GRAPH_ROOT_URL,
   FB_PAGE_ACCESS_TOKEN,
   TYPING_TIME_IN_MILLISECONDS,
@@ -33,6 +37,7 @@ const {
   STOP_MESSAGE,
   RESUME_MESSAGE,
   STOPPED_MESSAGE,
+  FB_STOP_MSG_EVENT
 } = require('./constants');
 
 const {
@@ -260,6 +265,10 @@ function receivedMessage({
 
   // HERE if we get a Specific 'STOP' message.text, we stop the service
   if (message.text && R.equals(message.text.toUpperCase(),STOP_MESSAGE)) {
+    logEvent({userId: user.id, eventName: FB_STOP_MSG_EVENT}).catch(err => {
+      logger.log(err);
+      logger.log('error', `something went wrong logging event ${FB_STOP_MSG_EVENT} ${userToUpdate.id}`);
+    });
     userToUpdate = Object.assign({}, userToUpdate, {
       stopNotifications: true,
     });
@@ -347,7 +356,6 @@ function receivedMessage({
   }
 
   // send it
-
   sendAllMessagesToMessenger({
     messages: messagesWithTyping,
     senderID,
