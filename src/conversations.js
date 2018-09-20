@@ -84,6 +84,7 @@ function newConversationTrack(conversations, messages, collections, studyInfo, u
         R.propEq('start', true)
       )
     );
+
   if (
     user.assignedConversationTrack !== userUpdates.assignedConversationTrack
   ) {
