@@ -195,24 +195,24 @@ describe('Messages Module', () => {
   describe('generateUniqueStudyId', () => {
     it('should generate (almost) all unique studyIds', () => {
       let studyIds = [];
-      let id;
+      let studyId;
 
       for(let i = 0; i < STUDY_ID_LIST.length; i++) {
-        id = testModule.generateUniqueStudyId(studyIds, STUDY_ID_LIST);
-        expect(id.length).to.eq(5);
-        expect(Number.isFinite(Number(id))).to.be.true;
-        expect(studyIds.indexOf(id) === -1).to.be.true;
-        studyIds.push(id);
+        ({ studyId } = testModule.generateUniqueStudyId(studyIds, STUDY_ID_LIST));
+        expect(studyId.length).to.eq(5);
+        expect(studyIds.length).to.eq(i + 1);
+        expect(Number.isFinite(Number(studyId))).to.be.true;
       }
 
-      id = testModule.generateUniqueStudyId(studyIds, STUDY_ID_LIST);
-      expect(id).to.eq(String(STUDY_ID_NO_OP));
+      ({ studyId } = testModule.generateUniqueStudyId(studyIds, STUDY_ID_LIST));
+      expect(studyId).to.eq(String(STUDY_ID_NO_OP));
     });
 
     it('should continue to return the no op value if all of the study ids are used', () => {
+      let studyId;
       for (let i = 0; i < 10; i++) {
-        var id = testModule.generateUniqueStudyId(STUDY_ID_LIST.map(String), STUDY_ID_LIST);
-        expect(id).to.eq(String(STUDY_ID_NO_OP));
+        ({ studyId } = testModule.generateUniqueStudyId(STUDY_ID_LIST.map(String), STUDY_ID_LIST));
+        expect(studyId).to.eq(String(STUDY_ID_NO_OP));
       }
     });
 
