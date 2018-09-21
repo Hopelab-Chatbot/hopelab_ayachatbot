@@ -4,7 +4,7 @@ const constants = require('../src/constants');
 
 const { DB_COLLECTION_LIST, DB_COLLECTIONS } = constants;
 
-const { keyFormatMessageId } = require('../src/utils/msg_utils');
+const { keyFormatCollectionId } = require('../src/utils/collection_utils');
 const { getCollectionById } = require('../src/database');
 
 const {promisify} = require('util');
@@ -36,7 +36,7 @@ getLAsync(DB_COLLECTION_LIST, 0, -1).then(collIds => {
         redisClient.set(DB_COLLECTIONS, JSON.stringify(colls));
         redisClient.del(DB_COLLECTION_LIST);
         colls.forEach(({id = ''}, i) =>  {
-          redisClient.del(keyFormatMessageId(id)))
+          redisClient.del(keyFormatCollectionId(id));
           if (i === colls.length -1) {
             console.log('deleted ' + promises.length + ' individual collection keys');
             redisClient.quit();
@@ -44,7 +44,7 @@ getLAsync(DB_COLLECTION_LIST, 0, -1).then(collIds => {
               process.exit(0);
             }, 3000);
           }
-        };
+        });
       }
     })
       .catch(err => {console.log(err);process.exit(1);});// eslint-disable-line no-console
