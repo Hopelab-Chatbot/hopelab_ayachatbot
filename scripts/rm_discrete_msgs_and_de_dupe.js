@@ -16,13 +16,25 @@ const redisClient = redis.createClient({
   port: config.redis.port
 });
 
+const getAsync = promisify(redisClient.get).bind(redisClient);
 
 const getLAsync = promisify(redisClient.lrange).bind(redisClient);
 
+const deDupeOldMessages = () => {
+  getAsync(DB_MESSAGES).then(res => {
+    const json_msgs = JSON.parse(res);
+    redisClient.set(DB_MESSAGES, JSON.stringify(R.uniq(json_msgs)));
+    redisClient.quit();
+    setTimeout(() => {
+      process.exit(0);
+    }, 3000);
+  });
+};
+
 getLAsync(DB_MESSAGE_LIST, 0, -1).then(msgIds => {
   if (!msgIds || msgIds.length === 0) {
-    console.log('no messages to reset to message key')
-    redisClient.quit();
+    console.log('no messages to reset to message key');
+    deDupeOldMessages();
   } else {
     const promises = msgIds.map(id => {
       return getMessageById(id);
@@ -32,7 +44,6 @@ getLAsync(DB_MESSAGE_LIST, 0, -1).then(msgIds => {
         console.log(msgs.length)
         const uniqueMsgs = R.uniq(msgs);
         console.log(uniqueMsgs.length)
-        redisClient.set(DB_MESSAGES, JSON.stringify(uniqueMsgs));
         redisClient.del(DB_MESSAGE_LIST);
         uniqueMsgs.forEach(({id = ''}, i) => {
           redisClient.del(keyFormatMessageId(id));
@@ -40,6 +51,7 @@ getLAsync(DB_MESSAGE_LIST, 0, -1).then(msgIds => {
           redisClient.del(`msg:${id}`);
           if (i === uniqueMsgs.length - 1) {
             console.log('deleted ' + uniqueMsgs.length * 2 + ' individual message keys');
+            deDupeOldMessages();
           }
         });
       }
