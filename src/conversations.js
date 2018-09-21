@@ -3,6 +3,10 @@ const {
 } = require('./utils/msg_utils');
 
 const {
+  setStudyInfo
+} = require('./database');
+
+const {
   INTRO_CONVERSATION_ID,
   INTRO_BLOCK_ID,
   STUDY_ID_LIST,
@@ -55,7 +59,6 @@ function assignedConversationTrackIsDeleted(conversation, conversations) {
 */
 function newConversationTrack(conversations, messages, collections, studyInfo, user) {
   let conversationTrack;
-
   let userUpdates = Object.assign({}, user);
 
   if (!user.introConversationSeen) {
@@ -96,8 +99,10 @@ function newConversationTrack(conversations, messages, collections, studyInfo, u
         newConversation &&
         newConversation.isStudy
     ) {
-      userUpdates.studyId = generateUniqueStudyId(studyInfo, STUDY_ID_LIST);
+      const { studyId, newStudyInfoList } = generateUniqueStudyId(studyInfo, STUDY_ID_LIST);
+      userUpdates.studyId = studyId;
       userUpdates.studyStartTime = Date.now();
+      setStudyInfo(newStudyInfoList);
     }
   }
   return {
