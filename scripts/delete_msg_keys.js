@@ -33,7 +33,6 @@ getLAsync(DB_MESSAGE_LIST, 0, -1).then(msgIds => {
     });
     Promise.all(promises).then(msgs => {
       if (msgs && msgs.length > 0 && msgs[0]) {
-        redisClient.set(DB_MESSAGES, JSON.stringify(msgs));
         redisClient.del(DB_MESSAGE_LIST);
         msgs.forEach(({id = ''}, i) => {
           redisClient.del(keyFormatMessageId(id))

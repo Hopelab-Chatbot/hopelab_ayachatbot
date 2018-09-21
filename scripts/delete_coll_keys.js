@@ -33,7 +33,6 @@ getLAsync(DB_COLLECTION_LIST, 0, -1).then(collIds => {
     });
     Promise.all(promises).then(colls => {
       if (colls && colls.length > 0 && colls[0]) {
-        redisClient.set(DB_COLLECTIONS, JSON.stringify(colls));
         redisClient.del(DB_COLLECTION_LIST);
         colls.forEach(({id = ''}, i) =>  {
           redisClient.del(keyFormatCollectionId(id));
