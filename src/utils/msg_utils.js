@@ -78,14 +78,14 @@ const getLastMessageSentByUser = user => {
 
 
 function generateUniqueStudyId(studyInfo, studyIdList) {
-  let studyInfoSet = new Set(studyInfo.map(String));
-
-  for(let i = 0; i < studyIdList.length; i++) {
-    if (!studyInfoSet.has(String(studyIdList[i]))) {
-      return String(studyIdList[i]);
-    }
+  let studyId = String(STUDY_ID_NO_OP);
+  const stringStudyIdList = studyIdList.map(String);
+  const potentialIds = R.difference(stringStudyIdList, studyInfo);
+  if (potentialIds && potentialIds.length) {
+    studyId = potentialIds[0];
+    studyInfo.push(studyId);
   }
-  return String(STUDY_ID_NO_OP);
+  return {studyId, newStudyInfoList: studyInfo};
 }
 
 module.exports = {
