@@ -82,7 +82,7 @@ function generateUniqueStudyId(studyInfo, studyIdList) {
   const stringStudyIdList = studyIdList.map(String);
   const potentialIds = R.difference(stringStudyIdList, studyInfo);
   if (potentialIds && potentialIds.length) {
-    studyId = String(potentialIds[0]);
+    studyId = potentialIds[0];
     studyInfo.push(studyId);
   }
   return {studyId, newStudyInfoList: studyInfo};
