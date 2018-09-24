@@ -16,7 +16,7 @@ describe('should not Receive Update', () => {
     expect(testModule.shouldReceiveUpdate()).to.be.false;
   });
 
-  it('should not update if the user has set stopNotifications to true', () => {
+  it('should not update if the user has set stopNotifications to true', done => {
     const user = {
       introConversationSeen: true,
       history: [
@@ -31,6 +31,7 @@ describe('should not Receive Update', () => {
     };
 
     expect(testModule.shouldReceiveUpdate(user, Date.now())).to.be.false;
+    done();
   });
 });
 
@@ -40,7 +41,7 @@ xdescribe('should set User to stopNotifications with a STOP message', () => {
     facebookTestModule.__set__("callSendAPI", () => true);
   });
 
-  it('does not retur a promise if the user does not send \'stop\'', () => {
+  it('does not retur a promise if the user does not send \'stop\'', done => {
     let message = {message: {id: "ryEn5QyZf", type: TYPE_MESSAGE, text: 'stops'}};
     let allMessages = {allMessages: mocks.messages};
     let user = { user: {
@@ -61,9 +62,10 @@ xdescribe('should set User to stopNotifications with a STOP message', () => {
     let response = facebookTestModule.receivedMessage(data);
     expect(response).equals(undefined);
     expect(Promise.resolve(response)).not.equals(response);
+    done();
   });
 
-  it('returns a promise if the user sends \'stop\'', () => {
+  it('returns a promise if the user sends \'stop\'', done => {
     let message = {message: {id: "ryEn5QyZf", type: TYPE_MESSAGE, text: STOP_MESSAGE}};
     let allMessages = {allMessages: mocks.messages};
     let user = { user: {
@@ -82,5 +84,6 @@ xdescribe('should set User to stopNotifications with a STOP message', () => {
     let response = facebookTestModule.receivedMessage(data);
     // a promise is returned by this function if it breaks early to update the user with a stopNotifications attr
     expect(Promise.resolve(response)).equals(response);
+    done();
   });
 });
