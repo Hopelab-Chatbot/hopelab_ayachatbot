@@ -615,4 +615,5 @@ module.exports = {
   receivedMessage,
   sendPushMessagesToUsers,
   sendStudyMessageToUsers,
+  serializeSend
 };
