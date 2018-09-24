@@ -5,9 +5,12 @@ const { logger } = require('../logger');
 
 const apiFetch = ({ uri, data, method, options }) => {
   return new Promise((resolve, reject) => {
-    request(
+    return request(
       {
         uri,
+        headers: {
+          "Content-Type": "application/json"
+        },
         method: method || 'GET',
         body: data,
         json: true,
@@ -27,7 +30,8 @@ const apiFetch = ({ uri, data, method, options }) => {
             };
           }
 
-          console.error('ERROR: Unable to send message in callSendAPI');
+          console.error('ERROR: Unable to fetch in callSendAPI');
+          console.error(error);
           logger.log('error',
             `Unable to fetch, error: ${JSON.stringify(error)}, message: ${JSON.stringify(data)}`);
           reject(error);

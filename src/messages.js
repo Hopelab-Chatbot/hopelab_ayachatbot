@@ -19,7 +19,8 @@ const {
   getLastSentMessageInHistory,
   isUserConfirmReset,
   isUserCancelReset,
-  getLastMessageSentByUser
+  getLastMessageSentByUser,
+  formatAsEventName
 } = require('./utils/msg_utils');
 
 const {
@@ -67,7 +68,8 @@ const {
   RESET_USER_KEY_RESPONSE,
   RESET_USER_QUESTION,
   RESET_USER_CONFIRM,
-  FB_EVENT_COMPLETE_INTRO_CONVERSATION
+  FB_EVENT_COMPLETE_INTRO_CONVERSATION,
+  FB_QUICK_REPLY_RETRY_EVENT
 } = require('./constants');
 
 const R = require('ramda');
@@ -145,7 +147,7 @@ function makePlatformMediaMessagePayload(type, url, media) {
     return  {
       attachment: {
         type,
-        payload: { url, is_reusable }
+        payload: { url: encodeURI(url), is_reusable }
       }
     };
   } else {
@@ -154,7 +156,7 @@ function makePlatformMediaMessagePayload(type, url, media) {
         type: 'template',
         payload: {
           template_type: 'open_graph',
-          elements: [{ url, is_reusable }]
+          elements: [{ url: encodeURI(url), is_reusable }]
         }
       }
     };
@@ -555,6 +557,10 @@ function getActionForMessage({
     R.path(['messageType'], lastMessage) === TYPE_QUESTION_WITH_REPLIES &&
       !message.quick_reply
   ) {
+    logEvent({userId: user.id, eventName: FB_QUICK_REPLY_RETRY_EVENT}).catch(err => {
+      logger.log(err);
+      logger.log('error', `something went wrong logging event ${FB_QUICK_REPLY_RETRY_EVENT} ${user.id}`);
+    });
     return {
       action: {type: ACTION_RETRY_QUICK_REPLY},
       userActionUpdates
@@ -1056,7 +1062,7 @@ function getMessagesForAction({
       )
     });
     curr = null;
-  } else if (action.type === TYPE_MESSAGE) {
+  } else if (action.type === TYPE_MESSAGE || action.type === TYPE_QUESTION) {
     curr = messages.find(m => m.id === action.id);
   } else if (action.type === TYPE_COLLECTION) {
     let nextMessage = getNextMessageForCollection(
@@ -1073,6 +1079,7 @@ function getMessagesForAction({
   }
 
   while (curr) {
+    if (curr.isEvent) logEvent({eventName: formatAsEventName(curr.name), userId: user.id });
     if (
       curr.messageType === TYPE_IMAGE ||
             curr.messageType === TYPE_VIDEO
@@ -1252,6 +1259,8 @@ function getMessagesForAction({
 
         curr = nextMessage.message;
         userUpdates = nextMessage.user;
+      } else {
+        curr = null;
       }
     } else {
       if (
