@@ -39,21 +39,21 @@ const promises = userIds.map(id => {
   return getUserById(id);
 });
 Promise.all(promises).then(users => {
-  users.forEach((user, i) => {
+  const userPromises = [];
+  users.forEach(user => {
     if (user.studyId) {
       const userUpdates = Object.assign({}, user);
       userUpdates.studyId = false;
       userUpdates.studyStartTime = false;
-      updateUser(userUpdates).then(() => {
-        if (i === users.length - 1) {
-          redisClient.quit();
-          setTimeout(() => {
-            process.exit(0);
-          }, 3000);
-        }
-      })
-        .catch(err => console.log(err));// eslint-disable-line no-console
+      userPromises.push(updateUser(userUpdates)
+        .catch(console.error));// eslint-disable-line no-console
     }
+  });
+  Promise.all(userPromises).then(() => {
+    redisClient.quit();
+    setTimeout(() => {
+      process.exit(0);
+    }, 3000);
   });
 })
   .catch(err => console.log(err));// eslint-disable-line no-console

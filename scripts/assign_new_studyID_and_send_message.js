@@ -35,34 +35,40 @@ const userIds = [
 const promises = userIds.map(id => {
   return getUserById(id);
 });
-Promise.all(promises).then(users => {
-  users.forEach((user, i) => {
-    if (user.studyId) {
-      const userUpdates = Object.assign({}, user);
-      getStudyInfo().then(studyInfo => {
-        const {studyId, newStudyInfoList} = generateUniqueStudyId(studyInfo, STUDY_ID_LIST);
-        const text = `Sorry, I assigned you the wrong participant code. Your new code is ${studyId}. Please visit https://hopelab.az1.qualtrics.com/jfe/form/SV_3k19jeWjxbOu7Rz with this code to complete the first study survey for $20.`;
-        setStudyInfo(newStudyInfoList);
-        userUpdates.studyId = studyId;
-        updateUser(userUpdates).then(() => {
-          const messages = [{
-            type: TYPE_MESSAGE,
-            message: { text, quick_replies },
-          }];
-          serializeSend({
-            messages,
-            senderID: user.id,
-          });
-        });
-      });
-    }
-    if (i === users.length - 1) {
-      redisClient.quit();
-      setTimeout(() => {
-        process.exit(0);
-      }, 3000);
-    }
-  });
 
+const userPromises = [];
+
+Promise.all(promises).then(users => {
+  getStudyInfo().then(studyInfo => {
+    let mutableStudyInfo = studyInfo;
+    users.forEach((user, i) => {
+      const userUpdates = Object.assign({}, user);
+      const {studyId, newStudyInfoList} = generateUniqueStudyId(mutableStudyInfo, STUDY_ID_LIST);
+      mutableStudyInfo = newStudyInfoList;
+      const text = `Sorry, I assigned you the wrong participant code. Your new code is ${studyId}. Please visit https://hopelab.az1.qualtrics.com/jfe/form/SV_3k19jeWjxbOu7Rz with this code to complete the first study survey for $20.`;
+      userUpdates.studyId = studyId;
+      userPromises.push(updateUser(userUpdates).then(() => {
+        const messages = [{
+          type: TYPE_MESSAGE,
+          message: { text, quick_replies },
+        }];
+        return Promise.resolve(serializeSend({
+          messages,
+          senderID: user.id,
+        }));
+      })
+        .catch(console.error)
+      );
+      if ( i === users.length -1) {
+        Promise.all(userPromises).then(() => {
+          setStudyInfo(studyInfo);
+          redisClient.quit();
+          setTimeout(() => {
+            process.exit(0);
+          }, 3000);
+        });
+      }
+    });
+  });
 })
-  .catch(err => console.log(err));// eslint-disable-line no-console
+  .catch(err => console.log(err)); // eslint-disable-line no-console
