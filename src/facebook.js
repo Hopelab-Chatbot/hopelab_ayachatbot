@@ -37,7 +37,8 @@ const {
   STOP_MESSAGE,
   RESUME_MESSAGE,
   STOPPED_MESSAGE,
-  FB_STOP_MSG_EVENT
+  FB_STOP_MSG_EVENT,
+  STOP_NOTIFICATIONS_TITLE
 } = require('./constants');
 
 const {
@@ -264,7 +265,9 @@ function receivedMessage({
   logger.log('debug', `receivedMessage: ${JSON.stringify(message)} prevMessage: ${JSON.stringify(prevMessage)}`);
 
   // HERE if we get a Specific 'STOP' message.text, we stop the service
-  if (message.text && R.equals(message.text.toUpperCase(),STOP_MESSAGE)) {
+  const isStop = message.text &&
+    R.any(R.equals(message.text.toUpperCase()), [STOP_MESSAGE, STOP_NOTIFICATIONS_TITLE.toUpperCase()]);
+  if (isStop) {
     logEvent({userId: user.id, eventName: FB_STOP_MSG_EVENT}).catch(err => {
       logger.log(err);
       logger.log('error', `something went wrong logging event ${FB_STOP_MSG_EVENT} ${userToUpdate.id}`);
@@ -292,7 +295,7 @@ function receivedMessage({
   }
 
   // if user is an 'invalidUser' lets stop here as well
-  if (isInvalidUser(userToUpdate)) return;
+  if (isInvalidUser(userToUpdate) || hasStoppedNotifications(userToUpdate)) return;
 
   userToUpdate = Object.assign({}, userToUpdate, {
     history: updateHistory(
