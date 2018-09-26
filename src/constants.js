@@ -67,6 +67,8 @@ const MESSAGE_TYPE_TRANSITION = 'transition';
 const MESSAGE_TYPE_TEXT = 'text';
 const TYPE_STOP_NOTIFICATIONS = 'stopNotifications';
 
+const STOP_NOTIFICATIONS_TITLE = 'Stop Notifications';
+
 const STOP_MESSAGE = 'STOP';
 const RESUME_MESSAGE = 'RESUME';
 // entity keys
@@ -130,7 +132,7 @@ const QUICK_REPLY_RETRY_BUTTONS = [
     id: `${QUICK_REPLY_RETRY_ID}-continue`,
   },
   {
-    title: "Stop Notifications",
+    title: STOP_NOTIFICATIONS_TITLE,
     id: `${QUICK_REPLY_RETRY_ID}-stop-notifications`,
     text: STOP_NOTIFICATIONS,
     type: TYPE_STOP_NOTIFICATIONS,
@@ -301,5 +303,6 @@ module.exports = {
   FB_EVENT_COMPLETE_INTRO_CONVERSATION,
   DB_COLLECTION_LIST,
   FB_STOP_MSG_EVENT,
-  FB_QUICK_REPLY_RETRY_EVENT
+  FB_QUICK_REPLY_RETRY_EVENT,
+  STOP_NOTIFICATIONS_TITLE
 };
