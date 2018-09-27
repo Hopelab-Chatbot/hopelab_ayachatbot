@@ -20,7 +20,8 @@ const {
   isUserConfirmReset,
   isUserCancelReset,
   getLastMessageSentByUser,
-  formatAsEventName
+  formatAsEventName,
+  isCrisisMessage,
 } = require('./utils/msg_utils');
 
 const {
@@ -346,27 +347,6 @@ function getUpdateActionForUsers({
 
 function doesMessageStillExist(message, messages) {
   return !!(messages.find(m => message.id === m.id));
-}
-
-function isCrisisMessage(message, crisisKeywords) {
-  if (!message || !message.text) {
-    return false;
-  }
-
-  const textWithoutPunctuation = message.text
-    .toLowerCase()
-    .replace(/[.,\/#\?!$%\^&\*;:{}=\-_`~()]/g, ""); //eslint-disable-line no-useless-escape
-
-  const textArray = textWithoutPunctuation.match(/\S+/g) || [];
-
-  return textArray.reduce((acc, wordInMessage) => {
-    crisisKeywords.forEach(crisisWord => {
-      if (crisisWord === wordInMessage) {
-        acc = true;
-      }
-    });
-    return acc;
-  }, false);
 }
 
 function getButtonForQuickReplyRetry(message, quickReplyRetryOptions) {
@@ -1333,6 +1313,5 @@ module.exports = {
   getNextMessage,
   getMediaUrlForMessage,
   shouldReceiveUpdate,
-  isCrisisMessage,
   createCustomMessageForHistory,
 };

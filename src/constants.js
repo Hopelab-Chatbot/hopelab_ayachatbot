@@ -152,7 +152,7 @@ const QUICK_REPLY_RETRY_BUTTONS = [
 const STOPPED_MESSAGE = {
   type: FB_MESSAGE_TYPE,
   message: {
-    text: `Ok, I will stop all messages. If you ever want to chat again just type ${RESUME_MESSAGE}`
+    text: `Your message indicated that you would like to stop all messages. If this is a mistake or you ever want to chat again just type ${RESUME_MESSAGE}`
   }
 };
 
@@ -169,6 +169,46 @@ const CRISIS_KEYWORDS = [
   'hurt',
   'hurting',
   'gun'
+];
+
+const STOP_MESSAGES = [
+  STOP_MESSAGE,
+  STOP_NOTIFICATIONS_TITLE.toUpperCase(),
+  'CANCEL',
+  'GO AWAY',
+  'UNSUBSCRIBE',
+];
+
+const CURSING_STOP_TRIGGERS = [
+  'fuck you',
+  'fuck u',
+  'fuck off',
+  'the fuck',
+  'fucking stop',
+  'bitch',
+  'blow',
+  'dick',
+  'shut up',
+  'leave me alone',
+  'stop texting',
+  'stop messaging',
+  'stop messages',
+  'stop receiving messages',
+  'stop sending',
+  'stop talking',
+  'stop this',
+  'stop notifications',
+  'stop contacting',
+  'please stop',
+  'deleting',
+  'delete',
+  'block me',
+  'block you',
+  'reporting',
+  'quit messaging',
+  'don’t chat me',
+  'spam',
+  'spamming',
 ];
 
 const STUDY_ID_LIST = [
@@ -304,5 +344,7 @@ module.exports = {
   DB_COLLECTION_LIST,
   FB_STOP_MSG_EVENT,
   FB_QUICK_REPLY_RETRY_EVENT,
-  STOP_NOTIFICATIONS_TITLE
+  STOP_NOTIFICATIONS_TITLE,
+  STOP_MESSAGES,
+  CURSING_STOP_TRIGGERS
 };
