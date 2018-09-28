@@ -229,7 +229,7 @@ function sendAllMessagesToMessenger({
           }
         })
         .catch(e => {
-          logger.log('error', `Error: updateUser, ${JSON.stringify(e)}`);
+          logger.log('error', `Error: updateUser, ${user.id} , ${JSON.stringify(user)} , ${JSON.stringify(e)}`);
         });
     })
     .catch(e => {
