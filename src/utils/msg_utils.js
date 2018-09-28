@@ -99,18 +99,17 @@ const cleanText = text =>
     .toLowerCase()
     .replace(/[.,\/#\?!$%\^&\*;:{}=\-_`~()]/g, ""); //eslint-disable-line no-useless-escape
 
-const findKeyWordsInTextBlock = (text, keywords) => {
-  const textWithoutPunctuation = cleanText(text);
-  const textArray = textWithoutPunctuation.match(/\S+/g) || [];
+const padText = text => ' '.concat(text.concat(' '))
 
-  return textArray.reduce((acc, wordInMessage) => {
-    keywords.forEach(crisisWord => {
-      if (crisisWord === wordInMessage) {
-        acc = true;
-      }
-    });
-    return acc;
-  }, false);
+const findKeyPhrasesInTextBlock = (text, keywords) => {
+  const formattedText = padText(cleanText(text));
+  let acc = false;
+  keywords.forEach(word => {
+    if (formattedText.includes(padText(word))) {
+      acc = true;
+    }
+  });
+  return acc;
 };
 
 function isCrisisMessage(message, crisisKeywords) {
@@ -118,11 +117,12 @@ function isCrisisMessage(message, crisisKeywords) {
     return false;
   }
 
-  return findKeyWordsInTextBlock(message.text, crisisKeywords);
+  return findKeyPhrasesInTextBlock(message.text, crisisKeywords);
 }
 
 const isStopOrSwearing = text => {
-  return R.any(R.equals(cleanText(text)), STOP_MESSAGES.map(cleanText).concat(CURSING_STOP_TRIGGERS.map(cleanText)));
+  return R.any(R.equals(cleanText(text)), STOP_MESSAGES.map(cleanText)) ||
+  findKeyPhrasesInTextBlock(text, CURSING_STOP_TRIGGERS.map(cleanText));
 };
 
 module.exports = {
