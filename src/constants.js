@@ -243,7 +243,7 @@ const NUMBER_OF_UPDATE_MESSAGES_ALLOWED = 7;
 
 // minutes of inactivty before update is sent
 const MINUTES_OF_INACTIVITY_BEFORE_UPDATE_MESSAGE = (24 * 60) - 15;
-const CRONTAB_FOR_MESSAGE_UPDATE_CHECK = '*/10 * * * *';
+const CRONTAB_FOR_MESSAGE_UPDATE_CHECK = '*/3 * * * *';
 
 const CRONTAB_FOR_STUDY_MESSAGE_UPDATE = '0 */2 * * *';
 
