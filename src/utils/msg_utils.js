@@ -99,7 +99,7 @@ const cleanText = text =>
     .toLowerCase()
     .replace(/[.,\/#\?!$%\^&\*;:{}=\-_`~()]/g, ""); //eslint-disable-line no-useless-escape
 
-const padText = text => ' '.concat(text.concat(' '))
+const padText = text => ' '.concat(text.concat(' '));
 
 const findKeyPhrasesInTextBlock = (text, keywords) => {
   const formattedText = padText(cleanText(text));
