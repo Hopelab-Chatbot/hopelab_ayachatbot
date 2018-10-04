@@ -26,8 +26,6 @@ const {
   FB_PAGE_ACCESS_TOKEN,
   TYPING_TIME_IN_MILLISECONDS,
   FB_MESSAGE_TYPE,
-  FB_ERROR_CODE_UNAVAILABLE_USER,
-  FB_ERROR_CODE_UNAVAILABLE_USER_10,
   FB_TYPING_ON_TYPE,
   FB_MESSAGING_TYPE_RESPONSE,
   FB_MESSAGING_TYPE_UPDATE,
@@ -477,19 +475,8 @@ function sendPushMessagesToUsers({
 
 function updateUsersCheckForErrors(usersToUpdate) {
   let updates = usersToUpdate.map(user => {
-    if (
-      R.path(['isError'], user) &&
-      (
-        R.path(['error', 'fbCode'], user) === FB_ERROR_CODE_UNAVAILABLE_USER ||
-        R.path(['error', 'fbCode'], user) === FB_ERROR_CODE_UNAVAILABLE_USER_10
-      )
-    ) {
-      let actualUser = usersToUpdate.find(u => R.path(['error', 'id'], user) === u.id);
-      if (!actualUser) { return undefined; }
-      return Object.assign({}, actualUser, {invalidUser: true});
-    } else if (R.path(['isError'], user)) {
-      // If there was a facebook error but it was not an invalid
-      // user error, do not mark the user as invalid
+    if (R.path(['isError'], user)) {
+      logger.log('error', `JSON.stringify(user.isError) + JSON.stringify(user)`);
       return undefined;
     }
     return user;
