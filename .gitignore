@@ -5,3 +5,4 @@ environment.sh
 .env
 coverage
 largestuser.json
+logs
