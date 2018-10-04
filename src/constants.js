@@ -179,6 +179,7 @@ const STOP_MESSAGES = [
   'shut up',
   'leave me alone',
   'bitch',
+  'quit',
 ];
 
 const CURSING_STOP_TRIGGERS = [
