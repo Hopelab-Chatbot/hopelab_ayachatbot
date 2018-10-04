@@ -35,7 +35,6 @@ describe('newConversationTrack function', () => {
       type: "conversation",
       "name":"Study routing",
       "userId":"",
-      "tags":[],
       "id":"study-conversation",
       "isStudy":true,
       "isLive":true
