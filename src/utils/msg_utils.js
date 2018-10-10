@@ -5,6 +5,8 @@ const { MESSAGE_TYPE_TRANSITION,
   RESET_USER_RESPONSE_CONFIRM,
   RESET_USER_RESPONSE_CANCEL,
   STUDY_ID_NO_OP,
+  CURSING_STOP_TRIGGERS,
+  STOP_MESSAGES,
   TYPE_ANSWER } = require('../constants');
 
 const messageIsTransition = message => (
@@ -92,6 +94,37 @@ const keyFormatMessageId = id => `message:${id}`;
 
 const formatAsEventName = name => `msg_event-${name}`;
 
+const cleanText = text =>
+  text
+    .toLowerCase()
+    .replace(/[.,\/#\?!$%\^&\*;:{}=\-_`~()]/g, ""); //eslint-disable-line no-useless-escape
+
+const padText = text => ` ${text} `;
+
+const findKeyPhrasesInTextBlock = (text, keywords) => {
+  const formattedText = padText(cleanText(text));
+  let acc = false;
+  keywords.forEach(word => {
+    if (formattedText.includes(padText(word))) {
+      acc = true;
+    }
+  });
+  return acc;
+};
+
+function isCrisisMessage(message, crisisKeywords) {
+  if (!message || !message.text) {
+    return false;
+  }
+
+  return findKeyPhrasesInTextBlock(message.text, crisisKeywords);
+}
+
+const isStopOrSwearing = text => {
+  return R.any(R.equals(cleanText(text)), STOP_MESSAGES.map(cleanText)) ||
+  findKeyPhrasesInTextBlock(text, CURSING_STOP_TRIGGERS.map(cleanText));
+};
+
 module.exports = {
   formatAsEventName,
   havePassedTransition,
@@ -103,4 +136,6 @@ module.exports = {
   isUserCancelReset,
   generateUniqueStudyId,
   keyFormatMessageId,
+  isStopOrSwearing,
+  isCrisisMessage
 };

@@ -7,7 +7,10 @@ const { updateHistory, getPreviousMessageInHistory, hasStoppedNotifications } = 
 const { isReturningBadFBCode } = require('./utils/fb_utils');
 const { isInvalidUser } = require('./utils/user_utils');
 
-const { isUserConfirmReset } = require('./utils/msg_utils');
+const {
+  isUserConfirmReset,
+  isStopOrSwearing,
+} = require('./utils/msg_utils');
 
 const {  createNewUser } = require('./users');
 const { updateUser, updateAllUsers, setStudyInfo } = require('./database');
@@ -23,8 +26,6 @@ const {
   FB_PAGE_ACCESS_TOKEN,
   TYPING_TIME_IN_MILLISECONDS,
   FB_MESSAGE_TYPE,
-  FB_ERROR_CODE_UNAVAILABLE_USER,
-  FB_ERROR_CODE_UNAVAILABLE_USER_10,
   FB_TYPING_ON_TYPE,
   FB_MESSAGING_TYPE_RESPONSE,
   FB_MESSAGING_TYPE_UPDATE,
@@ -34,11 +35,9 @@ const {
   MAX_UPDATE_ACTIONS_ALLOWED,
   STUDY_ID_NO_OP,
   STUDY_MESSAGES,
-  STOP_MESSAGE,
   RESUME_MESSAGE,
   STOPPED_MESSAGE,
   FB_STOP_MSG_EVENT,
-  STOP_NOTIFICATIONS_TITLE
 } = require('./constants');
 
 const {
@@ -228,7 +227,7 @@ function sendAllMessagesToMessenger({
           }
         })
         .catch(e => {
-          logger.log('error', `Error: updateUser, ${JSON.stringify(e)}`);
+          logger.log('error', `Error: updateUser, ${user.id} , ${JSON.stringify(user)} , ${JSON.stringify(e)}`);
         });
     })
     .catch(e => {
@@ -265,8 +264,7 @@ function receivedMessage({
   logger.log('debug', `receivedMessage: ${JSON.stringify(message)} prevMessage: ${JSON.stringify(prevMessage)}`);
 
   // HERE if we get a Specific 'STOP' message.text, we stop the service
-  const isStop = message.text &&
-    R.any(R.equals(message.text.toUpperCase()), [STOP_MESSAGE, STOP_NOTIFICATIONS_TITLE.toUpperCase()]);
+  const isStop = message.text && isStopOrSwearing(message.text);
   if (isStop) {
     logEvent({userId: user.id, eventName: FB_STOP_MSG_EVENT}).catch(err => {
       logger.log(err);
@@ -477,19 +475,8 @@ function sendPushMessagesToUsers({
 
 function updateUsersCheckForErrors(usersToUpdate) {
   let updates = usersToUpdate.map(user => {
-    if (
-      R.path(['isError'], user) &&
-      (
-        R.path(['error', 'fbCode'], user) === FB_ERROR_CODE_UNAVAILABLE_USER ||
-        R.path(['error', 'fbCode'], user) === FB_ERROR_CODE_UNAVAILABLE_USER_10
-      )
-    ) {
-      let actualUser = usersToUpdate.find(u => R.path(['error', 'id'], user) === u.id);
-      if (!actualUser) { return undefined; }
-      return Object.assign({}, actualUser, {invalidUser: true});
-    } else if (R.path(['isError'], user)) {
-      // If there was a facebook error but it was not an invalid
-      // user error, do not mark the user as invalid
+    if (R.path(['isError'], user)) {
+      logger.log('error', `JSON.stringify(user.isError) + JSON.stringify(user)`);
       return undefined;
     }
     return user;
