@@ -10,6 +10,7 @@ const { isInvalidUser } = require('./utils/user_utils');
 const {
   isUserConfirmReset,
   isStopOrSwearing,
+  isQuickReplyRetryStop,
 } = require('./utils/msg_utils');
 
 const {  createNewUser } = require('./users');
@@ -116,6 +117,7 @@ function callSendAPI(messageData) {
           }
 
           console.error('ERROR: Unable to send message in callSendAPI');
+          console.error(`${JSON.stringify(error)}`);
           logger.log('error',
             `Unable to send message to user, error: ${JSON.stringify(error)}, message: ${JSON.stringify(messageData)}`);
 
@@ -264,7 +266,7 @@ function receivedMessage({
   logger.log('debug', `receivedMessage: ${JSON.stringify(message)} prevMessage: ${JSON.stringify(prevMessage)}`);
 
   // HERE if we get a Specific 'STOP' message.text, we stop the service
-  const isStop = message.text && isStopOrSwearing(message.text);
+  const isStop = message.text && (isStopOrSwearing(message.text) || isQuickReplyRetryStop(message));
   if (isStop) {
     logEvent({userId: user.id, eventName: FB_STOP_MSG_EVENT}).catch(err => {
       logger.log(err);

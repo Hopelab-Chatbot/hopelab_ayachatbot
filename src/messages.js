@@ -48,8 +48,6 @@ const {
   ACTION_REPLAY_PREVIOUS_MESSAGE,
   CRISIS_KEYWORDS,
   END_OF_CONVERSATION_ID,
-  QUICK_REPLY_RETRY_MESSAGE,
-  QUICK_REPLY_RETRY_BUTTONS,
   QUICK_REPLY_RETRY_ID,
   END_OF_CONVERSATION_MESSAGE,
   CRISIS_RESPONSE_MESSAGE,
@@ -70,7 +68,9 @@ const {
   RESET_USER_QUESTION,
   RESET_USER_CONFIRM,
   FB_EVENT_COMPLETE_INTRO_CONVERSATION,
-  FB_QUICK_REPLY_RETRY_EVENT
+  FB_QUICK_REPLY_RETRY_EVENT,
+  QUICK_REPLY_RETRY_ID_CONTINUE,
+  TYPE_BACK_TO_CONVERSATION
 } = require('./constants');
 
 const R = require('ramda');
@@ -95,8 +95,8 @@ function makePlatformMessagePayload(action, messages) {
         message.quick_replies) {
     let quick_replies = message.quick_replies.map(qr => (
       qr.payload === undefined ?
-        Object.assign({}, qr, {payload: "{}"}) :
-        qr
+        Object.assign({}, R.omit(['next'], qr), {payload: qr.next ? JSON.stringify(qr.next) : "{}"}) :
+        R.omit(['next'], {...qr, payload: JSON.stringify({ ...JSON.parse(qr.payload), ...qr.next }) })
     ));
     return { text: message.text, quick_replies };
   }
@@ -349,20 +349,6 @@ function doesMessageStillExist(message, messages) {
   return !!(messages.find(m => message.id === m.id));
 }
 
-function getButtonForQuickReplyRetry(message, quickReplyRetryOptions) {
-  if (!Array.isArray(quickReplyRetryOptions)) { return false; }
-  if (R.path(['quick_reply'], message)) {
-    try {
-      const payload = JSON.parse(
-        R.path(['quick_reply', 'payload'], message)
-      );
-      return quickReplyRetryOptions.find(opt => opt.id === payload.id);
-    } catch(e) { /*empty*/ }
-  }
-
-  return false;
-}
-
 /**
  * Get the next Action for incoming message
  *
@@ -413,24 +399,6 @@ function getActionForMessage({
       userActionUpdates
     };
   };
-
-  let lastMessageWithQuickReply = getLastSentMessageInHistory(user, false);
-  // NOTE: I'm not sure what this block does... seems like it never could be triggered
-  // This block below returns the previous message before the user entered something
-  // unscripted.
-  const quickReplyButton = QUICK_REPLY_RETRY_BUTTONS.find(b => (
-    b.id === R.path(['id'], lastMessageWithQuickReply)
-  ));
-  if (
-    R.path(['isQuickReplyRetry'], lastMessageWithQuickReply) &&
-      R.path(['text'], quickReplyButton)
-  ) {
-
-    return {
-      action: { type: ACTION_REPLAY_PREVIOUS_MESSAGE },
-      userActionUpdates
-    };
-  }
   // here we check if the message sent was a request to reset the user data (admin only)
   if (isUserResetMessage(message)) {
     return {
@@ -483,21 +451,23 @@ function getActionForMessage({
     };
   }
 
-  // here we do whatever the action is we were supposed to do when
-  // the user replies with a quick reply btn
-  let quickReplyRetryButton = getButtonForQuickReplyRetry(
-    message,
-    QUICK_REPLY_RETRY_BUTTONS
-  );
+  // THIS IS HOW WE RETURN TO THE MAIN CONVERSATION
+  const lastMessageSentByBot = getLastSentMessageInHistory(user, false);
 
-  if (quickReplyRetryButton) {
-    return {
-      action: {
-        type: ACTION_QUICK_REPLY_RETRY_NEXT_MESSAGE,
-        quickReplyRetryId: quickReplyRetryButton.id
-      },
-      userActionUpdates
-    };
+  const forceBackToConvo = lastMessageSentByBot && lastMessageSentByBot.next &&
+    R.equals(lastMessageSentByBot.next.type, TYPE_BACK_TO_CONVERSATION);
+  if ((message && message.quick_reply && message.quick_reply.payload) || forceBackToConvo) {
+    const payload = JSON.parse(message.quick_reply ? message.quick_reply.payload : "{}");
+    if (R.equals(payload.id, QUICK_REPLY_RETRY_ID_CONTINUE) ||
+    R.equals(payload.type, TYPE_BACK_TO_CONVERSATION) || forceBackToConvo) {
+      return {
+        action: {
+          type: ACTION_QUICK_REPLY_RETRY_NEXT_MESSAGE,
+          quickReplyRetryId: QUICK_REPLY_RETRY_ID_CONTINUE
+        },
+        userActionUpdates
+      };
+    }
   }
 
   // If the message track this user has been following has been deleted, start a new conversation
@@ -548,7 +518,6 @@ function getActionForMessage({
   }
 
   let action;
-
   if (
     lastMessage &&
         R.path(['next'], lastMessage)
@@ -853,29 +822,17 @@ function transitionIsDelayed(message, conversationStartTimestampMs, timeNowMs) {
   return false;
 }
 
-function createQuickReplyRetryMessage(message, messageOptions) {
-  let options = Array.isArray(messageOptions) ? messageOptions : [""];
-  const quick_replies = options.map(button => ({
-    content_type: "text",
-    title: button.title,
-    payload: JSON.stringify({id: button.id, type: TYPE_MESSAGE})
-  }));
-  const messageId = QUICK_REPLY_RETRY_ID;
-  const messages = [{
-    id: messageId,
-    text: message,
-    messageType: TYPE_QUESTION_WITH_REPLIES,
-    quick_replies
-  }];
-
+function createQuickReplyRetryMessage(id, messages) {
+  const message = [R.find(R.propEq('id', id))(messages)];
   return {
     type: TYPE_MESSAGE,
-    message: makePlatformMessagePayload(messageId, messages)
+    message: makePlatformMessagePayload(id, message)
   };
 }
 
 function createQuickReplyRetryNextMessageResponse(action, messageOptions) {
   let messageReply = messageOptions.find(opt => action.quickReplyRetryId === opt.id);
+  if (!messageReply || !messageReply.text) { return undefined; }
 
   const messages = [{
     id: action.quickReplyRetryId,
@@ -883,7 +840,6 @@ function createQuickReplyRetryNextMessageResponse(action, messageOptions) {
     messageType: TYPE_QUESTION
   }];
 
-  if (!messages[0].text) { return undefined; }
 
   return {
     type: TYPE_MESSAGE,
@@ -915,10 +871,10 @@ function getMessagesForAction({
 }) {
   let messagesToSend = [];
   let curr;
-
   let userUpdates = Object.assign({}, user);
   // if it was a reset user request, send the button array with responses
   if (action.type === RESET_USER_RESPONSE_TYPE) {
+    // FIXME!! seed RESET USER into db, and pass the id here
     curr = createQuickReplyRetryMessage(
       RESET_USER_QUESTION,
       RESET_USER_KEY_RESPONSE
@@ -962,10 +918,9 @@ function getMessagesForAction({
     curr = null;
   } else if (action.type === ACTION_RETRY_QUICK_REPLY) {
     curr = createQuickReplyRetryMessage(
-      QUICK_REPLY_RETRY_MESSAGE,
-      QUICK_REPLY_RETRY_BUTTONS
+      QUICK_REPLY_RETRY_ID,
+      messages
     );
-
     messagesToSend.push(curr);
 
     curr = createCustomMessageForHistory({
@@ -986,13 +941,13 @@ function getMessagesForAction({
       )
     });
     curr = null;
-  } else if (action.type === ACTION_QUICK_REPLY_RETRY_NEXT_MESSAGE) {
+  } else if (action.type === ACTION_QUICK_REPLY_RETRY_NEXT_MESSAGE|| action.type === TYPE_BACK_TO_CONVERSATION) {
     let message = createQuickReplyRetryNextMessageResponse(
       action,
-      QUICK_REPLY_RETRY_BUTTONS
+      messages
     );
-
     if (!message) {
+      // if there is no text in the quick reply retry message, we send the last message...
       curr = Object.assign({}, getLastSentMessageInHistory(user));
     } else {
       curr = message;
@@ -1296,6 +1251,7 @@ function getMessagesForAction({
       }
     }
   }
+
 
   return {
     messagesToSend,

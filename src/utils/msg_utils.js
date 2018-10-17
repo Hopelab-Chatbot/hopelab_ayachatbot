@@ -7,6 +7,8 @@ const { MESSAGE_TYPE_TRANSITION,
   STUDY_ID_NO_OP,
   CURSING_STOP_TRIGGERS,
   STOP_MESSAGES,
+  TYPE_STOP_NOTIFICATIONS,
+  QUICK_REPLY_BLOCK_ID,
   TYPE_ANSWER } = require('../constants');
 
 const messageIsTransition = message => (
@@ -45,6 +47,10 @@ const isUserCancelReset = (message = {}) => {
   return R.equals(messageToCheck.id, RESET_USER_RESPONSE_CANCEL.id);
 };
 
+const isQuickReplyRetry = message => (
+  message.isQuickReplyRetry || (message.parent && message.parent.id === QUICK_REPLY_BLOCK_ID)
+);
+
 /**
  * Get the last message sent to user in history
  *
@@ -58,7 +64,7 @@ function getLastSentMessageInHistory(user, ignoreQuickReplyRetryMessages=true) {
     if (
       user.history[i].type !== TYPE_ANSWER &&
           !user.history[i].isCrisisMessage &&
-          !(user.history[i].isQuickReplyRetry && ignoreQuickReplyRetryMessages)
+          !(ignoreQuickReplyRetryMessages && isQuickReplyRetry(user.history[i]))
     ) {
       return user.history[i];
     }
@@ -125,6 +131,11 @@ const isStopOrSwearing = text => {
   findKeyPhrasesInTextBlock(text, CURSING_STOP_TRIGGERS.map(cleanText));
 };
 
+const isQuickReplyRetryStop = message => (
+  message && message.quick_reply &&
+  message.quick_reply.payload && R.equals(message.quick_reply.payload.type, TYPE_STOP_NOTIFICATIONS)
+);
+
 module.exports = {
   formatAsEventName,
   havePassedTransition,
@@ -137,5 +148,6 @@ module.exports = {
   generateUniqueStudyId,
   keyFormatMessageId,
   isStopOrSwearing,
-  isCrisisMessage
+  isCrisisMessage,
+  isQuickReplyRetryStop
 };
