@@ -456,7 +456,7 @@ function getActionForMessage({
 
   const forceBackToConvo = lastMessageSentByBot && lastMessageSentByBot.next &&
     R.equals(lastMessageSentByBot.next.type, TYPE_BACK_TO_CONVERSATION);
-  if ((message.quick_reply && message.quick_reply.payload) || forceBackToConvo) {
+  if ((message && message.quick_reply && message.quick_reply.payload) || forceBackToConvo) {
     const payload = JSON.parse(message.quick_reply ? message.quick_reply.payload : "{}");
     if (R.equals(payload.id, QUICK_REPLY_RETRY_ID_CONTINUE) ||
     R.equals(payload.type, TYPE_BACK_TO_CONVERSATION) || forceBackToConvo) {
