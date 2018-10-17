@@ -65,7 +65,9 @@ const TYPE_VIDEO = 'video';
 const TYPE_ANSWER = 'answer';
 const MESSAGE_TYPE_TRANSITION = 'transition';
 const MESSAGE_TYPE_TEXT = 'text';
-const TYPE_STOP_NOTIFICATIONS = 'stopNotifications';
+const TYPE_STOP_NOTIFICATIONS = 'stop-notifications';
+
+const TYPE_BACK_TO_CONVERSATION = 'back-to-conversation';
 
 const STOP_NOTIFICATIONS_TITLE = 'Stop Notifications';
 
@@ -320,5 +322,6 @@ module.exports = {
   CURSING_STOP_TRIGGERS,
   DB_ORDER_LIST,
   QUICK_REPLY_BLOCK_ID,
-  QUICK_REPLY_RETRY_ID_CONTINUE
+  QUICK_REPLY_RETRY_ID_CONTINUE,
+  TYPE_BACK_TO_CONVERSATION
 };

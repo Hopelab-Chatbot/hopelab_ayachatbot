@@ -69,7 +69,8 @@ const {
   RESET_USER_CONFIRM,
   FB_EVENT_COMPLETE_INTRO_CONVERSATION,
   FB_QUICK_REPLY_RETRY_EVENT,
-  QUICK_REPLY_RETRY_ID_CONTINUE
+  QUICK_REPLY_RETRY_ID_CONTINUE,
+  TYPE_BACK_TO_CONVERSATION
 } = require('./constants');
 
 const R = require('ramda');
@@ -451,9 +452,14 @@ function getActionForMessage({
   }
 
   // THIS IS HOW WE RETURN TO THE MAIN CONVERSATION
-  if (message.quick_reply && message.quick_reply.payload) {
-    const payload = JSON.parse(message.quick_reply.payload);
-    if (R.equals(payload.id, QUICK_REPLY_RETRY_ID_CONTINUE)) {
+  const lastMessageSentByBot = getLastSentMessageInHistory(user, false);
+
+  const forceBackToConvo = lastMessageSentByBot && lastMessageSentByBot.next &&
+    R.equals(lastMessageSentByBot.next.type, TYPE_BACK_TO_CONVERSATION);
+  if ((message.quick_reply && message.quick_reply.payload) || forceBackToConvo) {
+    const payload = JSON.parse(message.quick_reply ? message.quick_reply.payload : "{}");
+    if (R.equals(payload.id, QUICK_REPLY_RETRY_ID_CONTINUE) ||
+    R.equals(payload.type, TYPE_BACK_TO_CONVERSATION) || forceBackToConvo) {
       return {
         action: {
           type: ACTION_QUICK_REPLY_RETRY_NEXT_MESSAGE,
@@ -826,6 +832,7 @@ function createQuickReplyRetryMessage(id, messages) {
 
 function createQuickReplyRetryNextMessageResponse(action, messageOptions) {
   let messageReply = messageOptions.find(opt => action.quickReplyRetryId === opt.id);
+  if (!messageReply || !messageReply.text) { return undefined; }
 
   const messages = [{
     id: action.quickReplyRetryId,
@@ -833,7 +840,6 @@ function createQuickReplyRetryNextMessageResponse(action, messageOptions) {
     messageType: TYPE_QUESTION
   }];
 
-  if (!messages[0].text) { return undefined; }
 
   return {
     type: TYPE_MESSAGE,
@@ -935,7 +941,7 @@ function getMessagesForAction({
       )
     });
     curr = null;
-  } else if (action.type === ACTION_QUICK_REPLY_RETRY_NEXT_MESSAGE) {
+  } else if (action.type === ACTION_QUICK_REPLY_RETRY_NEXT_MESSAGE|| action.type === TYPE_BACK_TO_CONVERSATION) {
     let message = createQuickReplyRetryNextMessageResponse(
       action,
       messages

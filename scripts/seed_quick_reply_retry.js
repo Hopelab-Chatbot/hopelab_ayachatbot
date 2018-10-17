@@ -1,7 +1,7 @@
 const constants = require('../src/constants');
 const { keyFormatMessageId } = require('../src/utils/msg_utils');
 
-const { QUICK_REPLY_RETRY_MESSAGE, QUICK_REPLY_RETRY_ID, DB_MESSAGE_LIST, TYPE_MESSAGE, TYPE_BLOCK, TYPE_QUESTION, TYPE_STOP_NOTIFICATIONS,
+const { QUICK_REPLY_RETRY_MESSAGE, QUICK_REPLY_RETRY_ID, DB_MESSAGE_LIST, TYPE_MESSAGE, TYPE_BLOCK, TYPE_QUESTION, TYPE_STOP_NOTIFICATIONS, TYPE_BACK_TO_CONVERSATION,
   TYPE_QUESTION_WITH_REPLIES, DB_ORDER_LIST, QUICK_REPLY_BLOCK_ID, STOP_NOTIFICATIONS_TITLE, STOP_NOTIFICATIONS } = constants;
 
 const CRISIS_RESPONSE_MESSAGE_FOR_BUTTONS = "I can't connect you directly to a human but if you text Crisis Text Line at m.me/crisistextline there is always someone there to help when you are struggling.";
@@ -13,6 +13,7 @@ const QUICK_REPLY_RETRY_BUTTONS = [
   {
     title: "Continue chatting",
     id: `${QUICK_REPLY_RETRY_ID}-continue`,
+    type: TYPE_BACK_TO_CONVERSATION,
   },
   {
     title: STOP_NOTIFICATIONS_TITLE,
@@ -62,6 +63,9 @@ const nextMessages = QUICK_REPLY_RETRY_BUTTONS.map(qr =>
       type: TYPE_BLOCK,
     },
     type: TYPE_MESSAGE,
+    next: {
+      type: TYPE_BACK_TO_CONVERSATION,
+    }
   }));
 
 const msg = {
