@@ -98,14 +98,11 @@ const EXPIRE_USER_AFTER = ONE_MONTH_IN_SECONDS;
 // Special Messages
 const QUICK_REPLY_RETRY_MESSAGE = "Sorry can’t compute! 🤖 Buttons plz. What would you like to do next?";
 const QUICK_REPLY_RETRY_ID = 'quick-reply-retry-id';
-
+const QUICK_REPLY_RETRY_ID_CONTINUE = `${QUICK_REPLY_RETRY_ID}-continue`;
 const END_OF_CONVERSATION_MESSAGE = "Sorry! I’m hanging out with my bot friends for the rest of the day 💅🏽. Plus I want to make sure we talk a bit every day so you get the most out of our chats. Text me tomorrow!";
 const UPDATE_USER_MESSAGE = "Hi! Don't forget about me!";
 const CRISIS_RESPONSE_MESSAGE = "hey, I hope everything is ok. Your response included a few words that indicate you may be struggling. If you want to talk to a real person text Crisis Text Line at 741741 or call this hotline: 1-800-273-8255";
-const CRISIS_RESPONSE_MESSAGE_FOR_BUTTONS = "I can't connect you directly to a human but if you text Crisis Text Line at m.me/crisistextline there is always someone there to help when you are struggling.";
-const SUPPORT_MESSAGE = "I love feedback! Please type anything you'd like to send my human makers here in one message. Or you can e-mail my team at vivibot@hopelab.org";
 // const SUPPORT_MESSAGE = "I can’t stop automatically but you can change your settings to turn me off like this:\n\nOn a phone: Click the settings gear in the top right corner. Then click “Manage Messages”. You can either turn off just notifications or all messages from me there.\n\nOn the computer: look for the “Options” panel to the right of our chat. Click either “Manage Messages” or “Notifications” from here to change your settings."
-const STOP_NOTIFICATIONS = `Type ${STOP_MESSAGE} and I'll stop sending you notifications until you contact me by typing ${RESUME_MESSAGE}`;
 
 const RESET_USER_QUESTION = 'Are you sure you want to wipe your history from my memory?🤖';
 
@@ -126,28 +123,9 @@ const RESET_USER_KEY_RESPONSE = [RESET_USER_RESPONSE_CONFIRM, RESET_USER_RESPONS
 const RESET_USER_CONFIRM = 'Your user information has been completely reset 🤖';
 const RESET_USER_KEY_MESSAGE = '#oz8mu[M7h9C6rsrNza9';
 
-const QUICK_REPLY_RETRY_BUTTONS = [
-  {
-    title: "Continue chatting",
-    id: `${QUICK_REPLY_RETRY_ID}-continue`,
-  },
-  {
-    title: STOP_NOTIFICATIONS_TITLE,
-    id: `${QUICK_REPLY_RETRY_ID}-stop-notifications`,
-    text: STOP_NOTIFICATIONS,
-    type: TYPE_STOP_NOTIFICATIONS,
-  },
-  {
-    title: "Talk to a human",
-    id: `${QUICK_REPLY_RETRY_ID}-talk-to-human`,
-    text: CRISIS_RESPONSE_MESSAGE_FOR_BUTTONS
-  },
-  {
-    title: "Send Feedback",
-    id: `${QUICK_REPLY_RETRY_ID}-send-feedback`,
-    text: SUPPORT_MESSAGE
-  }
-];
+const DB_ORDER_LIST = 'ordersList';
+const QUICK_REPLY_BLOCK_ID = 'quick-reply-block-id';
+
 
 const STOPPED_MESSAGE = {
   type: FB_MESSAGE_TYPE,
@@ -270,10 +248,7 @@ module.exports = {
   ACTION_REPLAY_PREVIOUS_MESSAGE,
   END_OF_CONVERSATION_ID,
   QUICK_REPLY_RETRY_MESSAGE,
-  QUICK_REPLY_RETRY_BUTTONS,
   QUICK_REPLY_RETRY_ID,
-  CRISIS_RESPONSE_MESSAGE_FOR_BUTTONS,
-  SUPPORT_MESSAGE,
   END_OF_CONVERSATION_MESSAGE,
   UPDATE_USER_MESSAGE,
   CRISIS_RESPONSE_MESSAGE,
@@ -342,5 +317,8 @@ module.exports = {
   FB_QUICK_REPLY_RETRY_EVENT,
   STOP_NOTIFICATIONS_TITLE,
   STOP_MESSAGES,
-  CURSING_STOP_TRIGGERS
+  CURSING_STOP_TRIGGERS,
+  DB_ORDER_LIST,
+  QUICK_REPLY_BLOCK_ID,
+  QUICK_REPLY_RETRY_ID_CONTINUE
 };
