@@ -26,7 +26,9 @@ const {
   DB_MEDIA,
   DB_STUDY,
   ONE_DAY_IN_MILLISECONDS,
-  EXPIRE_USER_AFTER
+  EXPIRE_USER_AFTER,
+  CRISIS_SEARCH_TERM_LIST,
+  CRISIS_SEARCH_WORD_LIST,
 } = require('./constants');
 
 const { createNewUser } = require('./users');
@@ -327,6 +329,20 @@ const setStudyInfo = studyInfo =>
     )
   ));
 
+const getParams = () =>
+  new Promise(resolve => {
+    Promise.all([getLAsync(CRISIS_SEARCH_TERM_LIST, 0, -1),getLAsync(CRISIS_SEARCH_WORD_LIST, 0, -1)])
+      .then(([crisisTerms, crisisWords]) => {
+        resolve({
+          crisisTerms,
+          crisisWords
+        });
+      })
+      .catch(e => console.error(e));
+  });
+
+
+
 
 module.exports = {
   getUserById,
@@ -345,5 +361,6 @@ module.exports = {
   keyFormatUserId,
   setUserInCache,
   getJSONItemFromCache,
-  getCollectionById
+  getCollectionById,
+  getParams
 };

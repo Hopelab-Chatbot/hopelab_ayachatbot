@@ -258,7 +258,8 @@ function receivedMessage({
   allSeries,
   allBlocks,
   media,
-  studyInfo
+  studyInfo,
+  params,
 }) {
   let userToUpdate = Object.assign({}, user);
   const prevMessage = getPreviousMessageInHistory(allMessages, user);
@@ -319,7 +320,8 @@ function receivedMessage({
     messages: allMessages,
     collections: allCollections,
     conversations: allConversations,
-    studyInfo
+    studyInfo,
+    params
   });
 
   // update the user to include that action in it's history

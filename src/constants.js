@@ -103,7 +103,6 @@ const QUICK_REPLY_RETRY_ID = 'quick-reply-retry-id';
 const QUICK_REPLY_RETRY_ID_CONTINUE = `${QUICK_REPLY_RETRY_ID}-continue`;
 const END_OF_CONVERSATION_MESSAGE = "Sorry! I’m hanging out with my bot friends for the rest of the day 💅🏽. Plus I want to make sure we talk a bit every day so you get the most out of our chats. Text me tomorrow!";
 const UPDATE_USER_MESSAGE = "Hi! Don't forget about me!";
-const CRISIS_RESPONSE_MESSAGE = "hey, I hope everything is ok. Your response included a few words that indicate you may be struggling. If you want to talk to a real person text Crisis Text Line at 741741 or call this hotline: 1-800-273-8255";
 // const SUPPORT_MESSAGE = "I can’t stop automatically but you can change your settings to turn me off like this:\n\nOn a phone: Click the settings gear in the top right corner. Then click “Manage Messages”. You can either turn off just notifications or all messages from me there.\n\nOn the computer: look for the “Options” panel to the right of our chat. Click either “Manage Messages” or “Notifications” from here to change your settings."
 
 const RESET_USER_QUESTION = 'Are you sure you want to wipe your history from my memory?🤖';
@@ -136,20 +135,10 @@ const STOPPED_MESSAGE = {
   }
 };
 
-// Crisis Keywords
-const CRISIS_KEYWORDS = [
-  'suicide',
-  'kill',
-  'hurt myself',
-  'don\'t want to live',
-  'bridge',
-  'what is the point',
-  'whats the point',
-  'harm',
-  'hurt',
-  'hurting',
-  'gun'
-];
+const CRISIS_SEARCH_TERM_LIST = 'crisis-search-term-list';
+const CRISIS_SEARCH_WORD_LIST = 'crisis-search-word-list';
+
+const CRISIS_RESPONSE_MESSAGE_ID = 'crisis-response-message-id';
 
 const STOP_MESSAGES = [
   STOP_MESSAGE,
@@ -253,8 +242,7 @@ module.exports = {
   QUICK_REPLY_RETRY_ID,
   END_OF_CONVERSATION_MESSAGE,
   UPDATE_USER_MESSAGE,
-  CRISIS_RESPONSE_MESSAGE,
-  CRISIS_KEYWORDS,
+  CRISIS_RESPONSE_MESSAGE_ID,
   TYPE_ANSWER,
   TYPE_CONVERSATION,
   TYPE_COLLECTION,
@@ -323,5 +311,7 @@ module.exports = {
   DB_ORDER_LIST,
   QUICK_REPLY_BLOCK_ID,
   QUICK_REPLY_RETRY_ID_CONTINUE,
-  TYPE_BACK_TO_CONVERSATION
+  TYPE_BACK_TO_CONVERSATION,
+  CRISIS_SEARCH_TERM_LIST,
+  CRISIS_SEARCH_WORD_LIST
 };

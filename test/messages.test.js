@@ -14,7 +14,6 @@ const {
   TYPE_CONVERSATION,
   MESSAGE_TYPE_TRANSITION,
   INTRO_CONVERSATION_ID,
-  CRISIS_KEYWORDS,
   LOGIC_SEQUENTIAL,
   STUDY_ID_LIST,
   STUDY_ID_NO_OP
@@ -427,6 +426,20 @@ describe('Messages Module', () => {
       expect(testModule.shouldReceiveUpdate(user, Date.now())).to.be.false;
     });
   });
+
+  const CRISIS_KEYWORDS = [
+    'suicide',
+    'kill',
+    'hurt myself',
+    'don\'t want to live',
+    'bridge',
+    'what is the point',
+    'whats the point',
+    'harm',
+    'hurt',
+    'hurting',
+    'gun',
+  ];
 
   describe('isCrisisMessage', () => {
     it('should identify text that needs a crisis message', () => {
