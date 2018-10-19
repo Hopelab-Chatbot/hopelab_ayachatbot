@@ -29,6 +29,8 @@ const {
   EXPIRE_USER_AFTER,
   CRISIS_SEARCH_TERM_LIST,
   CRISIS_SEARCH_WORD_LIST,
+  STOP_SEARCH_TERM_LIST,
+  STOP_SEARCH_WORD_LIST,
 } = require('./constants');
 
 const { createNewUser } = require('./users');
@@ -331,11 +333,18 @@ const setStudyInfo = studyInfo =>
 
 const getParams = () =>
   new Promise(resolve => {
-    Promise.all([getLAsync(CRISIS_SEARCH_TERM_LIST, 0, -1),getLAsync(CRISIS_SEARCH_WORD_LIST, 0, -1)])
-      .then(([crisisTerms, crisisWords]) => {
+    Promise.all([
+      getLAsync(CRISIS_SEARCH_TERM_LIST, 0, -1),
+      getLAsync(CRISIS_SEARCH_WORD_LIST, 0, -1),
+      getLAsync(STOP_SEARCH_TERM_LIST, 0, -1),
+      getLAsync(STOP_SEARCH_WORD_LIST, 0, -1),
+    ])
+      .then(([crisisTerms, crisisWords, stopTerms, stopWords]) => {
         resolve({
           crisisTerms,
-          crisisWords
+          crisisWords,
+          stopTerms,
+          stopWords
         });
       })
       .catch(e => console.error(e));

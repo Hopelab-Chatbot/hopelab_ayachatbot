@@ -5,8 +5,6 @@ const { MESSAGE_TYPE_TRANSITION,
   RESET_USER_RESPONSE_CONFIRM,
   RESET_USER_RESPONSE_CANCEL,
   STUDY_ID_NO_OP,
-  CURSING_STOP_TRIGGERS,
-  STOP_MESSAGES,
   TYPE_STOP_NOTIFICATIONS,
   QUICK_REPLY_BLOCK_ID,
   CRISIS_RESPONSE_MESSAGE_ID,
@@ -128,9 +126,9 @@ const  isCrisisMessage = (message, crisisTerms = [], crisisExactWords = []) => {
     findKeyPhrasesInTextBlock(message.text, crisisTerms);
 };
 
-const isStopOrSwearing = text => {
-  return R.any(R.equals(cleanText(text)), STOP_MESSAGES.map(cleanText)) ||
-  findKeyPhrasesInTextBlock(text, CURSING_STOP_TRIGGERS.map(cleanText));
+const isStopOrSwearing = (text, stopTerms = [], stopExactWords = []) => {
+  return R.any(R.equals(cleanText(text)), stopExactWords.map(cleanText)) ||
+  findKeyPhrasesInTextBlock(text, stopTerms.map(cleanText));
 };
 
 const isQuickReplyRetryStop = message => (
