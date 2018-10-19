@@ -136,6 +136,8 @@ const STOPPED_MESSAGE = {
 };
 
 const CRISIS_SEARCH_TERM_LIST = 'crisis-search-term-list';
+const CRISIS_SEARCH_WORD_LIST = 'crisis-search-word-list';
+
 const CRISIS_RESPONSE_MESSAGE_ID = 'crisis-response-message-id';
 
 const STOP_MESSAGES = [
@@ -310,5 +312,6 @@ module.exports = {
   QUICK_REPLY_BLOCK_ID,
   QUICK_REPLY_RETRY_ID_CONTINUE,
   TYPE_BACK_TO_CONVERSATION,
-  CRISIS_SEARCH_TERM_LIST
+  CRISIS_SEARCH_TERM_LIST,
+  CRISIS_SEARCH_WORD_LIST
 };

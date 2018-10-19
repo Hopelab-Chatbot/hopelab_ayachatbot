@@ -9,6 +9,7 @@ const { MESSAGE_TYPE_TRANSITION,
   STOP_MESSAGES,
   TYPE_STOP_NOTIFICATIONS,
   QUICK_REPLY_BLOCK_ID,
+  CRISIS_RESPONSE_MESSAGE_ID,
   TYPE_ANSWER } = require('../constants');
 
 const messageIsTransition = message => (
@@ -63,7 +64,7 @@ function getLastSentMessageInHistory(user, ignoreQuickReplyRetryMessages=true) {
   for (let i = user.history.length - 1; i >= 0; i--) {
     if (
       user.history[i].type !== TYPE_ANSWER &&
-          !user.history[i].isCrisisMessage &&
+          !(ignoreQuickReplyRetryMessages && user.history[i].id === CRISIS_RESPONSE_MESSAGE_ID) &&
           !(ignoreQuickReplyRetryMessages && isQuickReplyRetry(user.history[i]))
     ) {
       return user.history[i];
@@ -118,13 +119,14 @@ const findKeyPhrasesInTextBlock = (text, keywords) => {
   return acc;
 };
 
-function isCrisisMessage(message, crisisKeywords) {
+const  isCrisisMessage = (message, crisisTerms = [], crisisExactWords = []) => {
   if (!message || !message.text) {
     return false;
   }
 
-  return findKeyPhrasesInTextBlock(message.text, crisisKeywords);
-}
+  return R.any(R.equals(cleanText(message.text)), crisisExactWords.map(cleanText)) ||
+    findKeyPhrasesInTextBlock(message.text, crisisTerms);
+};
 
 const isStopOrSwearing = text => {
   return R.any(R.equals(cleanText(text)), STOP_MESSAGES.map(cleanText)) ||

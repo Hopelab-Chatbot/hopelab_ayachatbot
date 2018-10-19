@@ -46,11 +46,10 @@ const {
   ACTION_CRISIS_REPONSE,
   ACTION_QUICK_REPLY_RETRY_NEXT_MESSAGE,
   ACTION_REPLAY_PREVIOUS_MESSAGE,
-  CRISIS_KEYWORDS,
   END_OF_CONVERSATION_ID,
   QUICK_REPLY_RETRY_ID,
   END_OF_CONVERSATION_MESSAGE,
-  CRISIS_RESPONSE_MESSAGE,
+  CRISIS_RESPONSE_MESSAGE_ID,
   LOGIC_SEQUENTIAL,
   LOGIC_RANDOM,
   COLLECTION_PROGRESS,
@@ -89,7 +88,7 @@ const { isUserResetMessage } = require('./utils/msg_utils');
  * @return {Object}
 */
 function makePlatformMessagePayload(action, messages) {
-  const message = messages.find(m => m.id === action);
+  const message = messages.find(m =>  m.id === action);
 
   if (message && message.messageType === TYPE_QUESTION_WITH_REPLIES &&
         message.quick_replies) {
@@ -369,11 +368,12 @@ function getActionForMessage({
   messages,
   collections,
   conversations,
-  studyInfo
+  studyInfo,
+  params,
 }) {
   let userActionUpdates = Object.assign({}, user);
   const lastMessage = getLastSentMessageInHistory(user);
-  if (isCrisisMessage(message, CRISIS_KEYWORDS)) {
+  if (isCrisisMessage(message, params.crisisTerms, params.crisisWords)) {
     return {
       action: { type: ACTION_CRISIS_REPONSE },
       userActionUpdates
@@ -893,23 +893,24 @@ function getMessagesForAction({
     curr = null;
 
   } else if (action.type === ACTION_CRISIS_REPONSE) {
+    const crisisMessage = R.find(R.propEq('id', CRISIS_RESPONSE_MESSAGE_ID))(messages);
     curr = {
-      type: TYPE_MESSAGE,
-      message: { text: CRISIS_RESPONSE_MESSAGE }
+      message: R.omit(['name','id', 'messageType', 'parent', 'type', 'next'], crisisMessage),
+      type: TYPE_MESSAGE
     };
 
     messagesToSend.push(curr);
 
     curr = createCustomMessageForHistory({
-      type: TYPE_MESSAGE,
       messageType: MESSAGE_TYPE_TEXT,
-      text: curr.message.text,
+      ...crisisMessage,
     });
+
     curr.isCrisisMessage = true;
 
     userUpdates = R.merge(userUpdates, {
       history: updateHistory(
-        R.merge(curr, {
+        R.merge(crisisMessage, {
           timestamp: Date.now()
         }),
         userUpdates.history
