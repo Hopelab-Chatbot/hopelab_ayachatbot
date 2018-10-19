@@ -69,7 +69,8 @@ const {
   FB_EVENT_COMPLETE_INTRO_CONVERSATION,
   FB_QUICK_REPLY_RETRY_EVENT,
   QUICK_REPLY_RETRY_ID_CONTINUE,
-  TYPE_BACK_TO_CONVERSATION
+  TYPE_BACK_TO_CONVERSATION,
+  RESUME_MESSAGE_ID
 } = require('./constants');
 
 const R = require('ramda');
@@ -454,20 +455,31 @@ function getActionForMessage({
   // THIS IS HOW WE RETURN TO THE MAIN CONVERSATION
   const lastMessageSentByBot = getLastSentMessageInHistory(user, false);
 
+  let isReturnToLastMessage = false;
   const forceBackToConvo = lastMessageSentByBot && lastMessageSentByBot.next &&
     R.equals(lastMessageSentByBot.next.type, TYPE_BACK_TO_CONVERSATION);
-  if ((message && message.quick_reply && message.quick_reply.payload) || forceBackToConvo) {
+  const resumeMessage = R.find(R.propEq('id', RESUME_MESSAGE_ID))(messages);
+  const isResumeMessage = message && message.text &&
+    R.equals(message.text.toUpperCase(), resumeMessage.text.toUpperCase());
+  if (forceBackToConvo || isResumeMessage) {
+    isReturnToLastMessage = true;
+  }
+  if (message && message.quick_reply && message.quick_reply.payload) {
     const payload = JSON.parse(message.quick_reply ? message.quick_reply.payload : "{}");
     if (R.equals(payload.id, QUICK_REPLY_RETRY_ID_CONTINUE) ||
-    R.equals(payload.type, TYPE_BACK_TO_CONVERSATION) || forceBackToConvo) {
-      return {
-        action: {
-          type: ACTION_QUICK_REPLY_RETRY_NEXT_MESSAGE,
-          quickReplyRetryId: QUICK_REPLY_RETRY_ID_CONTINUE
-        },
-        userActionUpdates
-      };
+    R.equals(payload.type, TYPE_BACK_TO_CONVERSATION)) {
+      isReturnToLastMessage = true;
     }
+  }
+
+  if (isReturnToLastMessage) {
+    return {
+      action: {
+        type: ACTION_QUICK_REPLY_RETRY_NEXT_MESSAGE,
+        quickReplyRetryId: QUICK_REPLY_RETRY_ID_CONTINUE
+      },
+      userActionUpdates
+    };
   }
 
   // If the message track this user has been following has been deleted, start a new conversation

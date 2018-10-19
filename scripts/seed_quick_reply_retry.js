@@ -2,12 +2,13 @@ const constants = require('../src/constants');
 const { keyFormatMessageId } = require('../src/utils/msg_utils');
 
 const { QUICK_REPLY_RETRY_MESSAGE, QUICK_REPLY_RETRY_ID, DB_MESSAGE_LIST, TYPE_MESSAGE, TYPE_BLOCK, TYPE_QUESTION, TYPE_STOP_NOTIFICATIONS, TYPE_BACK_TO_CONVERSATION,
-  TYPE_QUESTION_WITH_REPLIES, DB_ORDER_LIST, QUICK_REPLY_BLOCK_ID, STOP_NOTIFICATIONS_TITLE, STOP_NOTIFICATIONS } = constants;
+  TYPE_QUESTION_WITH_REPLIES, DB_ORDER_LIST, QUICK_REPLY_BLOCK_ID, STOP_NOTIFICATIONS } = constants;
 
 const CRISIS_RESPONSE_MESSAGE_FOR_BUTTONS = "I can't connect you directly to a human but if you text Crisis Text Line at m.me/crisistextline there is always someone there to help when you are struggling.";
 
 const SUPPORT_MESSAGE = "I love feedback! Please type anything you'd like to send my human makers here in one message. Or you can e-mail my team at vivibot@hopelab.org";
 
+const STOP_NOTIFICATIONS_TITLE = 'Stop Notifications';
 
 const QUICK_REPLY_RETRY_BUTTONS = [
   {
