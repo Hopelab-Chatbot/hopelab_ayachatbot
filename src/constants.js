@@ -98,7 +98,7 @@ const EXPIRE_USER_AFTER = ONE_MONTH_IN_SECONDS;
 const QUICK_REPLY_RETRY_MESSAGE = "Sorry can’t compute! 🤖 Buttons plz. What would you like to do next?";
 const QUICK_REPLY_RETRY_ID = 'quick-reply-retry-id';
 const QUICK_REPLY_RETRY_ID_CONTINUE = `${QUICK_REPLY_RETRY_ID}-continue`;
-const END_OF_CONVERSATION_MESSAGE = "Sorry! I’m hanging out with my bot friends for the rest of the day 💅🏽. Plus I want to make sure we talk a bit every day so you get the most out of our chats. Text me tomorrow!";
+
 const UPDATE_USER_MESSAGE = "Hi! Don't forget about me!";
 // const SUPPORT_MESSAGE = "I can’t stop automatically but you can change your settings to turn me off like this:\n\nOn a phone: Click the settings gear in the top right corner. Then click “Manage Messages”. You can either turn off just notifications or all messages from me there.\n\nOn the computer: look for the “Options” panel to the right of our chat. Click either “Manage Messages” or “Notifications” from here to change your settings."
 
@@ -206,7 +206,6 @@ module.exports = {
   END_OF_CONVERSATION_ID,
   QUICK_REPLY_RETRY_MESSAGE,
   QUICK_REPLY_RETRY_ID,
-  END_OF_CONVERSATION_MESSAGE,
   UPDATE_USER_MESSAGE,
   CRISIS_RESPONSE_MESSAGE_ID,
   TYPE_ANSWER,
