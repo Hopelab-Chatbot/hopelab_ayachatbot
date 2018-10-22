@@ -1209,6 +1209,8 @@ function getMessagesForAction({
 
         curr = nextMessage.message;
         userUpdates = nextMessage.user;
+      } else if (curr.next.type === TYPE_BACK_TO_CONVERSATION) {
+        curr = Object.assign({}, getLastSentMessageInHistory(user, true, true));
       } else {
         curr = null;
       }
@@ -1266,7 +1268,6 @@ function getMessagesForAction({
       }
     }
   }
-
 
   return {
     messagesToSend,
