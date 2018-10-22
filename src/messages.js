@@ -515,7 +515,7 @@ function getActionForMessage({
   // if the user did not respond correctly to the question
   // try the message with the quick-reply buttons saying 'Hey, I don't get that'
   if (
-    R.path(['messageType'], lastMessage) === TYPE_QUESTION_WITH_REPLIES &&
+    R.path(['messageType'], lastMessageSentByBot) === TYPE_QUESTION_WITH_REPLIES &&
       !message.quick_reply
   ) {
     logEvent({userId: user.id, eventName: FB_QUICK_REPLY_RETRY_EVENT}).catch(err => {
@@ -530,10 +530,15 @@ function getActionForMessage({
 
   let action;
   if (
-    lastMessage &&
-        R.path(['next'], lastMessage)
+    (lastMessageSentByBot && R.path(['next'], lastMessageSentByBot))||
+    (lastMessage && R.path(['next'], lastMessage))
   ) {
-    action = { type: lastMessage.next.type, id: lastMessage.next.id };
+    // go first in current flow (meaning crisis or stop) before reverting to regular conversation
+    if (lastMessageSentByBot && R.path(['next'], lastMessageSentByBot)) {
+      action = { type: lastMessageSentByBot.next.type, id: lastMessageSentByBot.next.id };
+    } else {
+      action = { type: lastMessage.next.type, id: lastMessage.next.id };
+    }
     // if the user is working through a collection, then we move through that
   } else if (user[COLLECTION_SCOPE] && user[COLLECTION_SCOPE].length) {
     let nextMessage = getNextMessageForCollection(
@@ -880,7 +885,6 @@ function getMessagesForAction({
   media,
   studyInfo
 }) {
-
   let messagesToSend = [];
   let curr;
   let userUpdates = Object.assign({}, user);
@@ -921,7 +925,6 @@ function getMessagesForAction({
     });
 
     curr.isCrisisMessage = true;
-
     userUpdates = R.merge(userUpdates, {
       history: updateHistory(
         R.merge(crisisMessage, {
@@ -956,7 +959,7 @@ function getMessagesForAction({
       )
     });
     curr = null;
-  } else if (action.type === ACTION_QUICK_REPLY_RETRY_NEXT_MESSAGE|| action.type === TYPE_BACK_TO_CONVERSATION) {
+  } else if (action.type === ACTION_QUICK_REPLY_RETRY_NEXT_MESSAGE || action.type === TYPE_BACK_TO_CONVERSATION) {
     let message = createQuickReplyRetryNextMessageResponse(
       action,
       messages

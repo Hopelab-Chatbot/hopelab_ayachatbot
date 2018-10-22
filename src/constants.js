@@ -130,7 +130,7 @@ const RESET_USER_KEY_MESSAGE = '#oz8mu[M7h9C6rsrNza9';
 const DB_ORDER_LIST = 'ordersList';
 const QUICK_REPLY_BLOCK_ID = 'quick-reply-block-id';
 
-
+const CRISIS_BLOCK_ID = 'crisis-parent-id';
 const CRISIS_SEARCH_TERM_LIST = 'crisis-search-term-list';
 const CRISIS_SEARCH_WORD_LIST = 'crisis-search-word-list';
 
@@ -277,5 +277,6 @@ module.exports = {
   TYPE_BACK_TO_CONVERSATION,
   CRISIS_SEARCH_TERM_LIST,
   CRISIS_SEARCH_WORD_LIST,
-  RESUME_MESSAGE_ID
+  RESUME_MESSAGE_ID,
+  CRISIS_BLOCK_ID
 };

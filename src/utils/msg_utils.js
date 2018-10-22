@@ -8,6 +8,7 @@ const { MESSAGE_TYPE_TRANSITION,
   TYPE_STOP_NOTIFICATIONS,
   QUICK_REPLY_BLOCK_ID,
   CRISIS_RESPONSE_MESSAGE_ID,
+  CRISIS_BLOCK_ID,
   TYPE_ANSWER } = require('../constants');
 
 const RESET_USER_RESPONSE_CONFIRM_ID = JSON.parse(RESET_USER_RESPONSE_CONFIRM.payload).id;
@@ -49,10 +50,13 @@ const isUserCancelReset = (message = {}) => {
   return R.equals(messageToCheck.id, RESET_USER_RESPONSE_CANCEL_ID);
 };
 
-const isQuickReplyRetry = (message, ignoreQuickReplyRetryBlock = true) => (
-  message.isQuickReplyRetry ||
-  (!ignoreQuickReplyRetryBlock && message.parent && message.parent.id === QUICK_REPLY_BLOCK_ID)
+const isQuickReplyRetry = message => (
+  message.isQuickReplyRetry
 );
+
+const isSpecialBlock = message =>
+  message.parent && R.any(R.equals(message.parent.id))([QUICK_REPLY_BLOCK_ID, CRISIS_BLOCK_ID]);
+
 
 /**
  * Get the last message sent to user in history
@@ -68,7 +72,7 @@ function getLastSentMessageInHistory(user, ignoreQuickReplyRetryMessage = true, 
       user.history[i].type !== TYPE_ANSWER &&
           !(ignoreQuickReplyRetryMessage && user.history[i].id === CRISIS_RESPONSE_MESSAGE_ID) &&
           !(ignoreQuickReplyRetryMessage && isQuickReplyRetry(user.history[i])) &&
-          !(ignoreQuickReplyRetryBlock && isQuickReplyRetry(user.history[i], false))
+          !(ignoreQuickReplyRetryBlock && isSpecialBlock(user.history[i]))
     ) {
       return user.history[i];
     }
