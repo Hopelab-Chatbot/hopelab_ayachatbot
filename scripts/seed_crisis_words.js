@@ -1,7 +1,7 @@
 const constants = require('../src/constants');
 const { keyFormatMessageId } = require('../src/utils/msg_utils');
 
-const { CRISIS_RESPONSE_MESSAGE_ID, DB_MESSAGE_LIST, TYPE_MESSAGE, CRISIS_SEARCH_WORD_LIST,
+const { CRISIS_RESPONSE_MESSAGE_ID, DB_MESSAGE_LIST, TYPE_MESSAGE, CRISIS_SEARCH_WORD_LIST, CRISIS_BLOCK_ID,
   TYPE_BLOCK, TYPE_QUESTION, TYPE_BACK_TO_CONVERSATION, CRISIS_SEARCH_TERM_LIST } = constants;
 
 const CRISIS_KEYWORDS = [
@@ -34,7 +34,7 @@ const message = {
   id: CRISIS_RESPONSE_MESSAGE_ID,
   messageType: TYPE_QUESTION,
   parent: {
-    id: 'crisis-parent-id',
+    id: CRISIS_BLOCK_ID,
     type: TYPE_BLOCK,
   },
   type: TYPE_MESSAGE,

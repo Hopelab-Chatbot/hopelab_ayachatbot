@@ -115,6 +115,8 @@ function callSendAPI(messageData) {
               fbMessage: R.path(['body', 'error', 'message'], response)
             };
           }
+          // NOTE: uncomment below to see error responses facebook is sending (useful debug)
+          // console.error(error)
 
           logger.log('error',
             `Unable to send message to user, error: ${JSON.stringify(error)}, message: ${JSON.stringify(messageData)}`);
@@ -217,7 +219,7 @@ function sendAllMessagesToMessenger({
     .then(() => {
       updateUser(user)
         .then(() => {
-          logger.log(`User ${user.id} updated successfully`);
+          logger.log('info', `User ${user.id} updated successfully`);
           if (Array.isArray(studyInfo)) {
             return setStudyInfo(studyInfo).then(() => {
               let logStr = `New study participant (user: ${user.id}) created with study id: ` +

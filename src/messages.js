@@ -381,6 +381,14 @@ function getActionForMessage({
     };
   }
 
+  // here we check if the message sent was a request to reset the user data (admin only)
+  if (isUserResetMessage(message)) {
+    return {
+      action: { type: RESET_USER_RESPONSE_TYPE },
+      userActionUpdates
+    };
+  }
+
   // this is just to reduce clutter later on
   const startNewConversationTrack = convo => {
     const newTrack = newConversationTrack(
@@ -400,15 +408,8 @@ function getActionForMessage({
       userActionUpdates
     };
   };
-  // here we check if the message sent was a request to reset the user data (admin only)
-  if (isUserResetMessage(message)) {
-    return {
-      action: { type: RESET_USER_RESPONSE_TYPE },
-      userActionUpdates
-    };
-  }
-  // here we check if the message sent was a confirmation to reset user data (admin only)
 
+  // here we check if the message sent was a confirmation to reset user data (admin only)
   if (isUserConfirmReset(message)) {
     return {
       action: { type: RESET_USER_CONFIRM },
@@ -441,7 +442,6 @@ function getActionForMessage({
   }
 
   // here we say this convo is done, and we'll talk to you tomorrow
-
   if (
     R.path(['next', 'id'], lastMessage) === END_OF_CONVERSATION_ID &&
       R.path(['messageType'], lastMessage) !== TYPE_QUESTION_WITH_REPLIES
@@ -454,7 +454,6 @@ function getActionForMessage({
 
   // THIS IS HOW WE RETURN TO THE MAIN CONVERSATION
   const lastMessageSentByBot = getLastSentMessageInHistory(user, false);
-
   let isReturnToLastMessage = false;
   const forceBackToConvo = lastMessageSentByBot && lastMessageSentByBot.next &&
     R.equals(lastMessageSentByBot.next.type, TYPE_BACK_TO_CONVERSATION);
@@ -516,7 +515,7 @@ function getActionForMessage({
   // if the user did not respond correctly to the question
   // try the message with the quick-reply buttons saying 'Hey, I don't get that'
   if (
-    R.path(['messageType'], lastMessage) === TYPE_QUESTION_WITH_REPLIES &&
+    R.path(['messageType'], lastMessageSentByBot) === TYPE_QUESTION_WITH_REPLIES &&
       !message.quick_reply
   ) {
     logEvent({userId: user.id, eventName: FB_QUICK_REPLY_RETRY_EVENT}).catch(err => {
@@ -531,10 +530,15 @@ function getActionForMessage({
 
   let action;
   if (
-    lastMessage &&
-        R.path(['next'], lastMessage)
+    (lastMessageSentByBot && R.path(['next'], lastMessageSentByBot))||
+    (lastMessage && R.path(['next'], lastMessage))
   ) {
-    action = { type: lastMessage.next.type, id: lastMessage.next.id };
+    // go first in current flow (meaning crisis or stop) before reverting to regular conversation
+    if (lastMessageSentByBot && R.path(['next'], lastMessageSentByBot)) {
+      action = { type: lastMessageSentByBot.next.type, id: lastMessageSentByBot.next.id };
+    } else {
+      action = { type: lastMessage.next.type, id: lastMessage.next.id };
+    }
     // if the user is working through a collection, then we move through that
   } else if (user[COLLECTION_SCOPE] && user[COLLECTION_SCOPE].length) {
     let nextMessage = getNextMessageForCollection(
@@ -886,11 +890,13 @@ function getMessagesForAction({
   let userUpdates = Object.assign({}, user);
   // if it was a reset user request, send the button array with responses
   if (action.type === RESET_USER_RESPONSE_TYPE) {
-    // FIXME!! seed RESET USER into db, and pass the id here
-    curr = createQuickReplyRetryMessage(
-      RESET_USER_QUESTION,
-      RESET_USER_KEY_RESPONSE
-    );
+    curr = {
+      type: TYPE_MESSAGE,
+      message: {
+        text:RESET_USER_QUESTION,
+        quick_replies: RESET_USER_KEY_RESPONSE
+      },
+    };
 
     messagesToSend.push(curr);
     curr = null;
@@ -919,7 +925,6 @@ function getMessagesForAction({
     });
 
     curr.isCrisisMessage = true;
-
     userUpdates = R.merge(userUpdates, {
       history: updateHistory(
         R.merge(crisisMessage, {
@@ -954,14 +959,14 @@ function getMessagesForAction({
       )
     });
     curr = null;
-  } else if (action.type === ACTION_QUICK_REPLY_RETRY_NEXT_MESSAGE|| action.type === TYPE_BACK_TO_CONVERSATION) {
+  } else if (action.type === ACTION_QUICK_REPLY_RETRY_NEXT_MESSAGE || action.type === TYPE_BACK_TO_CONVERSATION) {
     let message = createQuickReplyRetryNextMessageResponse(
       action,
       messages
     );
     if (!message) {
       // if there is no text in the quick reply retry message, we send the last message...
-      curr = Object.assign({}, getLastSentMessageInHistory(user));
+      curr = Object.assign({}, getLastSentMessageInHistory(user, true, true));
     } else {
       curr = message;
 
@@ -1207,6 +1212,8 @@ function getMessagesForAction({
 
         curr = nextMessage.message;
         userUpdates = nextMessage.user;
+      } else if (curr.next.type === TYPE_BACK_TO_CONVERSATION) {
+        curr = Object.assign({}, getLastSentMessageInHistory(user, true, true));
       } else {
         curr = null;
       }
@@ -1264,7 +1271,6 @@ function getMessagesForAction({
       }
     }
   }
-
 
   return {
     messagesToSend,

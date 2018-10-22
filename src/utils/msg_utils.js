@@ -8,7 +8,11 @@ const { MESSAGE_TYPE_TRANSITION,
   TYPE_STOP_NOTIFICATIONS,
   QUICK_REPLY_BLOCK_ID,
   CRISIS_RESPONSE_MESSAGE_ID,
+  CRISIS_BLOCK_ID,
   TYPE_ANSWER } = require('../constants');
+
+const RESET_USER_RESPONSE_CONFIRM_ID = JSON.parse(RESET_USER_RESPONSE_CONFIRM.payload).id;
+const RESET_USER_RESPONSE_CANCEL_ID = JSON.parse(RESET_USER_RESPONSE_CANCEL.payload).id;
 
 const messageIsTransition = message => (
   R.path(['messageType'], message) === MESSAGE_TYPE_TRANSITION
@@ -35,7 +39,7 @@ const isUserConfirmReset = (message = {}) => {
   if (message.quick_reply) {
     messageToCheck = JSON.parse(message.quick_reply.payload);
   }
-  return R.equals(messageToCheck.id, RESET_USER_RESPONSE_CONFIRM.id);
+  return R.equals(messageToCheck.id, RESET_USER_RESPONSE_CONFIRM_ID);
 };
 
 const isUserCancelReset = (message = {}) => {
@@ -43,12 +47,16 @@ const isUserCancelReset = (message = {}) => {
   if (message.message && message.message.quick_reply) {
     messageToCheck = JSON.parse(message.message.quick_reply.payload);
   }
-  return R.equals(messageToCheck.id, RESET_USER_RESPONSE_CANCEL.id);
+  return R.equals(messageToCheck.id, RESET_USER_RESPONSE_CANCEL_ID);
 };
 
 const isQuickReplyRetry = message => (
-  message.isQuickReplyRetry || (message.parent && message.parent.id === QUICK_REPLY_BLOCK_ID)
+  message.isQuickReplyRetry
 );
+
+const isSpecialBlock = message =>
+  message.parent && R.any(R.equals(message.parent.id))([QUICK_REPLY_BLOCK_ID, CRISIS_BLOCK_ID]);
+
 
 /**
  * Get the last message sent to user in history
@@ -56,14 +64,15 @@ const isQuickReplyRetry = message => (
  * @param {Object} user
  * @return {Object}
 */
-function getLastSentMessageInHistory(user, ignoreQuickReplyRetryMessages=true) {
+function getLastSentMessageInHistory(user, ignoreQuickReplyRetryMessage = true, ignoreQuickReplyRetryBlock = false) {
   if (!(R.path(['history', 'length'], user))) { return undefined; }
 
   for (let i = user.history.length - 1; i >= 0; i--) {
     if (
       user.history[i].type !== TYPE_ANSWER &&
-          !(ignoreQuickReplyRetryMessages && user.history[i].id === CRISIS_RESPONSE_MESSAGE_ID) &&
-          !(ignoreQuickReplyRetryMessages && isQuickReplyRetry(user.history[i]))
+          !(ignoreQuickReplyRetryMessage && user.history[i].id === CRISIS_RESPONSE_MESSAGE_ID) &&
+          !(ignoreQuickReplyRetryMessage && isQuickReplyRetry(user.history[i])) &&
+          !(ignoreQuickReplyRetryBlock && isSpecialBlock(user.history[i]))
     ) {
       return user.history[i];
     }
