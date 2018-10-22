@@ -49,8 +49,9 @@ const isUserCancelReset = (message = {}) => {
   return R.equals(messageToCheck.id, RESET_USER_RESPONSE_CANCEL_ID);
 };
 
-const isQuickReplyRetry = message => (
-  message.isQuickReplyRetry || (message.parent && message.parent.id === QUICK_REPLY_BLOCK_ID)
+const isQuickReplyRetry = (message, ignoreQuickReplyRetryBlock = true) => (
+  message.isQuickReplyRetry ||
+  (!ignoreQuickReplyRetryBlock && message.parent && message.parent.id === QUICK_REPLY_BLOCK_ID)
 );
 
 /**
@@ -59,14 +60,15 @@ const isQuickReplyRetry = message => (
  * @param {Object} user
  * @return {Object}
 */
-function getLastSentMessageInHistory(user, ignoreQuickReplyRetryMessages=true) {
+function getLastSentMessageInHistory(user, ignoreQuickReplyRetryMessage = true, ignoreQuickReplyRetryBlock = false) {
   if (!(R.path(['history', 'length'], user))) { return undefined; }
 
   for (let i = user.history.length - 1; i >= 0; i--) {
     if (
       user.history[i].type !== TYPE_ANSWER &&
-          !(ignoreQuickReplyRetryMessages && user.history[i].id === CRISIS_RESPONSE_MESSAGE_ID) &&
-          !(ignoreQuickReplyRetryMessages && isQuickReplyRetry(user.history[i]))
+          !(ignoreQuickReplyRetryMessage && user.history[i].id === CRISIS_RESPONSE_MESSAGE_ID) &&
+          !(ignoreQuickReplyRetryMessage && isQuickReplyRetry(user.history[i])) &&
+          !(ignoreQuickReplyRetryBlock && isQuickReplyRetry(user.history[i], false))
     ) {
       return user.history[i];
     }

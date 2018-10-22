@@ -442,7 +442,6 @@ function getActionForMessage({
   }
 
   // here we say this convo is done, and we'll talk to you tomorrow
-
   if (
     R.path(['next', 'id'], lastMessage) === END_OF_CONVERSATION_ID &&
       R.path(['messageType'], lastMessage) !== TYPE_QUESTION_WITH_REPLIES
@@ -455,7 +454,6 @@ function getActionForMessage({
 
   // THIS IS HOW WE RETURN TO THE MAIN CONVERSATION
   const lastMessageSentByBot = getLastSentMessageInHistory(user, false);
-
   let isReturnToLastMessage = false;
   const forceBackToConvo = lastMessageSentByBot && lastMessageSentByBot.next &&
     R.equals(lastMessageSentByBot.next.type, TYPE_BACK_TO_CONVERSATION);
@@ -882,6 +880,7 @@ function getMessagesForAction({
   media,
   studyInfo
 }) {
+
   let messagesToSend = [];
   let curr;
   let userUpdates = Object.assign({}, user);
@@ -964,7 +963,7 @@ function getMessagesForAction({
     );
     if (!message) {
       // if there is no text in the quick reply retry message, we send the last message...
-      curr = Object.assign({}, getLastSentMessageInHistory(user));
+      curr = Object.assign({}, getLastSentMessageInHistory(user, true, true));
     } else {
       curr = message;
 
