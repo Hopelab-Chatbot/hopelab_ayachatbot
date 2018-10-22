@@ -16,7 +16,8 @@ const {
   INTRO_CONVERSATION_ID,
   LOGIC_SEQUENTIAL,
   STUDY_ID_LIST,
-  STUDY_ID_NO_OP
+  STUDY_ID_NO_OP,
+  RESET_USER_RESPONSE_TYPE
 } = require('../src/constants');
 
 const mocks = require('./mock');
@@ -557,6 +558,29 @@ describe('Messages Module', () => {
 
       expect(action.id).to.equal('ryBK6QM-G');
       expect(action.type).to.equal(TYPE_MESSAGE);
+
+      expect(userActionUpdates).to.exist;
+      expect(userActionUpdates.history.length).to.equal(1);
+    });
+
+    it('will return the reset user type action if to the user if the correct string is given ', () => {
+      let user = { user: {
+        introConversationSeen: true,
+        assignedConversationTrack: 'r1IJzNy-G',
+        history: [
+          {
+            type: TYPE_ANSWER,
+            timestamp: Date.now(),
+            message: {text: "hi"},
+            previous: undefined
+          }
+        ]
+      }};
+
+      const data = Object.assign({}, user, mocks, {message: { text: '#oz8mu[M7h9C6rsrNza9' }});
+      const {action, userActionUpdates} = testModule.getActionForMessage(data);
+
+      expect(action.type).to.equal(RESET_USER_RESPONSE_TYPE);
 
       expect(userActionUpdates).to.exist;
       expect(userActionUpdates.history.length).to.equal(1);

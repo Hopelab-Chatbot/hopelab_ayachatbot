@@ -10,6 +10,9 @@ const { MESSAGE_TYPE_TRANSITION,
   CRISIS_RESPONSE_MESSAGE_ID,
   TYPE_ANSWER } = require('../constants');
 
+const RESET_USER_RESPONSE_CONFIRM_ID = JSON.parse(RESET_USER_RESPONSE_CONFIRM.payload).id;
+const RESET_USER_RESPONSE_CANCEL_ID = JSON.parse(RESET_USER_RESPONSE_CANCEL.payload).id;
+
 const messageIsTransition = message => (
   R.path(['messageType'], message) === MESSAGE_TYPE_TRANSITION
 );
@@ -35,7 +38,7 @@ const isUserConfirmReset = (message = {}) => {
   if (message.quick_reply) {
     messageToCheck = JSON.parse(message.quick_reply.payload);
   }
-  return R.equals(messageToCheck.id, RESET_USER_RESPONSE_CONFIRM.id);
+  return R.equals(messageToCheck.id, RESET_USER_RESPONSE_CONFIRM_ID);
 };
 
 const isUserCancelReset = (message = {}) => {
@@ -43,7 +46,7 @@ const isUserCancelReset = (message = {}) => {
   if (message.message && message.message.quick_reply) {
     messageToCheck = JSON.parse(message.message.quick_reply.payload);
   }
-  return R.equals(messageToCheck.id, RESET_USER_RESPONSE_CANCEL.id);
+  return R.equals(messageToCheck.id, RESET_USER_RESPONSE_CANCEL_ID);
 };
 
 const isQuickReplyRetry = message => (

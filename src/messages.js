@@ -381,6 +381,14 @@ function getActionForMessage({
     };
   }
 
+  // here we check if the message sent was a request to reset the user data (admin only)
+  if (isUserResetMessage(message)) {
+    return {
+      action: { type: RESET_USER_RESPONSE_TYPE },
+      userActionUpdates
+    };
+  }
+
   // this is just to reduce clutter later on
   const startNewConversationTrack = convo => {
     const newTrack = newConversationTrack(
@@ -400,15 +408,8 @@ function getActionForMessage({
       userActionUpdates
     };
   };
-  // here we check if the message sent was a request to reset the user data (admin only)
-  if (isUserResetMessage(message)) {
-    return {
-      action: { type: RESET_USER_RESPONSE_TYPE },
-      userActionUpdates
-    };
-  }
-  // here we check if the message sent was a confirmation to reset user data (admin only)
 
+  // here we check if the message sent was a confirmation to reset user data (admin only)
   if (isUserConfirmReset(message)) {
     return {
       action: { type: RESET_USER_CONFIRM },
@@ -886,11 +887,13 @@ function getMessagesForAction({
   let userUpdates = Object.assign({}, user);
   // if it was a reset user request, send the button array with responses
   if (action.type === RESET_USER_RESPONSE_TYPE) {
-    // FIXME!! seed RESET USER into db, and pass the id here
-    curr = createQuickReplyRetryMessage(
-      RESET_USER_QUESTION,
-      RESET_USER_KEY_RESPONSE
-    );
+    curr = {
+      type: TYPE_MESSAGE,
+      message: {
+        text:RESET_USER_QUESTION,
+        quick_replies: RESET_USER_KEY_RESPONSE
+      },
+    };
 
     messagesToSend.push(curr);
     curr = null;

@@ -106,14 +106,20 @@ const RESET_USER_QUESTION = 'Are you sure you want to wipe your history from my 
 
 const RESET_USER_RESPONSE_CONFIRM = {
   title: "Yes, wipe it clean",
-  text: "Yes, wipe it clean",
-  id: 'reset-user-confirm',
+  content_type: MESSAGE_TYPE_TEXT,
+  payload: JSON.stringify({
+    text: "Yes, wipe it clean",
+    id: 'reset-user-confirm',
+  }),
 };
 
 const RESET_USER_RESPONSE_CANCEL = {
   title: 'Nope, resume normal flow',
-  id: `reset-user-reject`,
-  text: 'Nope, resume normal flow'
+  content_type: MESSAGE_TYPE_TEXT,
+  payload: JSON.stringify({
+    id: `reset-user-reject`,
+    text: 'Nope, resume normal flow'
+  }),
 };
 
 const RESET_USER_KEY_RESPONSE = [RESET_USER_RESPONSE_CONFIRM, RESET_USER_RESPONSE_CANCEL];
