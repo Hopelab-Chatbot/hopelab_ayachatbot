@@ -48,7 +48,6 @@ const {
   ACTION_REPLAY_PREVIOUS_MESSAGE,
   END_OF_CONVERSATION_ID,
   QUICK_REPLY_RETRY_ID,
-  END_OF_CONVERSATION_MESSAGE,
   CRISIS_RESPONSE_MESSAGE_ID,
   LOGIC_SEQUENTIAL,
   LOGIC_RANDOM,
@@ -70,7 +69,7 @@ const {
   FB_QUICK_REPLY_RETRY_EVENT,
   QUICK_REPLY_RETRY_ID_CONTINUE,
   TYPE_BACK_TO_CONVERSATION,
-  RESUME_MESSAGE_ID
+  RESUME_MESSAGE_ID,
 } = require('./constants');
 
 const R = require('ramda');
@@ -993,9 +992,10 @@ function getMessagesForAction({
   } else if (action.type === ACTION_REPLAY_PREVIOUS_MESSAGE) {
     curr = Object.assign({}, getLastSentMessageInHistory(user));
   } else if (action.type === ACTION_COME_BACK_LATER) {
+    const endOfConversation = messages.find(({ id }) => id === END_OF_CONVERSATION_ID);
     curr = {
       type: TYPE_MESSAGE,
-      message: { text: END_OF_CONVERSATION_MESSAGE },
+      message: { text: endOfConversation.text },
     };
     messagesToSend.push(curr);
 
@@ -1054,9 +1054,11 @@ function getMessagesForAction({
           )
     ) {
       if (messagesToSend.length === 0) {
+        const endOfConversation = messages.find(({ id }) => id === END_OF_CONVERSATION_ID);
+
         curr = {
           type: TYPE_MESSAGE,
-          message: { text: END_OF_CONVERSATION_MESSAGE },
+          message: { text: endOfConversation.text },
         };
         messagesToSend.push(curr);
 
