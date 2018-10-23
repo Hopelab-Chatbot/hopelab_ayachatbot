@@ -87,8 +87,8 @@ const { isUserResetMessage } = require('./utils/msg_utils');
  * @param {Array} messages
  * @return {Object}
 */
-function makePlatformMessagePayload(action, messages) {
-  const message = messages.find(m =>  m.id === action);
+function makePlatformMessagePayload(id, messages) {
+  const message = messages.find(m =>  m.id === id);
 
   if (message && message.messageType === TYPE_QUESTION_WITH_REPLIES &&
         message.quick_replies) {
@@ -911,12 +911,11 @@ function getMessagesForAction({
 
   } else if (action.type === ACTION_CRISIS_REPONSE) {
     const crisisMessage = R.find(R.propEq('id', CRISIS_RESPONSE_MESSAGE_ID))(messages);
-    curr = {
-      message: R.omit(['name','id', 'messageType', 'parent', 'type', 'next'], crisisMessage),
-      type: TYPE_MESSAGE
-    };
 
-    messagesToSend.push(curr);
+    messagesToSend.push({
+      type: TYPE_MESSAGE,
+      message: makePlatformMessagePayload(crisisMessage.id, messages)
+    });
 
     curr = createCustomMessageForHistory({
       messageType: MESSAGE_TYPE_TEXT,
