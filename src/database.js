@@ -31,6 +31,7 @@ const {
   CRISIS_SEARCH_WORD_LIST,
   STOP_SEARCH_TERM_LIST,
   STOP_SEARCH_WORD_LIST,
+  DB_ARCHIVE_USER_LIST,
 } = require('./constants');
 
 const { createNewUser } = require('./users');
@@ -134,6 +135,12 @@ const getUserById = id =>
       });
   });
 
+
+const archiveUser = user => {
+  redisClient.lrem(DB_USER_LIST, 0, user.id);
+  redisClient.lpush(DB_ARCHIVE_USER_LIST, user.id);
+  return;
+};
 
 const getUsers = () =>
   new Promise(resolve => {
@@ -371,5 +378,6 @@ module.exports = {
   setUserInCache,
   getJSONItemFromCache,
   getCollectionById,
-  getParams
+  getParams,
+  archiveUser
 };

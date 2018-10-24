@@ -27,6 +27,7 @@ const FB_MESSAGING_TYPE_UPDATE = 'UPDATE';
 // deprecated
 const DB_USERS = 'users';
 const DB_USER_LIST = 'userlist';
+const DB_ARCHIVE_USER_LIST = 'archiveUserList';
 const DB_CONVERSATIONS = 'conversations';
 const DB_COLLECTION_LIST = 'collectionList';
 // deprecated
@@ -178,7 +179,11 @@ const CRONTAB_FOR_MESSAGE_UPDATE_CHECK = '*/3 * * * *';
 
 const CRONTAB_FOR_STUDY_MESSAGE_UPDATE = '0 */2 * * *';
 
+const CRONTAB_FOR_ARCHIVE_USERS_CHECK = '0 3 * * *'; // at 3 in the morning
+
 const MAX_UPDATE_ACTIONS_ALLOWED = 20;
+
+const NUMBER_OF_DAYS_WITH_NO_ACTIVITY_BEFORE_ARCHIVING = 29;
 
 module.exports = {
   REST_PORT,
@@ -277,5 +282,8 @@ module.exports = {
   CRISIS_SEARCH_TERM_LIST,
   CRISIS_SEARCH_WORD_LIST,
   RESUME_MESSAGE_ID,
-  CRISIS_BLOCK_ID
+  CRISIS_BLOCK_ID,
+  CRONTAB_FOR_ARCHIVE_USERS_CHECK,
+  NUMBER_OF_DAYS_WITH_NO_ACTIVITY_BEFORE_ARCHIVING,
+  DB_ARCHIVE_USER_LIST,
 };
