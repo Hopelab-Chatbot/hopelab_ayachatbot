@@ -10,6 +10,7 @@ const { isInvalidUser } = require('./utils/user_utils');
 const {
   isUserConfirmReset,
   isStopOrSwearing,
+  isQuickReplyRetryStop,
 } = require('./utils/msg_utils');
 
 const {  createNewUser } = require('./users');
@@ -35,8 +36,8 @@ const {
   MAX_UPDATE_ACTIONS_ALLOWED,
   STUDY_ID_NO_OP,
   STUDY_MESSAGES,
-  RESUME_MESSAGE,
-  STOPPED_MESSAGE,
+  RESUME_MESSAGE_ID,
+  STOP_MESSAGE_ID,
   FB_STOP_MSG_EVENT,
 } = require('./constants');
 
@@ -114,8 +115,9 @@ function callSendAPI(messageData) {
               fbMessage: R.path(['body', 'error', 'message'], response)
             };
           }
+          // NOTE: uncomment below to see error responses facebook is sending (useful debug)
+          // console.error(error)
 
-          console.error('ERROR: Unable to send message in callSendAPI');
           logger.log('error',
             `Unable to send message to user, error: ${JSON.stringify(error)}, message: ${JSON.stringify(messageData)}`);
 
@@ -217,7 +219,7 @@ function sendAllMessagesToMessenger({
     .then(() => {
       updateUser(user)
         .then(() => {
-          logger.log(`User ${user.id} updated successfully`);
+          logger.log('info', `User ${user.id} updated successfully`);
           if (Array.isArray(studyInfo)) {
             return setStudyInfo(studyInfo).then(() => {
               let logStr = `New study participant (user: ${user.id}) created with study id: ` +
@@ -256,15 +258,18 @@ function receivedMessage({
   allSeries,
   allBlocks,
   media,
-  studyInfo
+  studyInfo,
+  params,
 }) {
   let userToUpdate = Object.assign({}, user);
   const prevMessage = getPreviousMessageInHistory(allMessages, user);
+  const resumeMessage = R.find(R.propEq('id', RESUME_MESSAGE_ID))(allMessages);
 
   logger.log('debug', `receivedMessage: ${JSON.stringify(message)} prevMessage: ${JSON.stringify(prevMessage)}`);
 
   // HERE if we get a Specific 'STOP' message.text, we stop the service
-  const isStop = message.text && isStopOrSwearing(message.text);
+  const isStop = message.text &&
+    (isStopOrSwearing(message.text, params.stopTerms, params.stopWords) || isQuickReplyRetryStop(message));
   if (isStop) {
     logEvent({userId: user.id, eventName: FB_STOP_MSG_EVENT}).catch(err => {
       logger.log(err);
@@ -273,8 +278,15 @@ function receivedMessage({
     userToUpdate = Object.assign({}, userToUpdate, {
       stopNotifications: true,
     });
+    const stopMessage = R.find(R.propEq('id', STOP_MESSAGE_ID))(allMessages);
+    const messageText = stopMessage.text.replace(/\$\{RESUME_MESSAGE\}/gi, resumeMessage.text);
     serializeSend({
-      messages: [STOPPED_MESSAGE],
+      messages: [{
+        type: FB_MESSAGE_TYPE,
+        message: {
+          text: messageText,
+        }
+      }],
       senderID,
     }).then(() =>{
       updateUser(userToUpdate).then(() =>
@@ -286,7 +298,7 @@ function receivedMessage({
     return;
   }
   // If message is 'resume' message, we resume the communication with the bot
-  if (message.text && R.equals(message.text.toUpperCase(), RESUME_MESSAGE)) {
+  if (message.text && R.equals(message.text.toUpperCase(), resumeMessage.text.toUpperCase())) {
     userToUpdate = Object.assign({}, userToUpdate, {
       stopNotifications: false,
     });
@@ -317,7 +329,8 @@ function receivedMessage({
     messages: allMessages,
     collections: allCollections,
     conversations: allConversations,
-    studyInfo
+    studyInfo,
+    params
   });
 
   // update the user to include that action in it's history

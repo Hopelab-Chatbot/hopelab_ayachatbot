@@ -5,9 +5,14 @@ const { MESSAGE_TYPE_TRANSITION,
   RESET_USER_RESPONSE_CONFIRM,
   RESET_USER_RESPONSE_CANCEL,
   STUDY_ID_NO_OP,
-  CURSING_STOP_TRIGGERS,
-  STOP_MESSAGES,
+  TYPE_STOP_NOTIFICATIONS,
+  QUICK_REPLY_BLOCK_ID,
+  CRISIS_RESPONSE_MESSAGE_ID,
+  CRISIS_BLOCK_ID,
   TYPE_ANSWER } = require('../constants');
+
+const RESET_USER_RESPONSE_CONFIRM_ID = JSON.parse(RESET_USER_RESPONSE_CONFIRM.payload).id;
+const RESET_USER_RESPONSE_CANCEL_ID = JSON.parse(RESET_USER_RESPONSE_CANCEL.payload).id;
 
 const messageIsTransition = message => (
   R.path(['messageType'], message) === MESSAGE_TYPE_TRANSITION
@@ -34,7 +39,7 @@ const isUserConfirmReset = (message = {}) => {
   if (message.quick_reply) {
     messageToCheck = JSON.parse(message.quick_reply.payload);
   }
-  return R.equals(messageToCheck.id, RESET_USER_RESPONSE_CONFIRM.id);
+  return R.equals(messageToCheck.id, RESET_USER_RESPONSE_CONFIRM_ID);
 };
 
 const isUserCancelReset = (message = {}) => {
@@ -42,8 +47,16 @@ const isUserCancelReset = (message = {}) => {
   if (message.message && message.message.quick_reply) {
     messageToCheck = JSON.parse(message.message.quick_reply.payload);
   }
-  return R.equals(messageToCheck.id, RESET_USER_RESPONSE_CANCEL.id);
+  return R.equals(messageToCheck.id, RESET_USER_RESPONSE_CANCEL_ID);
 };
+
+const isQuickReplyRetry = message => (
+  message.isQuickReplyRetry
+);
+
+const isSpecialBlock = message =>
+  message.parent && R.any(R.equals(message.parent.id))([QUICK_REPLY_BLOCK_ID, CRISIS_BLOCK_ID]);
+
 
 /**
  * Get the last message sent to user in history
@@ -51,14 +64,15 @@ const isUserCancelReset = (message = {}) => {
  * @param {Object} user
  * @return {Object}
 */
-function getLastSentMessageInHistory(user, ignoreQuickReplyRetryMessages=true) {
+function getLastSentMessageInHistory(user, ignoreQuickReplyRetryMessage = true, ignoreQuickReplyRetryBlock = false) {
   if (!(R.path(['history', 'length'], user))) { return undefined; }
 
   for (let i = user.history.length - 1; i >= 0; i--) {
     if (
       user.history[i].type !== TYPE_ANSWER &&
-          !user.history[i].isCrisisMessage &&
-          !(user.history[i].isQuickReplyRetry && ignoreQuickReplyRetryMessages)
+          !(ignoreQuickReplyRetryMessage && user.history[i].id === CRISIS_RESPONSE_MESSAGE_ID) &&
+          !(ignoreQuickReplyRetryMessage && isQuickReplyRetry(user.history[i])) &&
+          !(ignoreQuickReplyRetryBlock && isSpecialBlock(user.history[i]))
     ) {
       return user.history[i];
     }
@@ -112,18 +126,24 @@ const findKeyPhrasesInTextBlock = (text, keywords) => {
   return acc;
 };
 
-function isCrisisMessage(message, crisisKeywords) {
+const  isCrisisMessage = (message, crisisTerms = [], crisisExactWords = []) => {
   if (!message || !message.text) {
     return false;
   }
 
-  return findKeyPhrasesInTextBlock(message.text, crisisKeywords);
-}
-
-const isStopOrSwearing = text => {
-  return R.any(R.equals(cleanText(text)), STOP_MESSAGES.map(cleanText)) ||
-  findKeyPhrasesInTextBlock(text, CURSING_STOP_TRIGGERS.map(cleanText));
+  return R.any(R.equals(cleanText(message.text)), crisisExactWords.map(cleanText)) ||
+    findKeyPhrasesInTextBlock(message.text, crisisTerms);
 };
+
+const isStopOrSwearing = (text, stopTerms = [], stopExactWords = []) => {
+  return R.any(R.equals(cleanText(text)), stopExactWords.map(cleanText)) ||
+  findKeyPhrasesInTextBlock(text, stopTerms.map(cleanText));
+};
+
+const isQuickReplyRetryStop = message => (
+  message && message.quick_reply &&
+  message.quick_reply.payload && R.equals(message.quick_reply.payload.type, TYPE_STOP_NOTIFICATIONS)
+);
 
 module.exports = {
   formatAsEventName,
@@ -137,5 +157,6 @@ module.exports = {
   generateUniqueStudyId,
   keyFormatMessageId,
   isStopOrSwearing,
-  isCrisisMessage
+  isCrisisMessage,
+  isQuickReplyRetryStop
 };

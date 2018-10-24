@@ -6,6 +6,7 @@ const { getUserById, getStudyInfo, setStudyInfo, updateUser } = require('../src/
 const { serializeSend } = require('../src/facebook');
 const { generateUniqueStudyId } = require('../src/utils/msg_utils');
 
+//NOTE: if this gets used again, QUICK_REPLY_RETRY_BUTTONS must be imported from the seeding script
 const { STUDY_ID_LIST, TYPE_MESSAGE, QUICK_REPLY_RETRY_BUTTONS } = constants;
 
 const redis = require('redis');

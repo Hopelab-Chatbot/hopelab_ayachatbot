@@ -14,10 +14,10 @@ const {
   TYPE_CONVERSATION,
   MESSAGE_TYPE_TRANSITION,
   INTRO_CONVERSATION_ID,
-  CRISIS_KEYWORDS,
   LOGIC_SEQUENTIAL,
   STUDY_ID_LIST,
-  STUDY_ID_NO_OP
+  STUDY_ID_NO_OP,
+  RESET_USER_RESPONSE_TYPE
 } = require('../src/constants');
 
 const mocks = require('./mock');
@@ -428,6 +428,20 @@ describe('Messages Module', () => {
     });
   });
 
+  const CRISIS_KEYWORDS = [
+    'suicide',
+    'kill',
+    'hurt myself',
+    'don\'t want to live',
+    'bridge',
+    'what is the point',
+    'whats the point',
+    'harm',
+    'hurt',
+    'hurting',
+    'gun',
+  ];
+
   describe('isCrisisMessage', () => {
     it('should identify text that needs a crisis message', () => {
       const message = {text: "Going to KiLl myself"};
@@ -544,6 +558,29 @@ describe('Messages Module', () => {
 
       expect(action.id).to.equal('ryBK6QM-G');
       expect(action.type).to.equal(TYPE_MESSAGE);
+
+      expect(userActionUpdates).to.exist;
+      expect(userActionUpdates.history.length).to.equal(1);
+    });
+
+    it('will return the reset user type action if to the user if the correct string is given ', () => {
+      let user = { user: {
+        introConversationSeen: true,
+        assignedConversationTrack: 'r1IJzNy-G',
+        history: [
+          {
+            type: TYPE_ANSWER,
+            timestamp: Date.now(),
+            message: {text: "hi"},
+            previous: undefined
+          }
+        ]
+      }};
+
+      const data = Object.assign({}, user, mocks, {message: { text: '#oz8mu[M7h9C6rsrNza9' }});
+      const {action, userActionUpdates} = testModule.getActionForMessage(data);
+
+      expect(action.type).to.equal(RESET_USER_RESPONSE_TYPE);
 
       expect(userActionUpdates).to.exist;
       expect(userActionUpdates.history.length).to.equal(1);
