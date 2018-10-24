@@ -50,5 +50,6 @@ module.exports = {
   hasBegunIntro,
   isInvalidUser,
   emptyUser,
-  shouldArchiveUser
+  shouldArchiveUser,
+  findLastUserAnswer
 };
