@@ -12,7 +12,8 @@ const {
 
 const {
   hasFinishedIntro,
-  hasBegunIntro
+  hasBegunIntro,
+  findLastUserAnswer
 } = require('./utils/user_utils');
 
 const {
@@ -164,19 +165,6 @@ function makePlatformMediaMessagePayload(type, url, media) {
 }
 
 
-//TODO: could rewrite this and getLastSentMessageInHistory as they both look through user
-// history for something... could reduce code here.
-function findLastUserAnswer(user) {
-  if (!user.history) { return undefined; }
-
-  for(let i = user.history.length - 1; i >= 0; i--) {
-    if (user.history[i].type === TYPE_ANSWER) {
-      return user.history[i];
-    }
-  }
-
-  return undefined;
-}
 
 function findLastNonConversationEndMessage(user) {
   if (!user.history) { return undefined; }
