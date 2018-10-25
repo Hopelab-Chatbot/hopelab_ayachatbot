@@ -106,7 +106,7 @@ function generateUniqueStudyId(studyInfo, studyIdList) {
 
 const keyFormatMessageId = id => `message:${id}`;
 
-const formatAsEventName = name => `msg_event-${name}`;
+const formatAsEventName = (name, type) => `${type ? type.substr(0,4) : 'msg'}_event-${name}`;
 
 const cleanText = text =>
   text

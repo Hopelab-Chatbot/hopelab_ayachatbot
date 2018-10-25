@@ -71,6 +71,7 @@ const {
   QUICK_REPLY_RETRY_ID_CONTINUE,
   TYPE_BACK_TO_CONVERSATION,
   RESUME_MESSAGE_ID,
+  TYPE_SERIES,
 } = require('./constants');
 
 const R = require('ramda');
@@ -749,7 +750,9 @@ function getNextMessageForCollection(
   userUpdates
 ) {
   const collection = collections.find(c => c.id === collectionId);
-
+  if (collection.isEvent) {
+    logEvent({eventName: formatAsEventName(collection.name, TYPE_COLLECTION), userId: userUpdates.id });
+  }
   userUpdates = Object.assign({}, userUpdates, {
     [COLLECTION_SCOPE]: (userUpdates[COLLECTION_SCOPE] || []).concat(
       collectionId
@@ -761,11 +764,19 @@ function getNextMessageForCollection(
     seenEntities: seriesSeen
   } = getNextSeriesForCollection(collection, series, userUpdates);
 
+  if (nextSeries.isEvent) {
+    logEvent({eventName: formatAsEventName(nextSeries.name, TYPE_SERIES), userId: userUpdates.id });
+  }
+
   const { next: nextBlock, seenEntities: blocksSeen } = getNextBlockForSeries(
     nextSeries,
     blocks,
     userUpdates
   );
+
+  if (nextBlock.isEvent) {
+    logEvent({eventName: formatAsEventName(nextBlock.name, TYPE_BLOCK), userId: userUpdates.id });
+  }
 
   let user = Object.assign({}, userUpdates, {
     [COLLECTION_PROGRESS]: updateProgressForEntity(
