@@ -1,6 +1,9 @@
 const expect = require('chai').expect;
+const moment = require('moment');
+
 const testModule = require('../src/users');
-const { TYPE_BLOCK, TYPE_MESSAGE } = require('../src/constants');
+const { TYPE_BLOCK, TYPE_MESSAGE, TYPE_ANSWER } = require('../src/constants');
+const utilityModule = require('../src/utils/user_utils');
 
 describe('Users Module', () => {
   describe('createNewUser', () => {
@@ -81,6 +84,30 @@ describe('Users Module', () => {
       ).to.be.false;
 
       expect(testModule.isNextMessageBlock({ next: {} })).to.be.false;
+    });
+  });
+});
+
+describe('User Utility Module', () => {
+  describe('shouldArchiveUser', () => {
+    it('should not archive a user that has gone 30 days without an answer', () => {
+      const newUser = testModule.createNewUser('12345');
+      const now = moment();
+      const then = now - 30 * 24 * 60 * 60 * 1000;
+      expect(newUser.id).to.equal('12345');
+      const history = [{type: TYPE_ANSWER, timestamp: then}];
+      newUser.history = history;
+      expect(utilityModule.shouldArchiveUser(newUser, now)).to.be.false;
+    });
+
+    it('should archive a user that has gone 31 days without an answer', () => {
+      const newUser = testModule.createNewUser('12345');
+      const now = moment();
+      const then = now - 31 * 24 * 60 * 60 * 1000;
+      expect(newUser.id).to.equal('12345');
+      const history = [{type: TYPE_ANSWER, timestamp: then}];
+      newUser.history = history;
+      expect(utilityModule.shouldArchiveUser(newUser, now)).to.be.true;
     });
   });
 });

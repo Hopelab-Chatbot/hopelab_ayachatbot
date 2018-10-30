@@ -12,7 +12,8 @@ const {
 
 const {
   hasFinishedIntro,
-  hasBegunIntro
+  hasBegunIntro,
+  findLastUserAnswer
 } = require('./utils/user_utils');
 
 const {
@@ -70,6 +71,7 @@ const {
   QUICK_REPLY_RETRY_ID_CONTINUE,
   TYPE_BACK_TO_CONVERSATION,
   RESUME_MESSAGE_ID,
+  TYPE_SERIES,
 } = require('./constants');
 
 const R = require('ramda');
@@ -164,19 +166,6 @@ function makePlatformMediaMessagePayload(type, url, media) {
 }
 
 
-//TODO: could rewrite this and getLastSentMessageInHistory as they both look through user
-// history for something... could reduce code here.
-function findLastUserAnswer(user) {
-  if (!user.history) { return undefined; }
-
-  for(let i = user.history.length - 1; i >= 0; i--) {
-    if (user.history[i].type === TYPE_ANSWER) {
-      return user.history[i];
-    }
-  }
-
-  return undefined;
-}
 
 function findLastNonConversationEndMessage(user) {
   if (!user.history) { return undefined; }
@@ -761,7 +750,9 @@ function getNextMessageForCollection(
   userUpdates
 ) {
   const collection = collections.find(c => c.id === collectionId);
-
+  if (collection.isEvent) {
+    logEvent({eventName: formatAsEventName(collection.name, TYPE_COLLECTION), userId: userUpdates.id });
+  }
   userUpdates = Object.assign({}, userUpdates, {
     [COLLECTION_SCOPE]: (userUpdates[COLLECTION_SCOPE] || []).concat(
       collectionId
@@ -773,11 +764,19 @@ function getNextMessageForCollection(
     seenEntities: seriesSeen
   } = getNextSeriesForCollection(collection, series, userUpdates);
 
+  if (nextSeries.isEvent) {
+    logEvent({eventName: formatAsEventName(nextSeries.name, TYPE_SERIES), userId: userUpdates.id });
+  }
+
   const { next: nextBlock, seenEntities: blocksSeen } = getNextBlockForSeries(
     nextSeries,
     blocks,
     userUpdates
   );
+
+  if (nextBlock.isEvent) {
+    logEvent({eventName: formatAsEventName(nextBlock.name, TYPE_BLOCK), userId: userUpdates.id });
+  }
 
   let user = Object.assign({}, userUpdates, {
     [COLLECTION_PROGRESS]: updateProgressForEntity(

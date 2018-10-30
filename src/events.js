@@ -6,12 +6,15 @@ const {
   FB_ACTIVITIES_URL
 } = require('./constants');
 
+const fbEventNameFormat = name =>
+  name.replace(/[^0-9a-zA-Z_-]/g, '').substr(0,39);
+
 const logEvent = ({ userId, eventName }) => {
   const uri = `${FB_GRAPH_TRUE_ROOT}${FB_APP_ID}${FB_ACTIVITIES_URL}`;
   const data = {
     event: 'CUSTOM_APP_EVENTS',
     custom_events: JSON.stringify([{
-      _eventName: eventName,
+      _eventName: fbEventNameFormat(eventName),
       _app_user_id: userId,
       unique_user_id: userId,
     }]),
