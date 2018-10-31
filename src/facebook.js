@@ -43,10 +43,13 @@ const {
 
 const {
   getMessagesForAction,
-  getActionForMessage,
   getUpdateActionForUsers,
   createCustomMessageForHistory
 } = require('./messages');
+
+const {
+  getActionForMessage,
+} = require('./action');
 
 const { promiseSerial, promiseSerialKeepGoingOnError } = require('./utils/gen_utils');
 
