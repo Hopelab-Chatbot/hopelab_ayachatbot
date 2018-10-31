@@ -55,19 +55,13 @@ const keyFormatUserId = id => `user:${id}`;
  *
  * @param {Object} user
 */
-const setUserInCache = user => {
-  cacheUtils.setItem(
-    keyFormatUserId(user.id),
-    // expires user in ONE month (default) if no changes are made to it
-    EXPIRE_USER_AFTER,
-    user
-  ).catch(e => (
-    console.error(
-      `error: setUserInCache - cacheUtils.setItem(user:${user.id})`,
-      e
-    )
-  ));
-};
+const setUserInCache = user =>
+  new Promise(resolve => {
+    redisClient.set(keyFormatUserId(user.id), JSON.stringify(user));
+    resolve(user);
+  });
+
+
 // NOTE: this is used in testing. DO NOT DELETE
 const removeUserFromCache = user => { // eslint-disable-line no-unused-vars
   cacheUtils.deleteItem(
