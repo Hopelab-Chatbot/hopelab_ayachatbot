@@ -26,7 +26,6 @@ const {
   DB_MEDIA,
   DB_STUDY,
   ONE_DAY_IN_MILLISECONDS,
-  EXPIRE_USER_AFTER,
   CRISIS_SEARCH_TERM_LIST,
   CRISIS_SEARCH_WORD_LIST,
   STOP_SEARCH_TERM_LIST,
@@ -55,19 +54,13 @@ const keyFormatUserId = id => `user:${id}`;
  *
  * @param {Object} user
 */
-const setUserInCache = user => {
-  cacheUtils.setItem(
-    keyFormatUserId(user.id),
-    // expires user in ONE month (default) if no changes are made to it
-    EXPIRE_USER_AFTER,
-    user
-  ).catch(e => (
-    console.error(
-      `error: setUserInCache - cacheUtils.setItem(user:${user.id})`,
-      e
-    )
-  ));
-};
+const setUserInCache = user =>
+  new Promise(resolve => {
+    redisClient.set(keyFormatUserId(user.id), JSON.stringify(user));
+    resolve(user);
+  });
+
+
 // NOTE: this is used in testing. DO NOT DELETE
 const removeUserFromCache = user => { // eslint-disable-line no-unused-vars
   cacheUtils.deleteItem(
@@ -87,15 +80,10 @@ const removeUserFromCache = user => { // eslint-disable-line no-unused-vars
  * @param {Object} user
  * @return {Promise}
 */
-const updateUser = user =>
-  new Promise(resolve =>
-    resolve(setUserInCache(user))
-  );
+const updateUser = user => setUserInCache(user);
 
 const updateAllUsers = (usersToUpdate = []) =>
-  new Promise(resolve => {
-    resolve(usersToUpdate.forEach(user => setUserInCache(user)));
-  });
+  Promise.all(usersToUpdate.map(user => setUserInCache(user)));
 
 /**
  * Create a User in Database
@@ -109,8 +97,7 @@ function returnNewOrOldUser({ id, user }) {
     redisClient.lrem(DB_USER_LIST, 1, id);
     // add the id to the user list array
     redisClient.lpush(DB_USER_LIST, id);
-    setUserInCache(newUser);
-    return Promise.resolve(newUser);
+    return Promise.resolve(setUserInCache(newUser));
   } else {
     return Promise.resolve(user);
   }
