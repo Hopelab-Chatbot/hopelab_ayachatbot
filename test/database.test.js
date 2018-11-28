@@ -5,6 +5,7 @@ const testModule = rewire('../src/database');
 const { createNewUser } = require('../src/users');
 
 testModule.returnNewOrOldUser = testModule.__get__('returnNewOrOldUser');
+testModule.setUserInCache = testModule.__get__('setUserInCache');
 testModule.removeUserFromCache = testModule.__get__('removeUserFromCache');
 testModule.getJSONItemFromCache = testModule.__get__('getJSONItemFromCache');
 
@@ -60,19 +61,10 @@ describe('database user module functions', () => {
   it('updateAllUsers should update all users in array, get users should get all users', done => {
     testModule.updateAllUsers(
       [Object.assign({}, testUser, {foo: 'bop'}),Object.assign({}, testUser2, {foo: 'bar'})]
-    ).then(res => {
-      const firstTestUser = res.find(u => u.id === testUser.id);
-      const secondTestUser = res.find(u => u.id === testUser2.id);
-      expect(firstTestUser.id).to.equal(testUser.id);
-      expect(firstTestUser.foo).to.equal('bop');
-      expect(firstTestUser.foo).to.not.equal('bar');
-      expect(secondTestUser.id).to.equal(testUser2.id);
-      expect(secondTestUser.foo).to.equal('bar');
-      expect(secondTestUser.foo).to.not.equal('bop');
-      // FIXME: this call actually takes more than 2 seconds with a production db dump
-      testModule.getUsers().then(newUsers => {
-        const firstTestUser = newUsers.find(u => u.id === testUser.id);
-        const secondTestUser = newUsers.find(u => u.id === testUser2.id);
+    ).then(() => {
+      testModule.getUsers().then(res => {
+        const firstTestUser = res.find(u => u.id === testUser.id);
+        const secondTestUser = res.find(u => u.id === testUser2.id);
         expect(firstTestUser.id).to.equal(testUser.id);
         expect(firstTestUser.foo).to.equal('bop');
         expect(firstTestUser.foo).to.not.equal('bar');
@@ -85,8 +77,6 @@ describe('database user module functions', () => {
     })
       .catch(done);
   });
-
-
 
   // clean up the user
   it('removeUserFromCache should delete the user', done => {
