@@ -1,7 +1,6 @@
 const expect = require('chai').expect;
 const testModule = require('../src/messages');
 const { generateUniqueStudyId, isCrisisMessage } = require('../src/utils/msg_utils');
-const { createModifiedMocksForTransition } = require('./utils');
 
 testModule.generateUniqueStudyId = generateUniqueStudyId;
 const {
@@ -14,9 +13,11 @@ const {
   TYPE_MESSAGE,
   TYPE_CONVERSATION,
   MESSAGE_TYPE_TRANSITION,
+  INTRO_CONVERSATION_ID,
   LOGIC_SEQUENTIAL,
   STUDY_ID_LIST,
   STUDY_ID_NO_OP,
+  RESET_USER_RESPONSE_TYPE
 } = require('../src/constants');
 
 const mocks = require('./mock');
@@ -24,6 +25,68 @@ const mocks = require('./mock');
 const moment = require('moment');
 
 const media = require('../stubs/media.json');
+
+const createModifiedMocksForTransition = mocks => {
+  let modifiedMocks = Object.assign(
+    {},
+    mocks,
+    {messages: mocks.messages.slice()},
+    {conversations: mocks.conversations.slice()}
+  );
+
+  const conversationId = '54321abcdefg';
+
+  modifiedMocks.newConversationId = conversationId;
+
+  modifiedMocks.conversations.push({
+    type: TYPE_CONVERSATION,
+    id: conversationId,
+    isLive: true,
+    name: 'test1',
+  });
+  const anotherId = "anotherId456";
+  modifiedMocks.messages.push({
+    type: TYPE_MESSAGE,
+    messageType: TYPE_QUESTION,
+    text: "More stuff",
+    next: {id: anotherId, type: TYPE_MESSAGE},
+    start: true,
+    parent: {type: TYPE_CONVERSATION, id: conversationId}
+  });
+
+  const transitionId = 'transition123';
+  modifiedMocks.messages.push({
+    id: transitionId,
+    type: TYPE_MESSAGE,
+    messageType: MESSAGE_TYPE_TRANSITION,
+    nextConversations: [{id: conversationId}]
+  });
+  const previousMessage = {
+    id: 'previous123456',
+    type: TYPE_MESSAGE,
+    messageType: TYPE_QUESTION,
+    text: "Stuff",
+    next: {id: transitionId, type: TYPE_MESSAGE},
+    parent: {type: TYPE_CONVERSATION, id: "intro-conversation"}
+  };
+  modifiedMocks.messages.push(previousMessage);
+
+  modifiedMocks.user = {
+    introConversationSeen: true,
+    assignedConversationTrack: 'intro-conversation',
+    history: [
+      previousMessage,
+      {
+        type: TYPE_ANSWER,
+        timestamp: Date.now(),
+        message: {text: "stuff"},
+        previous: previousMessage.id
+      }
+    ]
+  };
+
+  return modifiedMocks;
+};
 
 const createModifiedMocksForConversationStartingWithCollection = mocks => {
   let modifiedMocks = Object.assign(
@@ -125,6 +188,10 @@ const createModifiedMocksForConversationStartingWithCollection = mocks => {
 };
 
 describe('Messages Module', () => {
+  it('should have an getActionForMessage function', () => {
+    expect(typeof testModule.getActionForMessage).to.equal('function');
+  });
+
   describe('generateUniqueStudyId', () => {
     it('should generate (almost) all unique studyIds', () => {
       let studyIds = [];
@@ -446,6 +513,113 @@ describe('Messages Module', () => {
       expect(message.quick_replies.length).to.equal(1);
       expect(message.quick_replies[0].title).to.be.undefined;
       expect(message.quick_replies[0].payload).to.equal("{}");
+    });
+  });
+
+  describe('getActionForMessage', () => {
+    describe('empty user history', () => {
+      it('gets intro seen state set in user update', () => {
+        const data = Object.assign({}, {user: { history: [] }}, mocks);
+        const {userActionUpdates} = testModule.getActionForMessage(data);
+        expect(userActionUpdates).to.not.be.undefined;
+        expect(userActionUpdates).to.have.all.keys('history', 'introConversationSeen');
+        expect(userActionUpdates.introConversationSeen).to.be.true;
+      });
+
+      it('starts with the first intro message', () => {
+        const data = Object.assign({}, {user: { history: [] }}, mocks);
+        const {action} = testModule.getActionForMessage(data);
+        expect(action).to.not.be.undefined;
+        expect(action).to.have.all.keys('id', 'type');
+        expect(action.type).to.eq(TYPE_MESSAGE);
+        const firstIntroMessage = mocks.messages.find(m => (
+          m.start && m.parent && m.parent.id === INTRO_CONVERSATION_ID
+        ));
+        expect(action.id).to.eq(firstIntroMessage.id);
+      });
+    });
+
+    it('starts in the assigned conversation track', () => {
+      let user = { user: {
+        introConversationSeen: true,
+        assignedConversationTrack: 'r1IJzNy-G',
+        history: [
+          {
+            type: TYPE_ANSWER,
+            timestamp: Date.now(),
+            message: {text: "hi"},
+            previous: undefined
+          }
+        ]
+      }};
+
+      const data = Object.assign({}, user, mocks);
+      const {action, userActionUpdates} = testModule.getActionForMessage(data);
+
+      expect(action.id).to.equal('ryBK6QM-G');
+      expect(action.type).to.equal(TYPE_MESSAGE);
+
+      expect(userActionUpdates).to.exist;
+      expect(userActionUpdates.history.length).to.equal(1);
+    });
+
+    it('will return the reset user type action if to the user if the correct string is given ', () => {
+      let user = { user: {
+        introConversationSeen: true,
+        assignedConversationTrack: 'r1IJzNy-G',
+        history: [
+          {
+            type: TYPE_ANSWER,
+            timestamp: Date.now(),
+            message: {text: "hi"},
+            previous: undefined
+          }
+        ]
+      }};
+
+      const data = Object.assign({}, user, mocks, {message: { text: '#oz8mu[M7h9C6rsrNza9' }});
+      const {action, userActionUpdates} = testModule.getActionForMessage(data);
+
+      expect(action.type).to.equal(RESET_USER_RESPONSE_TYPE);
+
+      expect(userActionUpdates).to.exist;
+      expect(userActionUpdates.history.length).to.equal(1);
+    });
+
+    it('gets the appropriate action for a transition', () => {
+      let modifiedMocks = createModifiedMocksForTransition(mocks);
+      const {action} = testModule.getActionForMessage(modifiedMocks);
+
+      expect(action).to.exist;
+      let transitionMessage = modifiedMocks.messages.find(
+        m => m.messageType === MESSAGE_TYPE_TRANSITION
+      );
+      expect(action.id).to.equal(transitionMessage.id);
+      expect(action.type).to.equal(TYPE_MESSAGE);
+    });
+
+    it('can transition back to the intro', () => {
+      const modifiedMocks = createModifiedMocksForTransition(mocks);
+      const newMessages = modifiedMocks.messages.map(m => (
+        m.messageType === MESSAGE_TYPE_TRANSITION ?
+          Object.assign(
+            {},
+            m,
+            {nextConversations: [{id: 'intro-conversation', text: 'yolo'}]}
+          ) : m
+      ));
+
+
+      const transitionMessage =
+          newMessages.find(m => m.messageType === MESSAGE_TYPE_TRANSITION);
+      expect(modifiedMocks.user.introConversationSeen).to.be.true;
+      const newMocks = Object.assign({}, modifiedMocks, {messages: newMessages});
+      const {action, userActionUpdates} = testModule.getActionForMessage(newMocks);
+
+      expect(action).to.exist;
+      expect(action.id).to.equal(transitionMessage.id);
+      expect(userActionUpdates).to.exist;
+      expect(userActionUpdates.introConversationSeen).to.be.true;
     });
   });
 
