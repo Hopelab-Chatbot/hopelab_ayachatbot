@@ -18,11 +18,7 @@ const {
 
 const {
   getLastSentMessageInHistory,
-  isUserConfirmReset,
-  isUserCancelReset,
-  getLastMessageSentByUser,
   formatAsEventName,
-  isCrisisMessage,
 } = require('./utils/msg_utils');
 
 const {
@@ -57,7 +53,6 @@ const {
   SERIES_SEEN,
   BLOCKS_SEEN,
   COLLECTION_SCOPE,
-  CUT_OFF_HOUR_FOR_NEW_MESSAGES,
   NUMBER_OF_UPDATE_MESSAGES_ALLOWED,
   MINUTES_OF_INACTIVITY_BEFORE_UPDATE_MESSAGE,
   STUDY_ID_NO_OP,
@@ -67,10 +62,7 @@ const {
   RESET_USER_QUESTION,
   RESET_USER_CONFIRM,
   FB_EVENT_COMPLETE_INTRO_CONVERSATION,
-  FB_QUICK_REPLY_RETRY_EVENT,
-  QUICK_REPLY_RETRY_ID_CONTINUE,
   TYPE_BACK_TO_CONVERSATION,
-  RESUME_MESSAGE_ID,
   TYPE_SERIES,
 } = require('./constants');
 
@@ -79,8 +71,6 @@ const R = require('ramda');
 const { logger } = require('./logger');
 
 const moment = require('moment');
-
-const { isUserResetMessage } = require('./utils/msg_utils');
 
 /**
  * Create Specific Platform Payload
@@ -167,21 +157,6 @@ function makePlatformMediaMessagePayload(type, url, media) {
 
 
 
-function findLastNonConversationEndMessage(user) {
-  if (!user.history) { return undefined; }
-
-  for(let i = user.history.length - 1; i >= 0; i--) {
-    if (
-      user.history[i].id !== END_OF_CONVERSATION_ID &&
-      user.history[i].type !== TYPE_ANSWER
-    ) {
-      return user.history[i];
-    }
-  }
-
-  return undefined;
-}
-
 function hasUpdateSinceInactivity(user, lastAnswer, minutesOfInactivityBeforeUpdate) {
   if (!lastAnswer) { return false; }
   if (!user.history) { return false; }
@@ -200,28 +175,7 @@ function hasUpdateSinceInactivity(user, lastAnswer, minutesOfInactivityBeforeUpd
   return false;
 }
 
-function atEndOfConversationAndShouldRestart(user, timeNow, cutOffHour, cutOffMinute=0) {
-  const lastMessage = getLastSentMessageInHistory(user);
 
-  if (R.path(['next', 'id'], lastMessage) !== END_OF_CONVERSATION_ID) {
-    return false;
-  }
-  const lastRealMessage = findLastNonConversationEndMessage(user);
-  if (lastRealMessage) {
-    let cutOffTime = moment().startOf('day').hour(cutOffHour).minute(cutOffMinute).unix();
-    if (timeNow < cutOffTime) {
-      cutOffTime = moment().subtract(1, 'day').startOf('day').hour(cutOffHour).minute(cutOffMinute).unix();
-    }
-
-    return (
-      (timeNow > cutOffTime) &&
-          (cutOffTime * 1000 > lastRealMessage.timestamp)
-    );
-  }
-
-  return false;
-
-}
 
 //TODO: could rewrite this using reduce
 function hasExceededMaxUpdates(user, maxUpdates) {
@@ -333,223 +287,7 @@ function getUpdateActionForUsers({
   }, []);
 }
 
-function doesMessageStillExist(message, messages) {
-  return !!(messages.find(m => message.id === m.id));
-}
 
-/**
- * Get the next Action for incoming message
- *
- * @param {Object} message
- * @param {Object} user
- * @param {Array} blocks
- * @param {Array} series
- * @param {Array} collections
- * @param {Array} conversations
- * @param {Array} messages
- * @return {Object}
-*/
-function getActionForMessage({
-  message,
-  user,
-  blocks,
-  series,
-  messages,
-  collections,
-  conversations,
-  studyInfo,
-  params,
-}) {
-  let userActionUpdates = Object.assign({}, user);
-  const lastMessage = getLastSentMessageInHistory(user);
-  if (isCrisisMessage(message, params.crisisTerms, params.crisisWords)) {
-    return {
-      action: { type: ACTION_CRISIS_REPONSE },
-      userActionUpdates
-    };
-  }
-
-  // here we check if the message sent was a request to reset the user data (admin only)
-  if (isUserResetMessage(message)) {
-    return {
-      action: { type: RESET_USER_RESPONSE_TYPE },
-      userActionUpdates
-    };
-  }
-
-  // this is just to reduce clutter later on
-  const startNewConversationTrack = convo => {
-    const newTrack = newConversationTrack(
-      convo,
-      messages,
-      collections,
-      studyInfo,
-      user
-    );
-
-    let action = newTrack.action;
-
-    userActionUpdates = Object.assign({}, userActionUpdates, newTrack.user);
-
-    return {
-      action,
-      userActionUpdates
-    };
-  };
-
-  // here we check if the message sent was a confirmation to reset user data (admin only)
-  if (isUserConfirmReset(message)) {
-    return {
-      action: { type: RESET_USER_CONFIRM },
-      userActionUpdates
-    };
-  }
-
-  // here we check if the message sent was canceling a request to reset user data (admin only)
-
-  if (isUserCancelReset(getLastMessageSentByUser(user))) {
-    return {
-      action: { type: ACTION_REPLAY_PREVIOUS_MESSAGE },
-      userActionUpdates
-    };
-  }
-
-  // here we start another conversation if the user finished the old one
-  if (
-    R.path(['next', 'id'], lastMessage) === END_OF_CONVERSATION_ID &&
-      R.path(['messageType'], lastMessage) !== TYPE_QUESTION_WITH_REPLIES &&
-      atEndOfConversationAndShouldRestart(user, moment().unix(), CUT_OFF_HOUR_FOR_NEW_MESSAGES)
-  ) {
-    let convoOptions = conversations.filter(conversationIsLiveAndNotIntro);
-    if (R.path(['assignedConversationTrack'], user)) {
-      convoOptions = conversations.filter(
-        c => c.id === user.assignedConversationTrack
-      );
-    }
-    return startNewConversationTrack(convoOptions);
-  }
-
-  // here we say this convo is done, and we'll talk to you tomorrow
-  if (
-    R.path(['next', 'id'], lastMessage) === END_OF_CONVERSATION_ID &&
-      R.path(['messageType'], lastMessage) !== TYPE_QUESTION_WITH_REPLIES
-  ) {
-    return {
-      action: { type: ACTION_COME_BACK_LATER },
-      userActionUpdates
-    };
-  }
-
-  // THIS IS HOW WE RETURN TO THE MAIN CONVERSATION
-  const lastMessageSentByBot = getLastSentMessageInHistory(user, false);
-  let isReturnToLastMessage = false;
-  const forceBackToConvo = lastMessageSentByBot && lastMessageSentByBot.next &&
-    R.equals(lastMessageSentByBot.next.type, TYPE_BACK_TO_CONVERSATION);
-  const resumeMessage = R.find(R.propEq('id', RESUME_MESSAGE_ID))(messages);
-  const isResumeMessage = message && message.text &&
-    R.equals(message.text.toUpperCase(), resumeMessage.text.toUpperCase());
-  if (forceBackToConvo || isResumeMessage) {
-    isReturnToLastMessage = true;
-  }
-  if (message && message.quick_reply && message.quick_reply.payload) {
-    const payload = JSON.parse(message.quick_reply ? message.quick_reply.payload : "{}");
-    if (R.equals(payload.id, QUICK_REPLY_RETRY_ID_CONTINUE) ||
-    R.equals(payload.type, TYPE_BACK_TO_CONVERSATION)) {
-      isReturnToLastMessage = true;
-    }
-  }
-
-  if (isReturnToLastMessage) {
-    return {
-      action: {
-        type: ACTION_QUICK_REPLY_RETRY_NEXT_MESSAGE,
-        quickReplyRetryId: QUICK_REPLY_RETRY_ID_CONTINUE
-      },
-      userActionUpdates
-    };
-  }
-
-  // If the message track this user has been following has been deleted, start a new conversation
-  if (
-    R.path(['next', 'id'], lastMessage) &&
-      lastMessage.messageType !== TYPE_QUESTION_WITH_REPLIES &&
-      (!doesMessageStillExist(lastMessage, messages) ||
-       !doesMessageStillExist(lastMessage.next, messages))
-  ) {
-    return startNewConversationTrack(conversations.filter(conversationIsLiveAndNotIntro));
-  }
-
-  // end conversation if appropriate...
-  if (
-    R.path(['messageType'], lastMessage) === TYPE_QUESTION_WITH_REPLIES &&
-      !!message.quick_reply
-  ) {
-    let action = JSON.parse(message.quick_reply.payload);
-    if (action.id === END_OF_CONVERSATION_ID) {
-      return {
-        action: {type: ACTION_COME_BACK_LATER},
-        userActionUpdates
-      };
-    }
-
-    if (action.id) {
-      return {
-        action,
-        userActionUpdates
-      };
-    }
-  }
-
-  // if the user did not respond correctly to the question
-  // try the message with the quick-reply buttons saying 'Hey, I don't get that'
-  if (
-    R.path(['messageType'], lastMessageSentByBot) === TYPE_QUESTION_WITH_REPLIES &&
-      !message.quick_reply
-  ) {
-    logEvent({userId: user.id, eventName: FB_QUICK_REPLY_RETRY_EVENT}).catch(err => {
-      logger.log(err);
-      logger.log('error', `something went wrong logging event ${FB_QUICK_REPLY_RETRY_EVENT} ${user.id}`);
-    });
-    return {
-      action: {type: ACTION_RETRY_QUICK_REPLY},
-      userActionUpdates
-    };
-  }
-
-  let action;
-  if (
-    (lastMessageSentByBot && R.path(['next'], lastMessageSentByBot))||
-    (lastMessage && R.path(['next'], lastMessage))
-  ) {
-    // go first in current flow (meaning crisis or stop) before reverting to regular conversation
-    if (lastMessageSentByBot && R.path(['next'], lastMessageSentByBot)) {
-      action = { type: lastMessageSentByBot.next.type, id: lastMessageSentByBot.next.id };
-    } else {
-      action = { type: lastMessage.next.type, id: lastMessage.next.id };
-    }
-    // if the user is working through a collection, then we move through that
-  } else if (user[COLLECTION_SCOPE] && user[COLLECTION_SCOPE].length) {
-    let nextMessage = getNextMessageForCollection(
-      R.last(user[COLLECTION_SCOPE]),
-      collections,
-      series,
-      blocks,
-      messages,
-      userActionUpdates
-    );
-
-    action = {
-      type: nextMessage.message.type,
-      id: nextMessage.message.id
-    };
-    userActionUpdates = nextMessage.user;
-    // just start a new conversation
-  } else {
-    return startNewConversationTrack(conversations.filter(conversationIsLiveAndNotIntro));
-  }
-
-  return { action, userActionUpdates };
-}
 
 /**
  * Get All Public Children Whose Parent Matches ID
@@ -1282,7 +1020,7 @@ module.exports = {
   makePlatformMessagePayload,
   makePlatformMediaMessagePayload,
   getMessagesForAction,
-  getActionForMessage,
+  getNextMessageForCollection,
   getUpdateActionForUsers,
   updateHistory,
   getNextMessage,
