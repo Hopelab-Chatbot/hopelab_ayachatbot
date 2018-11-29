@@ -35,7 +35,6 @@ const {
   ACTION_COME_BACK_LATER,
   ACTION_CRISIS_REPONSE,
   ACTION_QUICK_REPLY_RETRY_NEXT_MESSAGE,
-  ACTION_REPLAY_PREVIOUS_MESSAGE,
   COLLECTION_SCOPE,
   RESET_USER_RESPONSE_TYPE,
   RESET_USER_CONFIRM,
@@ -76,7 +75,7 @@ const getActionForMessage = ({
 }) => {
   let userActionUpdates = Object.assign({}, user);
   const lastMessage = getLastSentMessageInHistory(user);
-  const lastMessageSentByBot = getLastSentMessageInHistory(user, false);
+  const lastMessageSentByBot = getLastSentMessageInHistory(user, false, true);
   const resumeMessage = R.find(R.propEq('id', RESUME_MESSAGE_ID))(messages);
 
   if (isCrisisMessage(message, params.crisisTerms, params.crisisWords)) {
@@ -106,7 +105,7 @@ const getActionForMessage = ({
 
   if (isUserCancelReset(getLastMessageSentByUser(user))) {
     return {
-      action: { type: ACTION_REPLAY_PREVIOUS_MESSAGE },
+      action: { type: ACTION_QUICK_REPLY_RETRY_NEXT_MESSAGE },
       userActionUpdates
     };
   }
@@ -116,7 +115,6 @@ const getActionForMessage = ({
   const forceBackToConvo = isTypeBackToConversation(lastMessageSentByBot);
   const isResumeMessage = message && message.text
     && R.equals(message.text.toUpperCase(), resumeMessage.text.toUpperCase());
-
   if (forceBackToConvo || isResumeMessage || payloadIsBackToConvo(message)) {
     isReturnToLastMessage = true;
   }

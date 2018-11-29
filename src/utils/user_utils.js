@@ -1,5 +1,9 @@
 const R = require('ramda');
-const { NUMBER_OF_DAYS_WITH_NO_ACTIVITY_BEFORE_ARCHIVING, TYPE_ANSWER } = require('../constants');
+const {
+  NUMBER_OF_DAYS_WITH_NO_ACTIVITY_BEFORE_ARCHIVING,
+  TYPE_ANSWER,
+  STUDY_ID_NO_OP
+} = require('../constants');
 
 const  findLastUserAnswer = user => {
   if (!user.history) { return undefined; }
@@ -45,11 +49,32 @@ const shouldArchiveUser = (user, currentTimeMs) => {
   return daysSinceLastActivity > NUMBER_OF_DAYS_WITH_NO_ACTIVITY_BEFORE_ARCHIVING;
 };
 
+const userIsStartingStudy = (oldUser, newUser) => {
+  return !Number.isFinite(Number(R.path(['studyId'],oldUser))) &&
+         Number.isFinite(Number(R.path(['studyId'], newUser)));
+};
+
+const studyIdIsNotificationEligable = user => {
+  return Number.isFinite(Number(R.path(['studyId'], user))) &&
+        Number(R.path(['studyId'], user)) !== STUDY_ID_NO_OP;
+};
+
+const updateHistory = (currentMessage, history) => {
+  const historyToUpdate = history.slice();
+
+  historyToUpdate.push(Object.assign({}, currentMessage));
+
+  return historyToUpdate;
+};
+
 module.exports = {
   hasFinishedIntro,
   hasBegunIntro,
   isInvalidUser,
   emptyUser,
   shouldArchiveUser,
-  findLastUserAnswer
+  findLastUserAnswer,
+  userIsStartingStudy,
+  studyIdIsNotificationEligable,
+  updateHistory
 };
