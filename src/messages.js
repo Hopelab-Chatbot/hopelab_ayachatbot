@@ -45,7 +45,6 @@ const {
   ACTION_NO_UPDATE_NEEDED,
   ACTION_CRISIS_REPONSE,
   ACTION_QUICK_REPLY_RETRY_NEXT_MESSAGE,
-  ACTION_REPLAY_PREVIOUS_MESSAGE,
   END_OF_CONVERSATION_ID,
   QUICK_REPLY_RETRY_ID,
   CRISIS_RESPONSE_MESSAGE_ID,
@@ -789,9 +788,6 @@ const findMessageByActionType = (action, userUpdates, messages) => {
           )
         });
       }
-      break;
-    case ACTION_REPLAY_PREVIOUS_MESSAGE:
-      messagesToSend.push(Object.assign({}, getLastSentMessageInHistory(userUpdates)));
       break;
     case ACTION_COME_BACK_LATER:
       msg = {

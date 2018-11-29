@@ -35,7 +35,6 @@ const {
   ACTION_COME_BACK_LATER,
   ACTION_CRISIS_REPONSE,
   ACTION_QUICK_REPLY_RETRY_NEXT_MESSAGE,
-  ACTION_REPLAY_PREVIOUS_MESSAGE,
   COLLECTION_SCOPE,
   RESET_USER_RESPONSE_TYPE,
   RESET_USER_CONFIRM,
@@ -106,7 +105,7 @@ const getActionForMessage = ({
 
   if (isUserCancelReset(getLastMessageSentByUser(user))) {
     return {
-      action: { type: ACTION_REPLAY_PREVIOUS_MESSAGE },
+      action: { type: ACTION_QUICK_REPLY_RETRY_NEXT_MESSAGE },
       userActionUpdates
     };
   }
