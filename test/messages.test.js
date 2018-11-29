@@ -17,6 +17,18 @@ const {
   LOGIC_SEQUENTIAL,
   STUDY_ID_LIST,
   STUDY_ID_NO_OP,
+  RESET_USER_RESPONSE_TYPE,
+  RESET_USER_QUESTION,
+  RESET_USER_CONFIRM,
+  ACTION_CRISIS_REPONSE,
+  CRISIS_RESPONSE_MESSAGE_ID,
+  ACTION_RETRY_QUICK_REPLY,
+  QUICK_REPLY_RETRY_ID,
+  QUICK_REPLY_BLOCK_ID,
+  ACTION_QUICK_REPLY_RETRY_NEXT_MESSAGE,
+  CRISIS_BLOCK_ID,
+  ACTION_COME_BACK_LATER,
+  END_OF_CONVERSATION_ID
 } = require('../src/constants');
 
 const mocks = require('./mock');
@@ -121,6 +133,78 @@ const createModifiedMocksForConversationStartingWithCollection = mocks => {
     ]
   };
 
+  return modifiedMocks;
+};
+
+const createModifiedMocksForTestingGetMessageFromAction = mocks => {
+  let modifiedMocks = Object.assign(
+    {},
+    mocks,
+    {collections: mocks.collections.slice()},
+    {messages: mocks.messages.slice()},
+    {conversations: mocks.conversations.slice()},
+    {series: mocks.series.slice()},
+    {blocks: mocks.blocks.slice()}
+  );
+
+  const lastMessage = {
+    type: TYPE_QUESTION,
+    timestamp: Date.now(),
+    text: "stuff",
+    previous: null,
+    id: 'xxxxxx'
+  };
+
+  const quickReplyRetryMessage = {
+    type: TYPE_QUESTION,
+    timestamp: Date.now(),
+    text: "stuff",
+    previous: null,
+    id: QUICK_REPLY_RETRY_ID,
+    parent: QUICK_REPLY_BLOCK_ID
+  };
+
+  const crisisResponseMessage = {
+    type: TYPE_QUESTION,
+    timestamp: Date.now(),
+    text: "stuff",
+    previous: null,
+    id: CRISIS_RESPONSE_MESSAGE_ID,
+    parent: CRISIS_BLOCK_ID
+  };
+
+  modifiedMocks.user = {
+    introConversationSeen: true,
+    assignedConversationTrack: 'intro-conversation',
+    history: [
+      lastMessage,
+      quickReplyRetryMessage,
+      crisisResponseMessage
+    ]
+  };
+
+  modifiedMocks.messages.push(
+    {
+      id: CRISIS_RESPONSE_MESSAGE_ID,
+      text: 'blah',
+    }
+  );
+  modifiedMocks.messages.push(
+    {
+      id: QUICK_REPLY_RETRY_ID,
+      parent: QUICK_REPLY_BLOCK_ID,
+      text: 'qr text',
+    }
+  );
+  modifiedMocks.messages.push(
+    {
+      id: END_OF_CONVERSATION_ID,
+      text: 'cbl',
+    }
+  );
+  modifiedMocks.messages.push(
+    testModule.makePlatformMessagePayload(lastMessage.id, mocks.messages, lastMessage)
+  );
   return modifiedMocks;
 };
 
@@ -684,6 +768,91 @@ describe('Messages Module', () => {
       );
       const {userUpdates} = testModule.getMessagesForAction(data);
       expect(userUpdates.introConversationFinished).to.be.true;
+    });
+
+    it('returns a reset user response when appropriate', () => {
+      const action = { type: RESET_USER_RESPONSE_TYPE };
+      const data = Object.assign(
+        {},
+        mocks,
+        { action }
+      );
+      const {messagesToSend} = testModule.getMessagesForAction(data);
+      expect(messagesToSend[0].message.text).to.equal(RESET_USER_QUESTION);
+    });
+
+    it('sends reset response confirm when requested', () => {
+      const action = { type: RESET_USER_CONFIRM };
+      const data = Object.assign(
+        {},
+        mocks,
+        { action }
+      );
+      const { messagesToSend } = testModule.getMessagesForAction(data);
+      expect(messagesToSend[0].message.text).to.equal(RESET_USER_CONFIRM);
+    });
+
+    it('sends crisis response when action type is action crisis response', () => {
+      const action = { type: ACTION_CRISIS_REPONSE };
+      const modifiedMocks = createModifiedMocksForTestingGetMessageFromAction(mocks);
+      const data = Object.assign(
+        {},
+        modifiedMocks,
+        { action }
+      );
+      const { messagesToSend } = testModule.getMessagesForAction(data);
+      expect(messagesToSend[0].message.text)
+        .to.equal(testModule.makePlatformMessagePayload(CRISIS_RESPONSE_MESSAGE_ID, modifiedMocks.messages).text);
+    });
+
+    it('sends quick reply when action type is action quick reply', () => {
+      const action = { type: ACTION_RETRY_QUICK_REPLY };
+      const modifiedMocks = createModifiedMocksForTestingGetMessageFromAction(mocks);
+      const data = Object.assign(
+        {},
+        modifiedMocks,
+        { action }
+      );
+      const { messagesToSend } = testModule.getMessagesForAction(data);
+      expect(messagesToSend[0].message.text)
+        .to.equal(testModule.makePlatformMessagePayload(QUICK_REPLY_RETRY_ID, modifiedMocks.messages).text);
+    });
+
+    it('sends last message sent when type is quick reply retry next message or back to conversation', () => {
+      let action = { type: ACTION_QUICK_REPLY_RETRY_NEXT_MESSAGE };
+      const modifiedMocks = createModifiedMocksForTestingGetMessageFromAction(mocks);
+      let data = Object.assign(
+        {},
+        modifiedMocks,
+        { action }
+      );
+      let { messagesToSend } = testModule.getMessagesForAction(data);
+      expect(messagesToSend[0].message.text)
+        .to.equal(modifiedMocks.user.history[0].text);
+
+      action = { type: ACTION_QUICK_REPLY_RETRY_NEXT_MESSAGE };
+      data = Object.assign(
+        {},
+        modifiedMocks,
+        { action }
+      );
+
+      ({ messagesToSend } = testModule.getMessagesForAction(data));
+      expect(messagesToSend[0].message.text)
+        .to.equal(modifiedMocks.user.history[0].text);
+    });
+
+    it('sends last message sent when type is quick reply retry next message or back to conversation', () => {
+      let action = { type: ACTION_COME_BACK_LATER };
+      const modifiedMocks = createModifiedMocksForTestingGetMessageFromAction(mocks);
+      let data = Object.assign(
+        {},
+        modifiedMocks,
+        { action }
+      );
+      let { messagesToSend } = testModule.getMessagesForAction(data);
+      expect(messagesToSend[0].message.text)
+        .to.equal(testModule.makePlatformMessagePayload(END_OF_CONVERSATION_ID, modifiedMocks.messages).text);
     });
   });
 

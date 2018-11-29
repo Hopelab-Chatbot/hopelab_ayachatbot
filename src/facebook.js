@@ -2,10 +2,10 @@ const request = require('request');
 
 const R = require('ramda');
 
-const { updateHistory, getPreviousMessageInHistory, hasStoppedNotifications } = require('./users');
+const { getPreviousMessageInHistory, hasStoppedNotifications } = require('./users');
 
 const { isReturningBadFBCode } = require('./utils/fb_utils');
-const { isInvalidUser } = require('./utils/user_utils');
+const { isInvalidUser, updateHistory } = require('./utils/user_utils');
 
 const {
   isUserConfirmReset,
@@ -351,7 +351,6 @@ function receivedMessage({
     media,
     studyInfo
   });
-
   userToUpdate = Object.assign({}, userToUpdate, userUpdates);
 
   const messagesWithTyping = R.intersperse(

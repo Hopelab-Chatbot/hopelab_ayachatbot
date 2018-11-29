@@ -29,13 +29,6 @@ const hasStoppedNotifications = user => (
  * @param {Array} history
  * @return {Array}
 */
-function updateHistory(currentMessage, history) {
-  const historyToUpdate = history.slice();
-
-  historyToUpdate.push(Object.assign({}, currentMessage));
-
-  return historyToUpdate;
-}
 
 /**
  * Get Previous Message in User History
@@ -116,7 +109,6 @@ function popScope(user, scopeId) {
 
 module.exports = {
   createNewUser,
-  updateHistory,
   getPreviousMessageInHistory,
   getChildEntitiesSeenByUserForParent,
   isNextMessageBlock,
