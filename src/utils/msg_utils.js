@@ -145,6 +145,13 @@ const isQuickReplyRetryStop = message => (
   message.quick_reply.payload && R.equals(message.quick_reply.payload.type, TYPE_STOP_NOTIFICATIONS)
 );
 
+function createCustomMessageForHistory(properties) {
+  return {
+    ...properties,
+    timestamp: Date.now()
+  };
+}
+
 module.exports = {
   formatAsEventName,
   havePassedTransition,
@@ -158,5 +165,6 @@ module.exports = {
   keyFormatMessageId,
   isStopOrSwearing,
   isCrisisMessage,
-  isQuickReplyRetryStop
+  isQuickReplyRetryStop,
+  createCustomMessageForHistory
 };

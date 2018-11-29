@@ -76,7 +76,7 @@ const getActionForMessage = ({
 }) => {
   let userActionUpdates = Object.assign({}, user);
   const lastMessage = getLastSentMessageInHistory(user);
-  const lastMessageSentByBot = getLastSentMessageInHistory(user, false);
+  const lastMessageSentByBot = getLastSentMessageInHistory(user, false, true);
   const resumeMessage = R.find(R.propEq('id', RESUME_MESSAGE_ID))(messages);
 
   if (isCrisisMessage(message, params.crisisTerms, params.crisisWords)) {
@@ -116,7 +116,6 @@ const getActionForMessage = ({
   const forceBackToConvo = isTypeBackToConversation(lastMessageSentByBot);
   const isResumeMessage = message && message.text
     && R.equals(message.text.toUpperCase(), resumeMessage.text.toUpperCase());
-
   if (forceBackToConvo || isResumeMessage || payloadIsBackToConvo(message)) {
     isReturnToLastMessage = true;
   }

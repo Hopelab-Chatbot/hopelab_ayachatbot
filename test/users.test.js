@@ -45,7 +45,7 @@ describe('Users Module', () => {
     it('pushes a new message into history', () => {
       const history = [{}, {}, {}];
 
-      const newHistory = testModule.updateHistory({}, history);
+      const newHistory = utilityModule.updateHistory({}, history);
 
       expect(newHistory.length).to.equal(4);
     });
