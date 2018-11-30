@@ -1,5 +1,5 @@
 const {
-  generateUniqueStudyId,
+  generateUniqueStudyId
 } = require('./utils/msg_utils');
 
 const {
@@ -115,7 +115,6 @@ function newConversationTrack(conversations, messages, collections, studyInfo, u
       setStudyInfo(newStudyInfoList);
     }
   }
-
   return {
     action: { type: next.type, id: next.id },
     block: INTRO_BLOCK_ID,
