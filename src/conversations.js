@@ -1,5 +1,5 @@
 const {
-  generateUniqueStudyId
+  generateUniqueStudyId,
 } = require('./utils/msg_utils');
 
 const {
@@ -78,8 +78,7 @@ function newConversationTrack(conversations, messages, collections, studyInfo, u
   } else {
     conversationTrack = userUpdates.assignedConversationTrack;
   }
-
-  const next = messages
+  let next = messages
     .concat(collections)
     .find(
       R.both(
@@ -87,6 +86,17 @@ function newConversationTrack(conversations, messages, collections, studyInfo, u
         R.propEq('start', true)
       )
     );
+
+  // --------
+  // here if there is a different specified child to begin the conversation, then transition to it instead
+  const nextConversation = conversations.find(({ id }) => id === userUpdates.assignedConversationTrack);
+  if (nextConversation && nextConversation.nextChild) {
+    next = messages
+      .concat(collections)
+      .find(({id}) => id === nextConversation.nextChild);
+  }
+  // -------
+
   if (
     user.assignedConversationTrack !== userUpdates.assignedConversationTrack
   ) {
@@ -105,6 +115,7 @@ function newConversationTrack(conversations, messages, collections, studyInfo, u
       setStudyInfo(newStudyInfoList);
     }
   }
+
   return {
     action: { type: next.type, id: next.id },
     block: INTRO_BLOCK_ID,

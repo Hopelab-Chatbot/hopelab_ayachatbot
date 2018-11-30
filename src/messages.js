@@ -476,7 +476,7 @@ const getNextConversation = (
   let conversationsForNewTrack = [];
   if (R.path(['nextConversations', 'length'], curr) > 0) {
     conversationsForNewTrack = curr.nextConversations.map(nC =>
-      conversations.find(c => c.id === nC.id)
+      ({...conversations.find(c => c.id === nC.id), ...nC.nextChild && { nextChild: nC.nextChild }})
     ).filter(nc => !!nc);
   }
   // here we mark this user as having completed the intro conversation,
@@ -559,8 +559,11 @@ const getNextConversation = (
     curr = nextMessage.message;
     userUpdates = nextMessage.user;
   } else {
+
     curr = messages.find(m => m.id === newTrack.action.id);
+    //FIXME: maybe not grabbing the right thing for the userUpdate below
     userUpdates = Object.assign({}, userUpdates, newTrack.user);
+
   }
   return { curr, userUpdates, messagesToSend };
 };

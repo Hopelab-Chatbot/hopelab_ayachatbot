@@ -131,19 +131,6 @@ function callSendAPI(messageData) {
   });
 }
 
-// /**
-//  * Send a follow-up message to a user
-//  *
-//  * @param {String} recipientId
-//  * @param {Object} content
-//  * @return {Promise<String>}
-// */
-// function sendFollowUpMessageToUser(recipientId, content) {
-//   const messageData = createMessagePayload(recipientId, content, FB_MESSAGING_TYPE_UPDATE);
-//
-//   return callSendAPI(messageData);
-// }
-
 /**
  * Create the FB Message Payload
  *
