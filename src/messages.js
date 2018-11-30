@@ -476,7 +476,7 @@ const getNextConversation = (
   let conversationsForNewTrack = [];
   if (R.path(['nextConversations', 'length'], curr) > 0) {
     conversationsForNewTrack = curr.nextConversations.map(nC =>
-      conversations.find(c => c.id === nC.id)
+      ({...conversations.find(c => c.id === nC.id), ...nC.nextChild && { nextChild: nC.nextChild }})
     ).filter(nc => !!nc);
   }
   // here we mark this user as having completed the intro conversation,
