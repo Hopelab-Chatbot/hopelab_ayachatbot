@@ -39,7 +39,7 @@ const { keyFormatCollectionId } = require('./utils/collection_utils');
 
 const getJSONItemFromCache = key =>
   getAsync(key)
-    .then(item => item ? JSON.parse(item) : null)
+    .then(item => item ? JSON.parse(item) : { id: null })
     .catch(e => (
       console.error(
         `error: getItemFromCache on key: ${key}`,

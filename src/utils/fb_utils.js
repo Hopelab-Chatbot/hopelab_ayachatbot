@@ -7,7 +7,8 @@ const {
   FB_ERROR_CODE_UNAVAILABLE_USER,
   FB_ERROR_CODE_UNAVAILABLE_USER_10,
   FB_MESSAGING_TYPE_RESPONSE,
-  TYPE_IMAGE
+  TYPE_VIDEO,
+  EXT_TO_TYPE
 } = require('../constants');
 
 const defaultErrorMsg = {
@@ -30,6 +31,8 @@ const createDefaultErrorMessage = ({ recipient }) => (
     ...defaultErrorMsg
   }
 );
+
+const determineTypeByExtension = ext => EXT_TO_TYPE[ext] || TYPE_VIDEO;
 
 const asText = val => val && R.equals(typeof val, 'string') && val.length;
 
@@ -59,14 +62,17 @@ const sanitizeFBJSON = messageData => {
       sanitizedData = createDefaultErrorMessage(messageData);
     } else {
       if (attachment) {
-        const { type = TYPE_IMAGE, payload } = attachment;
-        sanitizedData.message.attachment.type = type;
+        const { type, payload } = attachment;
         if (payload) {
-          const { url } = payload;
-          sanitizedData.message.attachment.payload.is_reusable = true;
-          if (!url) {
+          const { url, attachment_id } = payload;
+          if (!url && !attachment_id) {
             logErrorAboutMessage(messageData, 'no url in attachment object');
             sanitizedData = createDefaultErrorMessage(messageData);
+          } else {
+            // if url, but no type given, assign a type based on the extension
+            if (!type) {
+              sanitizedData.message.attachment.type = determineTypeByExtension(R.last(url.split('.')));
+            }
           }
         } else {
           // no image... should we use a default image?
