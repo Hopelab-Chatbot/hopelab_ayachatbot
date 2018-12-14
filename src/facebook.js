@@ -4,7 +4,7 @@ const R = require('ramda');
 
 const { getPreviousMessageInHistory, hasStoppedNotifications } = require('./users');
 
-const { isReturningBadFBCode } = require('./utils/fb_utils');
+const { isReturningBadFBCode, sanitizeFBJSON } = require('./utils/fb_utils');
 const { isInvalidUser, updateHistory } = require('./utils/user_utils');
 
 const {
@@ -101,7 +101,7 @@ function callSendAPI(messageData) {
         uri: `${FB_GRAPH_ROOT_URL}me/messages`,
         qs: { access_token: FB_PAGE_ACCESS_TOKEN },
         method: 'POST',
-        json: messageData
+        json: sanitizeFBJSON(messageData)
       },
       (error, response, body) => {
         if (!error && response.statusCode == 200) {
