@@ -93,9 +93,9 @@ describe('database user module functions', () => {
     testModule.removeUserFromCache(testUser);
     testModule.removeUserFromCache(testUser2);
     testModule.getJSONItemFromCache(testUser.id).then(result => {
-      expect(result).to.deep.equal({id: null});
+      expect(result).to.equal(null);
       testModule.getJSONItemFromCache(testUser2.id).then(result => {
-        expect(result).to.deep.equal({id: null});
+        expect(result).to.equal(null);
         done();
       });
     })
