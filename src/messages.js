@@ -856,7 +856,7 @@ function getMessagesForAction({
 
   // if none of the above actions occurred, then we proceed through the conversation normally
   let curr;
-  if (action.type === TYPE_MESSAGE || action.type === TYPE_QUESTION) {
+  if (action.type === TYPE_MESSAGE || action.type === TYPE_QUESTION || !action.type) {
     curr = messages.find(m => m.id === action.id);
   } else if (action.type === TYPE_COLLECTION) {
     let nextMessage = getNextMessageForCollection(
