@@ -39,7 +39,7 @@ const { keyFormatCollectionId } = require('./utils/collection_utils');
 
 const getJSONItemFromCache = key =>
   getAsync(key)
-    .then(item => item ? JSON.parse(item) : { id: null })
+    .then(item => JSON.parse(item))
     .catch(e => (
       console.error(
         `error: getItemFromCache on key: ${key}`,
@@ -186,7 +186,7 @@ const getCollections = () =>
 const getCollectionById = id => (
   new Promise(resolve => {
     getJSONItemFromCache(keyFormatCollectionId(id))
-      .then(coll => resolve(coll))
+      .then(coll => coll ? resolve(coll) : resolve({ id: null}))
       .catch(e => {
         // no item found matching cacheKey
         console.error(
@@ -225,7 +225,7 @@ const getSeries = () =>
 const getMessageById = id => (
   new Promise(resolve => {
     getJSONItemFromCache(keyFormatMessageId(id))
-      .then(msg => resolve(msg))
+      .then(msg => msg ? resolve(msg) : resolve({ id: null }))
       .catch(e => {
         // no item found matching cacheKey
         console.error(
