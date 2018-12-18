@@ -175,7 +175,7 @@ const getActionForMessage = ({
   }
 
   // get next message id...
-  if (hasSentResponse(lastMessage, message)) {
+  if (hasSentResponse(message)) {
     let action = JSON.parse(message.quick_reply.payload);
     if (action && action.id) {
       return {

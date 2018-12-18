@@ -80,8 +80,7 @@ const isMessageTrackDeleted = (lastMessage, messages) =>
     (!doesMessageStillExist(lastMessage, messages) ||
      !doesMessageStillExist(lastMessage.next, messages));
 
-const hasSentResponse = (lastMessage, message) =>
-  R.path(['messageType'], lastMessage) === TYPE_QUESTION_WITH_REPLIES && !!message.quick_reply;
+const hasSentResponse = message => !!message.quick_reply;
 
 const hasNotSentResponse = (lastMessageSentByBot, message) =>
   R.path(['messageType'], lastMessageSentByBot) === TYPE_QUESTION_WITH_REPLIES && !message.quick_reply;
