@@ -187,10 +187,9 @@ const getActionForMessage = ({
   }
   // if the user did not respond correctly to the question
   // try the message with the quick-reply buttons saying 'Hey, I don't get that'
-  const getNext = m => m && R.path(['next'], m) ? R.path(['next'], m) : null;
-  const next = (lastMessageSentByBot && lastMessageSentByBot.messageType !== TYPE_QUESTION_WITH_REPLIES ?
-    getNext(lastMessageSentByBot) : null) ||
-    getNext(lastMessage);
+  const getNext = m => m && m.messageType !== TYPE_QUESTION_WITH_REPLIES && R.pathOr(null, ['next'], m);
+
+  const next = getNext(lastMessageSentByBot) || getNext(lastMessage);
 
   if (hasNotSentResponse(lastMessageSentByBot, message) && !(next)) {
     logEvent({userId: user.id, eventName: FB_QUICK_REPLY_RETRY_EVENT}).catch(err => {
