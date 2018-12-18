@@ -7,7 +7,8 @@ const {
   TYPE_QUESTION_WITH_REPLIES,
   QUICK_REPLY_RETRY_ID_CONTINUE,
   CUT_OFF_HOUR_FOR_NEW_MESSAGES,
-  TYPE_BACK_TO_CONVERSATION
+  TYPE_BACK_TO_CONVERSATION,
+  TYPE_QUESTION
 } = require('../constants');
 
 const {
@@ -80,11 +81,12 @@ const isMessageTrackDeleted = (lastMessage, messages) =>
     (!doesMessageStillExist(lastMessage, messages) ||
      !doesMessageStillExist(lastMessage.next, messages));
 
-const hasSentResponse = (lastMessage, message) =>
-  R.path(['messageType'], lastMessage) === TYPE_QUESTION_WITH_REPLIES && !!message.quick_reply;
+const hasSentResponse = message => message && !!message.quick_reply;
 
-const hasNotSentResponse = (lastMessageSentByBot, message) =>
-  R.path(['messageType'], lastMessageSentByBot) === TYPE_QUESTION_WITH_REPLIES && !message.quick_reply;
+const hasNotSentResponse = (lastMessageSentByBot, message) => {
+  if (R.path(['messageType'], lastMessageSentByBot) === TYPE_QUESTION) return false;
+  return (R.path(['messageType'], lastMessageSentByBot) === TYPE_QUESTION_WITH_REPLIES && !message.quick_reply);
+};
 
 module.exports = {
   isTypeBackToConversation,

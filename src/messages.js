@@ -768,6 +768,21 @@ const findMessageByActionType = (action, userUpdates, messages) => {
           type: TYPE_MESSAGE,
           message: makePlatformMessagePayload(msg.id, messages)
         });
+
+        userHistoryMsg = createCustomMessageForHistory({
+          id: action.quickReplyRetryId,
+          ...msg,
+        });
+        // include in history
+        userUpdates = R.merge(userUpdates, {
+          history: updateHistory(
+            R.merge(userHistoryMsg, {
+              timestamp: Date.now()
+            }),
+            userUpdates.history
+          )
+        });
+
       } else {
         messagesToSend.push(msg);
 
