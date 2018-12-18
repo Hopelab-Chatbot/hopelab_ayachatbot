@@ -187,8 +187,7 @@ const getActionForMessage = ({
   }
   // if the user did not respond correctly to the question
   // try the message with the quick-reply buttons saying 'Hey, I don't get that'
-  const getNext = m => m && m.messageType !== TYPE_QUESTION_WITH_REPLIES &&
-  R.path(['next'], m) ? R.path(['next'], m) : null;
+  const getNext = m => m && m.messageType !== TYPE_QUESTION_WITH_REPLIES && R.pathOr(null, ['next'], m);
 
   const next = getNext(lastMessageSentByBot) || getNext(lastMessage);
 
