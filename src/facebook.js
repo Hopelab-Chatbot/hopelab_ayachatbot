@@ -2,10 +2,10 @@ const request = require('request');
 
 const R = require('ramda');
 
-const { updateHistory, getPreviousMessageInHistory, hasStoppedNotifications } = require('./users');
+const { getPreviousMessageInHistory, hasStoppedNotifications } = require('./users');
 
-const { isReturningBadFBCode } = require('./utils/fb_utils');
-const { isInvalidUser } = require('./utils/user_utils');
+const { isReturningBadFBCode, sanitizeFBJSON } = require('./utils/fb_utils');
+const { isInvalidUser, updateHistory } = require('./utils/user_utils');
 
 const {
   isUserConfirmReset,
@@ -43,10 +43,13 @@ const {
 
 const {
   getMessagesForAction,
-  getActionForMessage,
   getUpdateActionForUsers,
   createCustomMessageForHistory
 } = require('./messages');
+
+const {
+  getActionForMessage,
+} = require('./action');
 
 const { promiseSerial, promiseSerialKeepGoingOnError } = require('./utils/gen_utils');
 
@@ -98,7 +101,7 @@ function callSendAPI(messageData) {
         uri: `${FB_GRAPH_ROOT_URL}me/messages`,
         qs: { access_token: FB_PAGE_ACCESS_TOKEN },
         method: 'POST',
-        json: messageData
+        json: sanitizeFBJSON(messageData)
       },
       (error, response, body) => {
         if (!error && response.statusCode == 200) {
@@ -127,19 +130,6 @@ function callSendAPI(messageData) {
     );
   });
 }
-
-// /**
-//  * Send a follow-up message to a user
-//  *
-//  * @param {String} recipientId
-//  * @param {Object} content
-//  * @return {Promise<String>}
-// */
-// function sendFollowUpMessageToUser(recipientId, content) {
-//   const messageData = createMessagePayload(recipientId, content, FB_MESSAGING_TYPE_UPDATE);
-//
-//   return callSendAPI(messageData);
-// }
 
 /**
  * Create the FB Message Payload
@@ -348,7 +338,6 @@ function receivedMessage({
     media,
     studyInfo
   });
-
   userToUpdate = Object.assign({}, userToUpdate, userUpdates);
 
   const messagesWithTyping = R.intersperse(
