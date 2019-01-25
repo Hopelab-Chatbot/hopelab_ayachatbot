@@ -10,6 +10,7 @@ const FB_GRAPH_ROOT_URL = `${FB_GRAPH_TRUE_ROOT}v2.6/`;
 const FB_ACTIVITIES_URL = '/activities';
 
 const FB_EVENT_COMPLETE_INTRO_CONVERSATION = 'fb_complete_intro_conversation';
+const FB_MOBILE_APP_TUTORIAL_COMPLETION = 'fb_mobile_tutorial_completion';
 const FB_STOP_MSG_EVENT = 'fb_stop_messages_event';
 const FB_QUICK_REPLY_RETRY_EVENT = 'fb_quick_reply_retry_event';
 
@@ -293,4 +294,5 @@ module.exports = {
   NUMBER_OF_DAYS_WITH_NO_ACTIVITY_BEFORE_ARCHIVING,
   DB_ARCHIVE_USER_LIST,
   EXT_TO_TYPE,
+  FB_MOBILE_APP_TUTORIAL_COMPLETION
 };

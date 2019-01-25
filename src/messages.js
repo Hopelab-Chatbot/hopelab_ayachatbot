@@ -63,6 +63,7 @@ const {
   RESET_USER_QUESTION,
   RESET_USER_CONFIRM,
   FB_EVENT_COMPLETE_INTRO_CONVERSATION,
+  FB_MOBILE_APP_TUTORIAL_COMPLETION,
   TYPE_BACK_TO_CONVERSATION,
   TYPE_SERIES,
 } = require('./constants');
@@ -482,7 +483,10 @@ const getNextConversation = (
   // here we mark this user as having completed the intro conversation,
   // so we can send push messages to them
   if (hasBegunIntro(userUpdates) && !hasFinishedIntro(userUpdates)) {
-    logEvent({ userId: userUpdates.id, eventName: FB_EVENT_COMPLETE_INTRO_CONVERSATION });
+    logEvent({
+      userId: userUpdates.id,
+      eventList: [FB_EVENT_COMPLETE_INTRO_CONVERSATION, FB_MOBILE_APP_TUTORIAL_COMPLETION]
+    });
     const updates = { introConversationFinished: true};
     userUpdates = Object.assign({}, userUpdates, updates);
   }
