@@ -11,14 +11,14 @@ const {
   EXT_TO_TYPE,
   FB_MESSAGING_TYPE_UPDATE,
   TYPE_IMAGE,
-  MESSAGE_TYPE_TEXT
+  MESSAGE_TYPE_TEXT,
+  DEFAULT_ERROR_MESSAGE
 } = require('../constants');
 
 const defaultErrorMsg = {
   messaging_type: FB_MESSAGING_TYPE_RESPONSE,
   message: {
-    text: `Beep Boop! Some wires are crossed in my head.
- Try to continue in the conversation in a different track if possible. My human makers are checking it out.`,
+    text:  DEFAULT_ERROR_MESSAGE
   }
 };
 
