@@ -125,6 +125,9 @@ const RESET_USER_RESPONSE_CANCEL = {
 
 const RESET_USER_KEY_RESPONSE = [RESET_USER_RESPONSE_CONFIRM, RESET_USER_RESPONSE_CANCEL];
 
+const DEFAULT_ERROR_MESSAGE = `Beep Boop! Some wires are crossed in my head.
+Try to continue in the conversation in a different track if possible. My human makers are checking it out.`;
+
 const RESET_USER_CONFIRM = 'Your user information has been completely reset 🤖';
 const RESET_USER_KEY_MESSAGE = '#oz8mu[M7h9C6rsrNza9';
 
@@ -294,5 +297,6 @@ module.exports = {
   NUMBER_OF_DAYS_WITH_NO_ACTIVITY_BEFORE_ARCHIVING,
   DB_ARCHIVE_USER_LIST,
   EXT_TO_TYPE,
-  FB_MOBILE_APP_TUTORIAL_COMPLETION
+  FB_MOBILE_APP_TUTORIAL_COMPLETION,
+  DEFAULT_ERROR_MESSAGE
 };

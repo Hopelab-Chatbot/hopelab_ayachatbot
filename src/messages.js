@@ -66,6 +66,7 @@ const {
   FB_MOBILE_APP_TUTORIAL_COMPLETION,
   TYPE_BACK_TO_CONVERSATION,
   TYPE_SERIES,
+  DEFAULT_ERROR_MESSAGE
 } = require('./constants');
 
 const R = require('ramda');
@@ -83,6 +84,7 @@ const moment = require('moment');
 */
 function makePlatformMessagePayload(id, messages, includedMessage) {
   const message = includedMessage || messages.find(m =>  m.id === id);
+  const text = message ? message.text : DEFAULT_ERROR_MESSAGE;
   if (message && message.messageType === TYPE_QUESTION_WITH_REPLIES &&
         message.quick_replies) {
     let quick_replies = message.quick_replies.map(qr => (
@@ -90,10 +92,10 @@ function makePlatformMessagePayload(id, messages, includedMessage) {
         Object.assign({}, R.omit(['next'], qr), {payload: qr.next ? JSON.stringify(qr.next) : "{}"}) :
         R.omit(['next'], {...qr, payload: JSON.stringify({ ...JSON.parse(qr.payload), ...qr.next }) })
     ));
-    return { text: message.text, quick_replies };
+    return { text, quick_replies };
   }
 
-  return { text: message.text };
+  return { text };
 }
 
 
