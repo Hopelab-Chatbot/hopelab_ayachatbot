@@ -1,5 +1,4 @@
-// NOTE: this script gets the largest user key. It is useful if you think there may be a bot
-// trying to spam our bot. This script will write to a file to easily inspect the object.
+// NOTE: this script finds the first user (if any) that entered a specific keyword
 
 const constants = require('../src/constants');
 var fs = require('fs');
