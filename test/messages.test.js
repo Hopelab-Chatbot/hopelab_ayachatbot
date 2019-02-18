@@ -938,6 +938,85 @@ describe('message function tests', () => {
       maxUpdates: 2,
     });
     expect(actions.length).to.be.at.most(2);
+  });
 
+  it('getUpdateActionForUsers should not send messages after maxUpdates exceeded and no answer', () => {
+    const user = {
+      introConversationSeen: true,
+      history: [
+        {
+          type: TYPE_QUESTION,
+          timestamp: moment().subtract(2, 'day').unix() * 1000,
+          message: {text: "hi"},
+          previous: undefined
+        },
+        {
+          type: TYPE_QUESTION,
+          timestamp: moment().subtract(2, 'day').unix() * 1000,
+          message: {text: "hi"},
+          previous: undefined
+        },
+      ],
+      invalidUser: false
+    };
+    const users = [user];
+
+
+    const allMessages = mocks.messages.slice();
+    const allConversations = mocks.conversations.slice();
+    const allCollections = mocks.collections.slice();
+
+    const actions = testModule.getUpdateActionForUsers({
+      users,
+      allConversations,
+      allCollections,
+      allMessages,
+      studyInfo: [],
+      maxUpdates: 2,
+    });
+    expect(actions.length).to.equal(0);
+  });
+
+  it('getUpdateActionForUsers should update after a break of maxUpdates, and convo resumed', () => {
+    const user = {
+      introConversationSeen: true,
+      history: [
+        {
+          type: TYPE_QUESTION,
+          timestamp: moment().subtract(2, 'day').unix() * 1000,
+          message: {text: "hi"},
+          previous: undefined
+        },
+        {
+          type: TYPE_QUESTION,
+          timestamp: moment().subtract(2, 'day').unix() * 1000,
+          message: {text: "hi"},
+          previous: undefined
+        },
+        {
+          type: TYPE_ANSWER,
+          timestamp: moment().subtract(2, 'day').unix() * 1000,
+          message: {text: "hi"},
+          previous: undefined
+        }
+      ],
+      invalidUser: false
+    };
+    const users = [user];
+
+
+    const allMessages = mocks.messages.slice();
+    const allConversations = mocks.conversations.slice();
+    const allCollections = mocks.collections.slice();
+
+    const actions = testModule.getUpdateActionForUsers({
+      users,
+      allConversations,
+      allCollections,
+      allMessages,
+      studyInfo: [],
+      maxUpdates: 2,
+    });
+    expect(actions.length).to.equal(1);
   });
 });
