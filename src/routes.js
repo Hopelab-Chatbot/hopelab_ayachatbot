@@ -11,7 +11,9 @@ const {
   getMessages,
   getMedia,
   getStudyInfo,
-  getParams
+  getParams,
+  unArchiveUser,
+  findInUserList
 } = require('./database');
 
 const { FB_VERIFY_TOKEN } = require('./constants');
@@ -44,7 +46,9 @@ module.exports = app => {
                 getMedia(),
                 getStudyInfo(),
                 getParams(),
+                findInUserList(senderID),
               ];
+              // if user is posting to webhook, but they aren't in the DB_USER_LIST, then they must have been archived
               Promise.all(promises)
                 .then(res => {
                   let user = Object.assign({}, res[0]);
@@ -56,6 +60,10 @@ module.exports = app => {
                   const media = res[6];
                   const studyInfo = res[7];
                   const params = res[8];
+                  const inUserList = res[9];
+                  if (!inUserList && senderID) {
+                    unArchiveUser(senderID);
+                  }
                   receivedMessage({
                     senderID,
                     message,
