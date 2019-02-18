@@ -13,7 +13,7 @@ const {
 
 const {
   getLastSentMessageInHistory
-} = require('./user_utils');
+} = require('./msg_utils');
 
 const isTypeBackToConversation = m => m && m.next && R.equals(m.next.type, TYPE_BACK_TO_CONVERSATION);
 
@@ -88,6 +88,12 @@ const hasNotSentResponse = (lastMessageSentByBot, message) => {
   return (R.path(['messageType'], lastMessageSentByBot) === TYPE_QUESTION_WITH_REPLIES && !message.quick_reply);
 };
 
+const isSameDay = convoStartTime => {
+  const currentTimeMs = moment();
+  const momentConvoStart = moment(convoStartTime);
+  return (currentTimeMs.endOf('day').diff(momentConvoStart, 'hours') < 2);
+};
+
 module.exports = {
   isTypeBackToConversation,
   payloadIsBackToConvo,
@@ -95,5 +101,6 @@ module.exports = {
   shouldStartNewConversation,
   isMessageTrackDeleted,
   hasSentResponse,
-  hasNotSentResponse
+  hasNotSentResponse,
+  isSameDay,
 };
