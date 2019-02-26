@@ -27,7 +27,8 @@ const {
   shouldStartNewConversation,
   isMessageTrackDeleted,
   hasSentResponse,
-  hasNotSentResponse
+  hasNotSentResponse,
+  isSameDay
 } = require('./utils/action');
 
 const {
@@ -131,7 +132,7 @@ const getActionForMessage = ({
   }
 
   // here we say this convo is done, and we'll talk to you tomorrow
-  if (isEndOfConversation(lastMessage)) {
+  if (isEndOfConversation(lastMessage) && isSameDay(user.conversationStartTimestamp)) {
     return {
       action: { type: ACTION_COME_BACK_LATER },
       userActionUpdates
