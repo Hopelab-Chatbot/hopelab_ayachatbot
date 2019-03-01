@@ -1,5 +1,4 @@
-// NOTE: This script determines if the user has completed the intro conversatiom,
-// and sets the corresponding value to true in the user object so they will get push notifications
+// NOTE: This script sends a message defined in the json file passed, to the number of users passed as the second arg
 const fs = require('fs');
 const constants = require('../src/constants');
 const { getUserById } = require('../src/database');
