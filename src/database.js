@@ -123,9 +123,31 @@ const getUserById = id =>
   });
 
 
+const findInUserList = id =>
+  new Promise(resolve => {
+    getLAsync(DB_USER_LIST, 0, -1)
+      .then(userIds =>
+        resolve(userIds.indexOf(id) > -1)
+      )
+      .catch(e => {
+        // no item found matching cacheKey
+        console.error(
+          `error: findUsersInList - cacheUtils.getItem(${DB_USER_LIST})`,
+          e
+        );
+        resolve(false);
+      });
+  });
+
 const archiveUser = user => {
   redisClient.lrem(DB_USER_LIST, 0, user.id);
   redisClient.lpush(DB_ARCHIVE_USER_LIST, user.id);
+  return;
+};
+
+const unArchiveUser = id => {
+  redisClient.lpush(DB_USER_LIST, id);
+  redisClient.lrem(DB_ARCHIVE_USER_LIST, 0, id);
   return;
 };
 
@@ -366,5 +388,7 @@ module.exports = {
   getJSONItemFromCache,
   getCollectionById,
   getParams,
-  archiveUser
+  archiveUser,
+  unArchiveUser,
+  findInUserList
 };
