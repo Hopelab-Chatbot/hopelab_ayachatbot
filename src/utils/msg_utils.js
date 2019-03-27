@@ -157,13 +157,19 @@ function createCustomMessageForHistory(properties) {
 
 
 const findByType = (item, {blocks, collections, series }) => {
-  switch (item.type) {
-    case TYPE_BLOCK:
-      return blocks.find(b => b.id === item.id);
-    case TYPE_SERIES:
-      return series.find(s => s.id === item.id);
-    case TYPE_COLLECTION:
-      return collections.find(c => c.id === item.id);
+  if (item) {
+    switch (item.type) {
+      case TYPE_BLOCK:
+        return blocks.find(b => b.id === item.id);
+      case TYPE_SERIES:
+        return series.find(s => s.id === item.id);
+      case TYPE_COLLECTION:
+        return collections.find(c => c.id === item.id);
+      default:
+        return null;
+    }
+  } else {
+    return null;
   }
 };
 

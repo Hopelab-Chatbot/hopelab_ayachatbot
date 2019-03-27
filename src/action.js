@@ -81,9 +81,6 @@ const getActionForMessage = ({
   const lastMessage = getLastSentMessageInHistory(user);
   const lastMessageSentByBot = getLastSentMessageInHistory(user, false, true);
   const resumeMessage = R.find(R.propEq('id', RESUME_MESSAGE_ID))(messages);
-  // console.log(message)
-  // console.log(lastMessage)
-  // console.log(lastMessageSentByBot)
 
   if (isCrisisMessage(message, params.crisisTerms, params.crisisWords)) {
     return {
