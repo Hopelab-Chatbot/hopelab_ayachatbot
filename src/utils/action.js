@@ -97,7 +97,8 @@ const isSameDay = convoStartTime => {
 };
 
 const isLastItemInParent = (lastMessage, message) => {
-  if ((message.quick_reply && message.quick_reply.payload ) || lastMessage.type !== MESSAGE_TYPE_TEXT) {
+  if ((message && message.quick_reply && message.quick_reply.payload )
+  || (lastMessage && lastMessage.type !== MESSAGE_TYPE_TEXT)) {
     return !lastMessage.next && !message.quick_reply.payload.next;
   }
 };
