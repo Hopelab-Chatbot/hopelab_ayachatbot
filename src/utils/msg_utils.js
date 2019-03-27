@@ -9,6 +9,9 @@ const { MESSAGE_TYPE_TRANSITION,
   QUICK_REPLY_BLOCK_ID,
   CRISIS_RESPONSE_MESSAGE_ID,
   CRISIS_BLOCK_ID,
+  TYPE_BLOCK,
+  TYPE_SERIES,
+  TYPE_COLLECTION,
   TYPE_ANSWER } = require('../constants');
 
 const RESET_USER_RESPONSE_CONFIRM_ID = JSON.parse(RESET_USER_RESPONSE_CONFIRM.payload).id;
@@ -152,6 +155,18 @@ function createCustomMessageForHistory(properties) {
   };
 }
 
+
+const findByType = (item, {blocks, collections, series }) => {
+  switch (item.type) {
+    case TYPE_BLOCK:
+      return blocks.find(b => b.id === item.id);
+    case TYPE_SERIES:
+      return series.find(s => s.id === item.id);
+    case TYPE_COLLECTION:
+      return collections.find(c => c.id === item.id);
+  }
+};
+
 module.exports = {
   formatAsEventName,
   havePassedTransition,
@@ -166,5 +181,6 @@ module.exports = {
   isStopOrSwearing,
   isCrisisMessage,
   isQuickReplyRetryStop,
-  createCustomMessageForHistory
+  createCustomMessageForHistory,
+  findByType
 };

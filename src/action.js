@@ -28,7 +28,9 @@ const {
   isMessageTrackDeleted,
   hasSentResponse,
   hasNotSentResponse,
-  isSameDay
+  isSameDay,
+  isLastItemInParent,
+  parentPath,
 } = require('./utils/action');
 
 const {
@@ -79,6 +81,9 @@ const getActionForMessage = ({
   const lastMessage = getLastSentMessageInHistory(user);
   const lastMessageSentByBot = getLastSentMessageInHistory(user, false, true);
   const resumeMessage = R.find(R.propEq('id', RESUME_MESSAGE_ID))(messages);
+  // console.log(message)
+  // console.log(lastMessage)
+  // console.log(lastMessageSentByBot)
 
   if (isCrisisMessage(message, params.crisisTerms, params.crisisWords)) {
     return {
@@ -203,10 +208,17 @@ const getActionForMessage = ({
     };
   }
 
+
+
   let action;
   if (next) {
     action = { type: next.type, id: next.id };
     // if the user is working through a collection, then we move through that
+
+  } else if (isLastItemInParent(lastMessage, message) && parentPath({lastMessage, blocks, series, collections })) {
+    // in the case this is a type question/questionWithReplies and should break out of current block/series/collection
+    const item = parentPath({lastMessage, blocks, series, collections });
+    action = { type: item.next.type, id: item.next.id};
   } else if (user[COLLECTION_SCOPE] && user[COLLECTION_SCOPE].length) {
     let nextMessage = getNextMessageForCollection(
       R.last(user[COLLECTION_SCOPE]),

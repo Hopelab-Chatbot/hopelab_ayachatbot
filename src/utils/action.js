@@ -8,11 +8,13 @@ const {
   QUICK_REPLY_RETRY_ID_CONTINUE,
   CUT_OFF_HOUR_FOR_NEW_MESSAGES,
   TYPE_BACK_TO_CONVERSATION,
-  TYPE_QUESTION
+  TYPE_QUESTION,
+  MESSAGE_TYPE_TEXT,
 } = require('../constants');
 
 const {
-  getLastSentMessageInHistory
+  getLastSentMessageInHistory,
+  findByType
 } = require('./msg_utils');
 
 const isTypeBackToConversation = m => m && m.next && R.equals(m.next.type, TYPE_BACK_TO_CONVERSATION);
@@ -94,6 +96,24 @@ const isSameDay = convoStartTime => {
   return (currentTimeMs.endOf('day').diff(momentConvoStart, 'hours') < 2);
 };
 
+const isLastItemInParent = (lastMessage, message) => {
+  if ((message.quick_reply && message.quick_reply.payload ) || lastMessage.type !== MESSAGE_TYPE_TEXT) {
+    return !lastMessage.next && !message.quick_reply.payload.next;
+  }
+};
+
+const parentPath = ({lastMessage, blocks, series, collections }) => {
+  let item = lastMessage;
+  let parent = findByType(lastMessage.parent, { blocks, series, collections });
+  while (parent) {
+    item = parent;
+    parent = findByType(parent.parent, { blocks, series, collections });
+  }
+  return item;
+};
+
+
+
 module.exports = {
   isTypeBackToConversation,
   payloadIsBackToConvo,
@@ -103,4 +123,6 @@ module.exports = {
   hasSentResponse,
   hasNotSentResponse,
   isSameDay,
+  isLastItemInParent,
+  parentPath
 };
