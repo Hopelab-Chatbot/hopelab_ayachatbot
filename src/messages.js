@@ -30,6 +30,10 @@ const {
 } = require('./conversations');
 
 const {
+  parentPath,
+} = require('./utils/action');
+
+const {
   TYPE_COLLECTION,
   TYPE_BLOCK,
   TYPE_MESSAGE,
@@ -953,10 +957,12 @@ function getMessagesForAction({
       continue;
     } else {
       // this is the most common case... just send the next specified message
-      messagesToSend.push({
-        type: TYPE_MESSAGE,
-        message: makePlatformMessagePayload(curr.id, messages)
-      });
+      if (curr.type === TYPE_MESSAGE) {
+        messagesToSend.push({
+          type: TYPE_MESSAGE,
+          message: makePlatformMessagePayload(curr.id, messages)
+        });
+      }
     }
 
     userUpdates = R.merge(userUpdates, {
@@ -968,7 +974,9 @@ function getMessagesForAction({
       )
     });
     // now break out of the curr cycle because we are going to wait for the user to reply
-    if ( curr.messageType === TYPE_QUESTION || curr.messageType === TYPE_QUESTION_WITH_REPLIES) {
+    if ( curr.messageType === TYPE_QUESTION ||
+       curr.messageType === TYPE_QUESTION_WITH_REPLIES ||
+      curr.next && curr.next.id === END_OF_CONVERSATION_ID) {
       break;
     }
 
@@ -993,6 +1001,11 @@ function getMessagesForAction({
         curr = nextMessage.message;
         userUpdates = nextMessage.user;
       // if we need to go back to the conversation as specified in the CMS, this is where that happens
+      } else if (curr.next.type === TYPE_BACK_TO_CONVERSATION && curr.parent.id) {
+        const item = parentPath({lastMessage: curr, blocks, series, collections });
+        if (item && item.next.id) {
+          curr = item;
+        }
       } else if (curr.next.type === TYPE_BACK_TO_CONVERSATION) {
         curr = Object.assign({}, getLastSentMessageInHistory(user, true, true));
       } else {

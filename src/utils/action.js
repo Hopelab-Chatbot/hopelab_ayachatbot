@@ -17,7 +17,7 @@ const {
   findByType
 } = require('./msg_utils');
 
-const isTypeBackToConversation = m => m && m.next && R.equals(m.next.type, TYPE_BACK_TO_CONVERSATION);
+const isTypeBackToConversation = m => m && m.next && R.equals(m.next.type, TYPE_BACK_TO_CONVERSATION) && !m.parent;
 
 const payloadIsBackToConvo = message => {
   if (message && message.quick_reply && message.quick_reply.payload) {
@@ -80,6 +80,7 @@ const doesMessageStillExist = (message, messages) =>
 const isMessageTrackDeleted = (lastMessage, messages) =>
   R.path(['next', 'id'], lastMessage) &&
     lastMessage.messageType !== TYPE_QUESTION_WITH_REPLIES &&
+    lastMessage.messageType !== TYPE_QUESTION &&
     (!doesMessageStillExist(lastMessage, messages) ||
      !doesMessageStillExist(lastMessage.next, messages));
 
@@ -99,7 +100,9 @@ const isSameDay = convoStartTime => {
 const isLastItemInParent = (lastMessage, message) => {
   if ((message && message.quick_reply && message.quick_reply.payload )
   || (lastMessage && lastMessage.type !== MESSAGE_TYPE_TEXT)) {
-    return !lastMessage.next && !message.quick_reply.payload.next;
+    return (!lastMessage.next || lastMessage.next.type === TYPE_BACK_TO_CONVERSATION) &&
+    !lastMessage.quick_replies.length &&
+    (!lastMessage.quick_reply || !message.quick_reply.payload.next);
   }
 };
 
