@@ -1,12 +1,15 @@
 /* eslint-disable max-len */
+const { chatApi } = require('../config/default');
+
+
 const REST_PORT = process.env.REST_PORT || 5000;
 const FB_VERIFY_TOKEN = process.env.FB_VERIFY_TOKEN;
 const FB_PAGE_ACCESS_TOKEN = process.env.FB_PAGE_ACCESS_TOKEN;
 const FB_APP_ID = process.env.FB_APP_ID;
 const FB_PAGE_ID = process.env.FB_PAGE_ID;
 const FB_TEXT_LIMIT = 640;
-const FB_GRAPH_TRUE_ROOT = 'https://graph.facebook.com/';
-const FB_GRAPH_ROOT_URL = `${FB_GRAPH_TRUE_ROOT}v2.6/`;
+const FB_GRAPH_TRUE_ROOT = chatApi.endpoint;
+const FB_GRAPH_ROOT_URL = `${FB_GRAPH_TRUE_ROOT}${chatApi.version}/`;
 const FB_ACTIVITIES_URL = '/activities';
 
 const FB_EVENT_COMPLETE_INTRO_CONVERSATION = 'fb_complete_intro_conversation';

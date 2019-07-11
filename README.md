@@ -29,9 +29,13 @@ FB_PAGE_ID
 
 
 These are set locally. They are required.
+`CHAT_API_ENDPOINT` and `CHAT_API_VERSION` are requiered for integration with GRYT, these variables are used to send the messages responses.
+
 ```
 REDIS_HOST
 REDIS_PORT
+CHAT_API_ENDPOINT
+CHAT_API_VERSION
 ```
 
 ## getting app Setup

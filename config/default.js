@@ -7,7 +7,11 @@ const FALLBACK_DEFAULT_VALUES = {
   redis: {
     host: '127.0.0.1',
     port: 6379
-  }
+  },
+  chat_api: {
+      endpoint: 'https://graph.facebook.com/',
+      version: 'v2.6'
+   }
 };
 
 const config = {
@@ -19,6 +23,16 @@ const config = {
     port: R.defaultTo(
       R.path(['redis', 'port'], FALLBACK_DEFAULT_VALUES),
       R.path(['env', 'REDIS_PORT'], process)
+    )
+  },
+  chatApi: {
+    endpoint: R.defaultTo(
+      R.path(['chat_api', 'endpoint'], FALLBACK_DEFAULT_VALUES),
+      R.path(['env', 'CHAT_API_ENDPOINT'], process)
+    ),
+    version: R.defaultTo(
+      R.path(['chat_api', 'versioj'], FALLBACK_DEFAULT_VALUES),
+      R.path(['env', 'CHAT_API_VERSION'], process)
     )
   }
 };
